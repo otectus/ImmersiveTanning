@@ -1,0 +1,23 @@
+{
+  "parent": "immersive_tanning:stitch_in_time",
+  "display": {
+    "icon": {
+      "item": "immersive_tanning:hardened_leather"
+    },
+    "title": {
+      "translate": "advancements.immersive_tanning.trophy_hide.title"
+    },
+    "description": {
+      "translate": "advancements.immersive_tanning.trophy_hide.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

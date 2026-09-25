@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.otectus.immersivetanning.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "immersive_tanning.refmap.json",
+  "mixins": [
+    "IngredientMixin",
+    "ItemStackMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

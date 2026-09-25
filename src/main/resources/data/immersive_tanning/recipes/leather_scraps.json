@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "immersive_tanning:binding_leather"
+    }
+  ],
+  "result": {
+    "item": "immersive_tanning:leather_scraps",
+    "count": 3
+  }
+}

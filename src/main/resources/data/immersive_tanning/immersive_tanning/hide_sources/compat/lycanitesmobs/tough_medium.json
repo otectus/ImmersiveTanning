@@ -1,0 +1,9 @@
+{
+  "entities": [
+    "lycanitesmobs:jabberwock"
+  ],
+  "size": "medium",
+  "count": 1,
+  "trait": "immersive_tanning:tough",
+  "priority": 10
+}

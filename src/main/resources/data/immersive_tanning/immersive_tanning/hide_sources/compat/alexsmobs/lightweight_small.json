@@ -1,0 +1,9 @@
+{
+  "entities": [
+    "alexsmobs:jerboa"
+  ],
+  "size": "small",
+  "count": 1,
+  "trait": "immersive_tanning:lightweight",
+  "priority": 10
+}

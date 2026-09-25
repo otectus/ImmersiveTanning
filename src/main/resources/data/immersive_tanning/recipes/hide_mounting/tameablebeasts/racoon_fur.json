@@ -1,0 +1,15 @@
+{
+  "type": "immersive_tanning:hide_mounting",
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "tameablebeasts"
+    }
+  ],
+  "ingredient": [
+    {
+      "item": "tameablebeasts:racoon_fur"
+    }
+  ],
+  "size": "small"
+}

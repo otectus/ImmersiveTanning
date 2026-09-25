@@ -1,0 +1,10 @@
+{
+  "entities": [
+    "alexsmobs:straddler",
+    "alexsmobs:dropbear"
+  ],
+  "size": "medium",
+  "count": 1,
+  "trait": "immersive_tanning:heatproof",
+  "priority": 10
+}

@@ -1,0 +1,8 @@
+{
+  "type": "immersive_tanning:leatherworking",
+  "leather": 5,
+  "result": {
+    "item": "minecraft:leather_helmet"
+  },
+  "seam": "immersive_tanning:helmet"
+}

@@ -1,0 +1,8 @@
+{
+  "type": "immersive_tanning:leatherworking",
+  "leather": 7,
+  "result": {
+    "item": "minecraft:leather_horse_armor"
+  },
+  "seam": "immersive_tanning:horse_armor"
+}

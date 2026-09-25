@@ -1,0 +1,2561 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "immersive_tanning:block/vat_staves",
+    "staves": "immersive_tanning:block/vat_staves",
+    "inner": "immersive_tanning:block/vat_inner",
+    "rim": "immersive_tanning:block/timber_end",
+    "band": "immersive_tanning:block/vat_band",
+    "details": "immersive_tanning:block/tool_materials"
+  },
+  "elements": [
+    {
+      "from": [
+        1,
+        0,
+        1
+      ],
+      "to": [
+        15,
+        2,
+        15
+      ],
+      "faces": {
+        "north": {
+          "texture": "#staves",
+          "uv": [
+            0,
+            0,
+            14,
+            2
+          ]
+        },
+        "south": {
+          "texture": "#staves",
+          "uv": [
+            0,
+            0,
+            14,
+            2
+          ]
+        },
+        "east": {
+          "texture": "#staves",
+          "uv": [
+            0,
+            0,
+            14,
+            2
+          ]
+        },
+        "west": {
+          "texture": "#staves",
+          "uv": [
+            0,
+            0,
+            14,
+            2
+          ]
+        },
+        "up": {
+          "texture": "#inner",
+          "uv": [
+            0,
+            0,
+            14,
+            14
+          ]
+        },
+        "down": {
+          "texture": "#staves",
+          "uv": [
+            0,
+            0,
+            14,
+            14
+          ]
+        }
+      },
+      "name": "Vat floor"
+    },
+    {
+      "from": [
+        1,
+        2,
+        1
+      ],
+      "to": [
+        15,
+        13,
+        2.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#staves",
+          "uv": [
+            0,
+            0,
+            14,
+            11
+          ]
+        },
+        "south": {
+          "texture": "#inner",
+          "uv": [
+            0,
+            0,
+            14,
+            11
+          ]
+        },
+        "east": {
+          "texture": "#inner",
+          "uv": [
+            0,
+            0,
+            1.5,
+            11
+          ]
+        },
+        "west": {
+          "texture": "#inner",
+          "uv": [
+            0,
+            0,
+            1.5,
+            11
+          ]
+        },
+        "up": {
+          "texture": "#rim",
+          "uv": [
+            1,
+            1,
+            15,
+            2.5
+          ]
+        },
+        "down": {
+          "texture": "#staves",
+          "uv": [
+            0,
+            0,
+            14,
+            1.5
+          ]
+        }
+      },
+      "name": "Front staves"
+    },
+    {
+      "from": [
+        1,
+        2,
+        13.5
+      ],
+      "to": [
+        15,
+        13,
+        15
+      ],
+      "faces": {
+        "north": {
+          "texture": "#inner",
+          "uv": [
+            0,
+            0,
+            14,
+            11
+          ]
+        },
+        "south": {
+          "texture": "#staves",
+          "uv": [
+            0,
+            0,
+            14,
+            11
+          ]
+        },
+        "east": {
+          "texture": "#inner",
+          "uv": [
+            0,
+            0,
+            1.5,
+            11
+          ]
+        },
+        "west": {
+          "texture": "#inner",
+          "uv": [
+            0,
+            0,
+            1.5,
+            11
+          ]
+        },
+        "up": {
+          "texture": "#rim",
+          "uv": [
+            1,
+            1,
+            15,
+            2.5
+          ]
+        },
+        "down": {
+          "texture": "#staves",
+          "uv": [
+            0,
+            0,
+            14,
+            1.5
+          ]
+        }
+      },
+      "name": "Back staves"
+    },
+    {
+      "from": [
+        1,
+        2,
+        2.5
+      ],
+      "to": [
+        2.5,
+        13,
+        13.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#inner",
+          "uv": [
+            0,
+            0,
+            1.5,
+            11
+          ]
+        },
+        "south": {
+          "texture": "#inner",
+          "uv": [
+            0,
+            0,
+            1.5,
+            11
+          ]
+        },
+        "east": {
+          "texture": "#inner",
+          "uv": [
+            0,
+            0,
+            11.0,
+            11
+          ]
+        },
+        "west": {
+          "texture": "#staves",
+          "uv": [
+            0,
+            0,
+            11.0,
+            11
+          ]
+        },
+        "up": {
+          "texture": "#rim",
+          "uv": [
+            1,
+            1,
+            2.5,
+            12
+          ]
+        },
+        "down": {
+          "texture": "#staves",
+          "uv": [
+            0,
+            0,
+            1.5,
+            11.0
+          ]
+        }
+      },
+      "name": "Left staves"
+    },
+    {
+      "from": [
+        13.5,
+        2,
+        2.5
+      ],
+      "to": [
+        15,
+        13,
+        13.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#inner",
+          "uv": [
+            0,
+            0,
+            1.5,
+            11
+          ]
+        },
+        "south": {
+          "texture": "#inner",
+          "uv": [
+            0,
+            0,
+            1.5,
+            11
+          ]
+        },
+        "east": {
+          "texture": "#staves",
+          "uv": [
+            0,
+            0,
+            11.0,
+            11
+          ]
+        },
+        "west": {
+          "texture": "#inner",
+          "uv": [
+            0,
+            0,
+            11.0,
+            11
+          ]
+        },
+        "up": {
+          "texture": "#rim",
+          "uv": [
+            1,
+            1,
+            2.5,
+            12
+          ]
+        },
+        "down": {
+          "texture": "#staves",
+          "uv": [
+            0,
+            0,
+            1.5,
+            11.0
+          ]
+        }
+      },
+      "name": "Right staves"
+    },
+    {
+      "from": [
+        0.75,
+        3,
+        0.75
+      ],
+      "to": [
+        15.25,
+        4.5,
+        1
+      ],
+      "faces": {
+        "north": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            14.5,
+            2
+          ]
+        },
+        "east": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            0.25,
+            2
+          ]
+        },
+        "west": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            0.25,
+            2
+          ]
+        },
+        "up": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            14.5,
+            0.25
+          ]
+        },
+        "down": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            14.5,
+            0.25
+          ]
+        }
+      },
+      "name": "Forged hoop"
+    },
+    {
+      "from": [
+        0.75,
+        3,
+        15
+      ],
+      "to": [
+        15.25,
+        4.5,
+        15.25
+      ],
+      "faces": {
+        "south": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            14.5,
+            2
+          ]
+        },
+        "east": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            0.25,
+            2
+          ]
+        },
+        "west": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            0.25,
+            2
+          ]
+        },
+        "up": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            14.5,
+            0.25
+          ]
+        },
+        "down": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            14.5,
+            0.25
+          ]
+        }
+      },
+      "name": "Forged hoop"
+    },
+    {
+      "from": [
+        0.75,
+        3,
+        1
+      ],
+      "to": [
+        1,
+        4.5,
+        15
+      ],
+      "faces": {
+        "west": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            14,
+            2
+          ]
+        },
+        "up": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            0.25,
+            14
+          ]
+        },
+        "down": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            0.25,
+            14
+          ]
+        }
+      },
+      "name": "Forged hoop"
+    },
+    {
+      "from": [
+        15,
+        3,
+        1
+      ],
+      "to": [
+        15.25,
+        4.5,
+        15
+      ],
+      "faces": {
+        "east": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            14,
+            2
+          ]
+        },
+        "up": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            0.25,
+            14
+          ]
+        },
+        "down": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            0.25,
+            14
+          ]
+        }
+      },
+      "name": "Forged hoop"
+    },
+    {
+      "from": [
+        0.75,
+        9.5,
+        0.75
+      ],
+      "to": [
+        15.25,
+        11,
+        1
+      ],
+      "faces": {
+        "north": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            14.5,
+            2
+          ]
+        },
+        "east": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            0.25,
+            2
+          ]
+        },
+        "west": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            0.25,
+            2
+          ]
+        },
+        "up": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            14.5,
+            0.25
+          ]
+        },
+        "down": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            14.5,
+            0.25
+          ]
+        }
+      },
+      "name": "Forged hoop"
+    },
+    {
+      "from": [
+        0.75,
+        9.5,
+        15
+      ],
+      "to": [
+        15.25,
+        11,
+        15.25
+      ],
+      "faces": {
+        "south": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            14.5,
+            2
+          ]
+        },
+        "east": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            0.25,
+            2
+          ]
+        },
+        "west": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            0.25,
+            2
+          ]
+        },
+        "up": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            14.5,
+            0.25
+          ]
+        },
+        "down": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            14.5,
+            0.25
+          ]
+        }
+      },
+      "name": "Forged hoop"
+    },
+    {
+      "from": [
+        0.75,
+        9.5,
+        1
+      ],
+      "to": [
+        1,
+        11,
+        15
+      ],
+      "faces": {
+        "west": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            14,
+            2
+          ]
+        },
+        "up": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            0.25,
+            14
+          ]
+        },
+        "down": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            0.25,
+            14
+          ]
+        }
+      },
+      "name": "Forged hoop"
+    },
+    {
+      "from": [
+        15,
+        9.5,
+        1
+      ],
+      "to": [
+        15.25,
+        11,
+        15
+      ],
+      "faces": {
+        "east": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            14,
+            2
+          ]
+        },
+        "up": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            0.25,
+            14
+          ]
+        },
+        "down": {
+          "texture": "#band",
+          "uv": [
+            0,
+            0,
+            0.25,
+            14
+          ]
+        }
+      },
+      "name": "Forged hoop"
+    },
+    {
+      "name": "Hoop rivet",
+      "from": [
+        2,
+        3.35,
+        0.625
+      ],
+      "to": [
+        2.75,
+        4.1,
+        0.75
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Hoop rivet",
+      "from": [
+        2,
+        3.35,
+        15.25
+      ],
+      "to": [
+        2.75,
+        4.1,
+        15.375
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Hoop rivet",
+      "from": [
+        12.75,
+        3.35,
+        0.625
+      ],
+      "to": [
+        13.5,
+        4.1,
+        0.75
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Hoop rivet",
+      "from": [
+        12.75,
+        3.35,
+        15.25
+      ],
+      "to": [
+        13.5,
+        4.1,
+        15.375
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Hoop rivet",
+      "from": [
+        0.625,
+        3.35,
+        2
+      ],
+      "to": [
+        0.75,
+        4.1,
+        2.75
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Hoop rivet",
+      "from": [
+        15.25,
+        3.35,
+        2
+      ],
+      "to": [
+        15.375,
+        4.1,
+        2.75
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Hoop rivet",
+      "from": [
+        0.625,
+        3.35,
+        12.75
+      ],
+      "to": [
+        0.75,
+        4.1,
+        13.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Hoop rivet",
+      "from": [
+        15.25,
+        3.35,
+        12.75
+      ],
+      "to": [
+        15.375,
+        4.1,
+        13.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Hoop rivet",
+      "from": [
+        2,
+        9.85,
+        0.625
+      ],
+      "to": [
+        2.75,
+        10.6,
+        0.75
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Hoop rivet",
+      "from": [
+        2,
+        9.85,
+        15.25
+      ],
+      "to": [
+        2.75,
+        10.6,
+        15.375
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Hoop rivet",
+      "from": [
+        12.75,
+        9.85,
+        0.625
+      ],
+      "to": [
+        13.5,
+        10.6,
+        0.75
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Hoop rivet",
+      "from": [
+        12.75,
+        9.85,
+        15.25
+      ],
+      "to": [
+        13.5,
+        10.6,
+        15.375
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Hoop rivet",
+      "from": [
+        0.625,
+        9.85,
+        2
+      ],
+      "to": [
+        0.75,
+        10.6,
+        2.75
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Hoop rivet",
+      "from": [
+        15.25,
+        9.85,
+        2
+      ],
+      "to": [
+        15.375,
+        10.6,
+        2.75
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Hoop rivet",
+      "from": [
+        0.625,
+        9.85,
+        12.75
+      ],
+      "to": [
+        0.75,
+        10.6,
+        13.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Hoop rivet",
+      "from": [
+        15.25,
+        9.85,
+        12.75
+      ],
+      "to": [
+        15.375,
+        10.6,
+        13.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Handle upright",
+      "from": [
+        0,
+        7,
+        6
+      ],
+      "to": [
+        0.5,
+        9.5,
+        6.75
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Handle upright",
+      "from": [
+        0,
+        7,
+        9.25
+      ],
+      "to": [
+        0.5,
+        9.5,
+        10.0
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Handle grip",
+      "from": [
+        0,
+        6.75,
+        6
+      ],
+      "to": [
+        0.5,
+        7.5,
+        10
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            4,
+            8,
+            5
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            4,
+            8,
+            5
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            4,
+            8,
+            5
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            4,
+            8,
+            5
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            4,
+            8,
+            5
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            4,
+            8,
+            5
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Handle mounting pin",
+      "from": [
+        0,
+        9,
+        6
+      ],
+      "to": [
+        1,
+        9.75,
+        6.75
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Handle mounting pin",
+      "from": [
+        0,
+        9,
+        9.25
+      ],
+      "to": [
+        1,
+        9.75,
+        10.0
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Handle upright",
+      "from": [
+        15.5,
+        7,
+        6
+      ],
+      "to": [
+        16,
+        9.5,
+        6.75
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Handle upright",
+      "from": [
+        15.5,
+        7,
+        9.25
+      ],
+      "to": [
+        16,
+        9.5,
+        10.0
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            4,
+            5,
+            7
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Handle grip",
+      "from": [
+        15.5,
+        6.75,
+        6
+      ],
+      "to": [
+        16,
+        7.5,
+        10
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            4,
+            8,
+            5
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            4,
+            8,
+            5
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            4,
+            8,
+            5
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            4,
+            8,
+            5
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            4,
+            8,
+            5
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            4,
+            8,
+            5
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Handle mounting pin",
+      "from": [
+        15.25,
+        9,
+        6
+      ],
+      "to": [
+        16,
+        9.75,
+        6.75
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Handle mounting pin",
+      "from": [
+        15.25,
+        9,
+        9.25
+      ],
+      "to": [
+        16,
+        9.75,
+        10.0
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            7,
+            3
+          ],
+          "texture": "#details"
+        }
+      }
+    }
+  ],
+  "ambientocclusion": true
+}

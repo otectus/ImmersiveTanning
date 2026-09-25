@@ -1,0 +1,17 @@
+{
+  "values": [
+    "#minecraft:is_freezing",
+    {
+      "id": "#irons_spellbooks:ice_magic",
+      "required": false
+    },
+    {
+      "id": "iceandfire:dragon_ice",
+      "required": false
+    },
+    {
+      "id": "attributeslib:cold_damage",
+      "required": false
+    }
+  ]
+}

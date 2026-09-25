@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:leather_boots",
+          "functions": [
+            {
+              "function": "immersive_tanning:set_leatherwork",
+              "finish": "harness",
+              "integrity": 80,
+              "workmanship": {
+                "type": "minecraft:uniform",
+                "min": 88,
+                "max": 92
+              },
+              "trait": "immersive_tanning:tough"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

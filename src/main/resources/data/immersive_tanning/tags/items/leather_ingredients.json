@@ -1,0 +1,8 @@
+{
+  "values": [
+    "minecraft:leather",
+    "immersive_tanning:binding_leather",
+    "#forge:leather",
+    "#immersive_tanning:finished_leather"
+  ]
+}

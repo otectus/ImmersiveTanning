@@ -1,0 +1,21 @@
+{
+  "entities": [
+    "minecraft:cow",
+    "minecraft:mooshroom",
+    "minecraft:horse",
+    "minecraft:donkey",
+    "minecraft:mule",
+    "minecraft:llama",
+    "minecraft:trader_llama",
+    "minecraft:camel",
+    "minecraft:sniffer",
+    "#forge:cow",
+    "#forge:horses",
+    "#forge:donkey",
+    "#forge:mule",
+    "#forge:llamas",
+    "#forge:camel"
+  ],
+  "size": "large",
+  "count": 1
+}

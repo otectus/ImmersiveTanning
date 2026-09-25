@@ -1,0 +1,19 @@
+{
+  "type": "immersive_tanning:hide_mounting",
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "alexsmobsdelight"
+    }
+  ],
+  "ingredient": [
+    {
+      "item": "alexsmobsdelight:seal_leather_brown"
+    },
+    {
+      "item": "alexsmobsdelight:seal_leather_gray"
+    }
+  ],
+  "size": "medium",
+  "trait": "immersive_tanning:water_resistant"
+}

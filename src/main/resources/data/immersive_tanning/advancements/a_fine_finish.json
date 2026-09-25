@@ -1,0 +1,23 @@
+{
+  "parent": "immersive_tanning:steeped",
+  "display": {
+    "icon": {
+      "item": "immersive_tanning:harness_leather"
+    },
+    "title": {
+      "translate": "advancements.immersive_tanning.a_fine_finish.title"
+    },
+    "description": {
+      "translate": "advancements.immersive_tanning.a_fine_finish.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

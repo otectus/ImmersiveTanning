@@ -1,0 +1,10 @@
+{
+  "entities": [
+    "alexsmobs:elephant",
+    "alexsmobs:grizzly_bear"
+  ],
+  "size": "large",
+  "count": 1,
+  "trait": "immersive_tanning:tough",
+  "priority": 10
+}

@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "immersive_tanning:block/leatherworkers_bench"
+    },
+    "facing=east": {
+      "model": "immersive_tanning:block/leatherworkers_bench",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "immersive_tanning:block/leatherworkers_bench",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "immersive_tanning:block/leatherworkers_bench",
+      "y": 270
+    }
+  }
+}

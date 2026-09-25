@@ -1,0 +1,116 @@
+buildscript {
+    repositories { maven { url = 'https://maven.minecraftforge.net/' }; mavenCentral() }
+    dependencies { classpath 'org.spongepowered:mixingradle:0.7.38' }
+}
+plugins {
+    id 'eclipse'
+    id 'net.minecraftforge.gradle' version '6.0.54'
+}
+apply plugin: 'org.spongepowered.mixin'
+
+version = mod_version
+group = mod_group
+base { archivesName = mod_archive }
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+mixin {
+    add sourceSets.main, "${mod_id}.refmap.json"
+    config "${mod_id}.mixins.json"
+}
+
+sourceSets {
+    gameTest {
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
+    // Test-only agent mod (immersive_tanning_smoketest): drives a dev client into a fresh flat world, stages every
+    // station and screen, saves screenshots and smoketest-result.json, then quits. Used by runClient -PsmokeTest. Never shipped.
+    smokeTest {
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
+}
+
+minecraft {
+    mappings channel: 'official', version: minecraft_version
+    copyIdeResources = true
+    runs {
+        configureEach {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'info'
+            property 'forge.enabledGameTestNamespaces', mod_id
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            mods { immersive_tanning { source sourceSets.main } }
+        }
+        client {
+            if (project.hasProperty('smokeTest')) {
+                property 'immersive_tanning.smoketest.output', file('run/smoketest').absolutePath
+                mods { immersive_tanning_smoketest { source sourceSets.smokeTest } }
+            }
+        }
+        server { args '--nogui' }
+        gameTestServer {
+            workingDirectory project.file('run-gametest')
+            mods { immersive_tanning { source sourceSets.gameTest } }
+        }
+    }
+}
+
+repositories {
+    maven { url = 'https://maven.blamejared.com/' }
+    maven {
+        url = 'https://www.cursemaven.com'
+        content { includeGroup 'curse.maven' }
+    }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}")
+    compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}")
+    runtimeOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")
+    // Station overlays (compat/jade). Jade discovers the plugin by annotation; nothing references it otherwise.
+    compileOnly fg.deobf("curse.maven:jade-324717:${jade_curse_file}")
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+}
+
+tasks.named('processResources', ProcessResources).configure {
+    def properties = [mod_id: mod_id, mod_name: mod_name, mod_version: mod_version, mod_license: mod_license,
+                      mod_authors: mod_authors, minecraft_version_range: minecraft_version_range,
+                      forge_version_range: forge_version_range, loader_version_range: loader_version_range]
+    inputs.properties properties
+    filesMatching('META-INF/mods.toml') { expand properties }
+}
+
+tasks.named('processSmokeTestResources', ProcessResources).configure {
+    inputs.properties mod_version: mod_version, mod_license: mod_license
+    filesMatching('META-INF/mods.toml') { expand mod_version: mod_version, mod_license: mod_license }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+// The smoke-test agent as a reobfuscated jar, for tools/packtest/ultima_pack_test.py against the Ultima modpack. Never shipped.
+tasks.register('smokeTestJar', Jar) {
+    archiveClassifier = 'smoketest'
+    from sourceSets.smokeTest.output
+    exclude "${mod_id}.refmap.json"
+    manifest.attributes('Implementation-Title': 'immersive_tanning_smoketest', 'Implementation-Version': mod_version)
+}
+
+reobf {
+    // The agent calls inherited Minecraft methods on Immersive Tanning types, so reobf must see the main classes.
+    smokeTestJar { libraries.from(sourceSets.smokeTest.compileClasspath) }
+}
+
+tasks.named('smokeTestJar') { finalizedBy 'reobfSmokeTestJar' }
+
+tasks.named('jar', Jar).configure {
+    manifest.attributes('Specification-Title': mod_id, 'Specification-Vendor': mod_authors,
+                        'Specification-Version': '1', 'Implementation-Title': project.name,
+                        'Implementation-Version': mod_version, 'Implementation-Vendor': mod_authors,
+                        'MixinConfigs': "${mod_id}.mixins.json")
+    finalizedBy 'reobfJar'
+}

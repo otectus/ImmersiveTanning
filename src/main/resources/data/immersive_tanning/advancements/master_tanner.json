@@ -1,0 +1,23 @@
+{
+  "parent": "immersive_tanning:stitch_in_time",
+  "display": {
+    "icon": {
+      "item": "minecraft:leather_chestplate"
+    },
+    "title": {
+      "translate": "advancements.immersive_tanning.master_tanner.title"
+    },
+    "description": {
+      "translate": "advancements.immersive_tanning.master_tanner.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

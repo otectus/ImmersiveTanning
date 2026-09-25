@@ -1,0 +1,9 @@
+{
+  "entities": [
+    "dragnlivestock:caribou"
+  ],
+  "size": "large",
+  "count": 1,
+  "trait": "immersive_tanning:insulating",
+  "priority": 10
+}

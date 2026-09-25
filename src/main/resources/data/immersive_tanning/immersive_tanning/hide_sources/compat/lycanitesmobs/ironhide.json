@@ -1,0 +1,10 @@
+{
+  "entities": [
+    "lycanitesmobs:makaalpha",
+    "lycanitesmobs:zoataur"
+  ],
+  "size": "large",
+  "count": 2,
+  "trait": "immersive_tanning:ironhide",
+  "priority": 20
+}

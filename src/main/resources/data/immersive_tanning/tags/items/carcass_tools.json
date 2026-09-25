@@ -1,0 +1,12 @@
+{
+  "values": [
+    {
+      "id": "#forge:cleaver",
+      "required": false
+    },
+    {
+      "id": "#c:cleaver",
+      "required": false
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "entities": [
+    "alexsmobs:sea_bear"
+  ],
+  "size": "large",
+  "count": 1,
+  "trait": "immersive_tanning:tidehide",
+  "priority": 20
+}

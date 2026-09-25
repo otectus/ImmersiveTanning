@@ -1,0 +1,58 @@
+{
+  "values": [
+    "minecraft:saddle",
+    "minecraft:leather_horse_armor",
+    {
+      "id": "sophisticatedbackpacks:backpack",
+      "required": false
+    },
+    {
+      "id": "supplementaries:quiver",
+      "required": false
+    },
+    {
+      "id": "travelersbackpack:standard",
+      "required": false
+    },
+    {
+      "id": "quark:backpack",
+      "required": false
+    },
+    {
+      "id": "spartanweaponry:small_arrow_quiver",
+      "required": false
+    },
+    {
+      "id": "spartanweaponry:small_bolt_quiver",
+      "required": false
+    },
+    {
+      "id": "dragnlivestock:light_saddle",
+      "required": false
+    },
+    {
+      "id": "dragnlivestock:heavy_saddle",
+      "required": false
+    },
+    {
+      "id": "dragnlivestock:rodeo_harness",
+      "required": false
+    },
+    {
+      "id": "dragnlivestock:wagon_harness",
+      "required": false
+    },
+    {
+      "id": "alexsmobs:falconry_glove",
+      "required": false
+    },
+    {
+      "id": "alexsmobs:falconry_hood",
+      "required": false
+    },
+    {
+      "id": "dragnpets:leather_dog_armor",
+      "required": false
+    }
+  ]
+}

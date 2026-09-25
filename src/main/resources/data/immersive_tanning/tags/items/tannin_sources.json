@@ -1,0 +1,13 @@
+{
+  "values": [
+    "immersive_tanning:bark",
+    {
+      "id": "#forge:bark",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:tree_bark",
+      "required": false
+    }
+  ]
+}

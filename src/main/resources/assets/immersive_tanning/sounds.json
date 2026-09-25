@@ -1,0 +1,223 @@
+{
+  "block.tanners_rack.mount": {
+    "sounds": [
+      {
+        "name": "minecraft:item/armor/equip_leather1"
+      },
+      {
+        "name": "minecraft:item/armor/equip_leather2"
+      },
+      {
+        "name": "minecraft:item/armor/equip_leather3"
+      },
+      {
+        "name": "minecraft:item/armor/equip_leather4"
+      },
+      {
+        "name": "minecraft:item/armor/equip_leather5"
+      },
+      {
+        "name": "minecraft:item/armor/equip_leather6"
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.rack.mount"
+  },
+  "block.tanners_rack.scrape": {
+    "sounds": [
+      {
+        "name": "minecraft:item/brush/brushing_generic1"
+      },
+      {
+        "name": "minecraft:item/brush/brushing_generic2"
+      },
+      {
+        "name": "minecraft:item/brush/brushing_generic3"
+      },
+      {
+        "name": "minecraft:item/brush/brushing_generic4"
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.rack.scrape"
+  },
+  "block.tanners_rack.dried": {
+    "sounds": [
+      {
+        "name": "minecraft:step/cloth1",
+        "pitch": 0.8
+      },
+      {
+        "name": "minecraft:step/cloth2",
+        "pitch": 0.8
+      },
+      {
+        "name": "minecraft:step/cloth3",
+        "pitch": 0.8
+      },
+      {
+        "name": "minecraft:step/cloth4",
+        "pitch": 0.8
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.rack.dried"
+  },
+  "block.tanners_vat.fill": {
+    "sounds": [
+      {
+        "name": "minecraft:item/bucket/empty1"
+      },
+      {
+        "name": "minecraft:item/bucket/empty2"
+      },
+      {
+        "name": "minecraft:item/bucket/empty3"
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.vat.fill"
+  },
+  "block.tanners_vat.bark": {
+    "sounds": [
+      {
+        "name": "minecraft:item/bundle/insert1"
+      },
+      {
+        "name": "minecraft:item/bundle/insert2"
+      },
+      {
+        "name": "minecraft:item/bundle/insert3"
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.vat.bark"
+  },
+  "block.tanners_vat.hide": {
+    "sounds": [
+      {
+        "name": "minecraft:liquid/splash"
+      },
+      {
+        "name": "minecraft:liquid/splash2"
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.vat.hide"
+  },
+  "block.tanners_vat.bubble": {
+    "sounds": [
+      {
+        "name": "minecraft:ambient/underwater/additions/bubbles1"
+      },
+      {
+        "name": "minecraft:ambient/underwater/additions/bubbles2"
+      },
+      {
+        "name": "minecraft:ambient/underwater/additions/bubbles3"
+      },
+      {
+        "name": "minecraft:ambient/underwater/additions/bubbles4"
+      },
+      {
+        "name": "minecraft:ambient/underwater/additions/bubbles5"
+      },
+      {
+        "name": "minecraft:ambient/underwater/additions/bubbles6"
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.vat.bubble"
+  },
+  "block.leatherworkers_bench.cut": {
+    "sounds": [
+      {
+        "name": "minecraft:item/axe/scrape1"
+      },
+      {
+        "name": "minecraft:item/axe/scrape2"
+      },
+      {
+        "name": "minecraft:item/axe/scrape3"
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.bench.cut"
+  },
+  "block.leatherworkers_bench.stitch": {
+    "sounds": [
+      {
+        "name": "minecraft:entity/leashknot/place1"
+      },
+      {
+        "name": "minecraft:entity/leashknot/place2"
+      },
+      {
+        "name": "minecraft:entity/leashknot/place3"
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.bench.stitch"
+  },
+  "block.leatherworkers_bench.finish": {
+    "sounds": [
+      {
+        "name": "minecraft:item/armor/equip_leather1"
+      },
+      {
+        "name": "minecraft:item/armor/equip_leather2"
+      },
+      {
+        "name": "minecraft:item/armor/equip_leather3"
+      },
+      {
+        "name": "minecraft:item/armor/equip_leather4"
+      },
+      {
+        "name": "minecraft:item/armor/equip_leather5"
+      },
+      {
+        "name": "minecraft:item/armor/equip_leather6"
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.bench.finish"
+  },
+  "item.tanners_knife.strip": {
+    "sounds": [
+      {
+        "name": "minecraft:item/axe/strip1"
+      },
+      {
+        "name": "minecraft:item/axe/strip2"
+      },
+      {
+        "name": "minecraft:item/axe/strip3"
+      },
+      {
+        "name": "minecraft:item/axe/strip4"
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.knife.strip"
+  },
+  "item.awl.repair": {
+    "sounds": [
+      {
+        "name": "minecraft:entity/leashknot/place1"
+      },
+      {
+        "name": "minecraft:entity/leashknot/place2"
+      },
+      {
+        "name": "minecraft:entity/leashknot/place3"
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.awl.repair"
+  },
+  "ui.tanning.fail": {
+    "sounds": [
+      {
+        "name": "minecraft:random/click"
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.fail"
+  },
+  "ui.tanning.timing_cue": {
+    "sounds": [
+      {
+        "name": "minecraft:random/click"
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.cue"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "entities": [
+    "alexsmobs:seal",
+    "alexsmobs:caiman"
+  ],
+  "size": "medium",
+  "count": 1,
+  "trait": "immersive_tanning:water_resistant",
+  "priority": 10
+}

@@ -1,0 +1,15 @@
+{
+  "entities": [
+    "minecraft:pig",
+    "minecraft:sheep",
+    "minecraft:goat",
+    "minecraft:wolf",
+    "minecraft:panda",
+    "#forge:pig",
+    "#forge:sheep",
+    "#forge:goat",
+    "#forge:wolves"
+  ],
+  "size": "medium",
+  "count": 1
+}

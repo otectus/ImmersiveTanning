@@ -1,0 +1,194 @@
+{
+  "values": [
+    "minecraft:cow",
+    "minecraft:mooshroom",
+    "minecraft:horse",
+    "minecraft:donkey",
+    "minecraft:mule",
+    "minecraft:llama",
+    "minecraft:trader_llama",
+    "minecraft:camel",
+    "minecraft:polar_bear",
+    "minecraft:hoglin",
+    "minecraft:zoglin",
+    "minecraft:panda",
+    "minecraft:sniffer",
+    "minecraft:pig",
+    "minecraft:sheep",
+    "minecraft:goat",
+    "minecraft:wolf",
+    "minecraft:fox",
+    "minecraft:ocelot",
+    "minecraft:rabbit",
+    "minecraft:dolphin",
+    "minecraft:bat",
+    {
+      "id": "#forge:cow",
+      "required": false
+    },
+    {
+      "id": "#c:cow",
+      "required": false
+    },
+    {
+      "id": "#forge:brown_mooshroom",
+      "required": false
+    },
+    {
+      "id": "#c:brown_mooshroom",
+      "required": false
+    },
+    {
+      "id": "#forge:horse",
+      "required": false
+    },
+    {
+      "id": "#c:horse",
+      "required": false
+    },
+    {
+      "id": "#forge:donkey",
+      "required": false
+    },
+    {
+      "id": "#c:donkey",
+      "required": false
+    },
+    {
+      "id": "#forge:mule",
+      "required": false
+    },
+    {
+      "id": "#c:mule",
+      "required": false
+    },
+    {
+      "id": "#forge:llama",
+      "required": false
+    },
+    {
+      "id": "#c:llama",
+      "required": false
+    },
+    {
+      "id": "#forge:camel",
+      "required": false
+    },
+    {
+      "id": "#c:camel",
+      "required": false
+    },
+    {
+      "id": "#forge:polar_bear",
+      "required": false
+    },
+    {
+      "id": "#c:polar_bear",
+      "required": false
+    },
+    {
+      "id": "#forge:hoglin",
+      "required": false
+    },
+    {
+      "id": "#c:hoglin",
+      "required": false
+    },
+    {
+      "id": "#forge:zoglin",
+      "required": false
+    },
+    {
+      "id": "#c:zoglin",
+      "required": false
+    },
+    {
+      "id": "#forge:panda",
+      "required": false
+    },
+    {
+      "id": "#c:panda",
+      "required": false
+    },
+    {
+      "id": "#forge:sniffer",
+      "required": false
+    },
+    {
+      "id": "#c:sniffer",
+      "required": false
+    },
+    {
+      "id": "#forge:pig",
+      "required": false
+    },
+    {
+      "id": "#c:pig",
+      "required": false
+    },
+    {
+      "id": "#forge:sheep",
+      "required": false
+    },
+    {
+      "id": "#c:sheep",
+      "required": false
+    },
+    {
+      "id": "#forge:goat",
+      "required": false
+    },
+    {
+      "id": "#c:goat",
+      "required": false
+    },
+    {
+      "id": "#forge:wolf",
+      "required": false
+    },
+    {
+      "id": "#c:wolf",
+      "required": false
+    },
+    {
+      "id": "#forge:fox",
+      "required": false
+    },
+    {
+      "id": "#c:fox",
+      "required": false
+    },
+    {
+      "id": "#forge:ocelot",
+      "required": false
+    },
+    {
+      "id": "#c:ocelot",
+      "required": false
+    },
+    {
+      "id": "#forge:rabbit",
+      "required": false
+    },
+    {
+      "id": "#c:rabbit",
+      "required": false
+    },
+    {
+      "id": "#forge:dolphin",
+      "required": false
+    },
+    {
+      "id": "#c:dolphin",
+      "required": false
+    },
+    {
+      "id": "#forge:bat",
+      "required": false
+    },
+    {
+      "id": "#c:bat",
+      "required": false
+    }
+  ]
+}

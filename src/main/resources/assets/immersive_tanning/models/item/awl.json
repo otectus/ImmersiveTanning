@@ -1,0 +1,18 @@
+{
+  "loader": "forge:separate_transforms",
+  "gui_light": "front",
+  "textures": {
+    "particle": "immersive_tanning:item/awl"
+  },
+  "base": {
+    "parent": "immersive_tanning:item/awl_held"
+  },
+  "perspectives": {
+    "gui": {
+      "parent": "minecraft:item/generated",
+      "textures": {
+        "layer0": "immersive_tanning:item/awl"
+      }
+    }
+  }
+}

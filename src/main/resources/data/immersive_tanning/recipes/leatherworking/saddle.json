@@ -1,0 +1,22 @@
+{
+  "type": "immersive_tanning:leatherworking",
+  "leather": 5,
+  "result": {
+    "item": "minecraft:saddle"
+  },
+  "seam": "immersive_tanning:saddle",
+  "auxiliary": [
+    {
+      "ingredient": {
+        "tag": "forge:ingots/iron"
+      },
+      "count": 1
+    },
+    {
+      "ingredient": {
+        "item": "minecraft:string"
+      },
+      "count": 2
+    }
+  ]
+}

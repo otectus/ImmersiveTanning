@@ -1,0 +1,802 @@
+{
+  "textures": {
+    "particle": "immersive_tanning:item/tanners_knife",
+    "details": "immersive_tanning:block/tool_materials"
+  },
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [
+        0,
+        -35,
+        15
+      ],
+      "translation": [
+        0,
+        2,
+        0
+      ],
+      "scale": [
+        0.8,
+        0.8,
+        0.8
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        0,
+        35,
+        -15
+      ],
+      "translation": [
+        0,
+        2,
+        0
+      ],
+      "scale": [
+        0.8,
+        0.8,
+        0.8
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        -25,
+        20
+      ],
+      "translation": [
+        1,
+        2,
+        1
+      ],
+      "scale": [
+        0.8,
+        0.8,
+        0.8
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        25,
+        -20
+      ],
+      "translation": [
+        1,
+        2,
+        1
+      ],
+      "scale": [
+        0.8,
+        0.8,
+        0.8
+      ]
+    },
+    "ground": {
+      "rotation": [
+        0,
+        0,
+        45
+      ],
+      "translation": [
+        0,
+        3,
+        0
+      ],
+      "scale": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "fixed": {
+      "rotation": [
+        0,
+        0,
+        -45
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.8,
+        0.8,
+        0.8
+      ]
+    }
+  },
+  "elements": [
+    {
+      "name": "Pommel",
+      "from": [
+        7.25,
+        1,
+        7.25
+      ],
+      "to": [
+        8.75,
+        1.75,
+        8.75
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Turned wooden grip",
+      "from": [
+        7,
+        1.75,
+        7
+      ],
+      "to": [
+        9,
+        5.5,
+        9
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Shoulder",
+      "from": [
+        7.25,
+        5.5,
+        7.25
+      ],
+      "to": [
+        8.75,
+        6.25,
+        8.75
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Bronze ferrule",
+      "from": [
+        7.125,
+        6.25,
+        7.125
+      ],
+      "to": [
+        8.875,
+        7,
+        8.875
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            8,
+            4
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            8,
+            4
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            8,
+            4
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            8,
+            4
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            8,
+            4
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            8,
+            4
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Blade neck",
+      "from": [
+        7.5,
+        7,
+        7.625
+      ],
+      "to": [
+        8.5,
+        9,
+        8.375
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            2,
+            3
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            2,
+            3
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            2,
+            3
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            2,
+            3
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            2,
+            3
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            2,
+            3
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Blade heel",
+      "from": [
+        6,
+        8.5,
+        7.5
+      ],
+      "to": [
+        10,
+        10,
+        8.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            1,
+            4,
+            3
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            0,
+            1,
+            4,
+            3
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            0,
+            1,
+            4,
+            3
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            0,
+            1,
+            4,
+            3
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            0,
+            1,
+            4,
+            3
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            0,
+            1,
+            4,
+            3
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Half-moon blade",
+      "from": [
+        4.5,
+        10,
+        7.5
+      ],
+      "to": [
+        11.5,
+        12.5,
+        8.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            4,
+            3
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            4,
+            3
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            4,
+            3
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            4,
+            3
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            4,
+            3
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            4,
+            3
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Beveled cutting edge",
+      "from": [
+        4.5,
+        12.5,
+        7.75
+      ],
+      "to": [
+        11.5,
+        13.25,
+        8.25
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            4,
+            4,
+            5
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            0,
+            4,
+            4,
+            5
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            0,
+            4,
+            4,
+            5
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            0,
+            4,
+            4,
+            5
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            0,
+            4,
+            4,
+            5
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            0,
+            4,
+            4,
+            5
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Left blade bevel",
+      "from": [
+        3.75,
+        10.75,
+        7.75
+      ],
+      "to": [
+        4.5,
+        12.5,
+        8.25
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            4,
+            1,
+            6
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            0,
+            4,
+            1,
+            6
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            0,
+            4,
+            1,
+            6
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            0,
+            4,
+            1,
+            6
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            0,
+            4,
+            1,
+            6
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            0,
+            4,
+            1,
+            6
+          ],
+          "texture": "#details"
+        }
+      }
+    },
+    {
+      "name": "Right blade bevel",
+      "from": [
+        11.5,
+        10.75,
+        7.75
+      ],
+      "to": [
+        12.25,
+        12.5,
+        8.25
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            4,
+            1,
+            6
+          ],
+          "texture": "#details"
+        },
+        "south": {
+          "uv": [
+            0,
+            4,
+            1,
+            6
+          ],
+          "texture": "#details"
+        },
+        "east": {
+          "uv": [
+            0,
+            4,
+            1,
+            6
+          ],
+          "texture": "#details"
+        },
+        "west": {
+          "uv": [
+            0,
+            4,
+            1,
+            6
+          ],
+          "texture": "#details"
+        },
+        "up": {
+          "uv": [
+            0,
+            4,
+            1,
+            6
+          ],
+          "texture": "#details"
+        },
+        "down": {
+          "uv": [
+            0,
+            4,
+            1,
+            6
+          ],
+          "texture": "#details"
+        }
+      }
+    }
+  ]
+}

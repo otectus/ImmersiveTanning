@@ -1,0 +1,10 @@
+{
+  "entities": [
+    "alexsmobs:snow_leopard",
+    "alexsmobs:froststalker"
+  ],
+  "size": "medium",
+  "count": 1,
+  "trait": "immersive_tanning:insulating",
+  "priority": 10
+}

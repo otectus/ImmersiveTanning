@@ -1,0 +1,10 @@
+{
+  "entities": [
+    "alexsmobs:tasmanian_devil",
+    "alexsmobs:raccoon",
+    "alexsmobs:skunk"
+  ],
+  "size": "small",
+  "count": 1,
+  "priority": 5
+}

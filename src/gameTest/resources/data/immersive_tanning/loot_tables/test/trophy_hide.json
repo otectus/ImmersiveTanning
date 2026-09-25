@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "immersive_tanning:large_hide",
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": 2
+            },
+            {
+              "function": "immersive_tanning:set_hide_trait",
+              "trait": "immersive_tanning:insulating"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "type": "immersive_tanning:hide_mounting",
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "butchery"
+    }
+  ],
+  "ingredient": [
+    {
+      "item": "butchery:fox_skin"
+    }
+  ],
+  "size": "small"
+}

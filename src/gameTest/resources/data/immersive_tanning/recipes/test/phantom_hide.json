@@ -1,0 +1,8 @@
+{
+  "type": "immersive_tanning:hide_mounting",
+  "ingredient": {
+    "item": "minecraft:phantom_membrane"
+  },
+  "size": "small",
+  "trait": "immersive_tanning:lightweight"
+}

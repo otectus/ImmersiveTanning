@@ -1,0 +1,25 @@
+{
+  "values": [
+    "#minecraft:is_fire",
+    {
+      "id": "#irons_spellbooks:fire_magic",
+      "required": false
+    },
+    {
+      "id": "irons_spellbooks:fire_field",
+      "required": false
+    },
+    {
+      "id": "iceandfire:dragon_fire",
+      "required": false
+    },
+    {
+      "id": "attributeslib:fire_damage",
+      "required": false
+    },
+    {
+      "id": "cataclysm:flame_strike",
+      "required": false
+    }
+  ]
+}

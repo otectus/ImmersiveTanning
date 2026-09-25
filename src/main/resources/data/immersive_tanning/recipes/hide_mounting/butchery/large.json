@@ -1,0 +1,69 @@
+{
+  "type": "immersive_tanning:hide_mounting",
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "butchery"
+    }
+  ],
+  "ingredient": [
+    {
+      "item": "butchery:cow_skin"
+    },
+    {
+      "item": "butchery:red_mooshroom_skin"
+    },
+    {
+      "item": "butchery:brown_mooshroom_skin"
+    },
+    {
+      "item": "butchery:black_horse_skin"
+    },
+    {
+      "item": "butchery:brown_horse_skin"
+    },
+    {
+      "item": "butchery:chestnut_horse_skin"
+    },
+    {
+      "item": "butchery:creamy_horse_skin"
+    },
+    {
+      "item": "butchery:dark_brown_horse_skin"
+    },
+    {
+      "item": "butchery:gray_horse_skin"
+    },
+    {
+      "item": "butchery:white_horse_skin"
+    },
+    {
+      "item": "butchery:donkey_skin"
+    },
+    {
+      "item": "butchery:mule_skin"
+    },
+    {
+      "item": "butchery:brown_llama_skin"
+    },
+    {
+      "item": "butchery:creamy_llama_skin"
+    },
+    {
+      "item": "butchery:gray_llama_skin"
+    },
+    {
+      "item": "butchery:white_llama_skin"
+    },
+    {
+      "item": "butchery:camel_skin"
+    },
+    {
+      "item": "butchery:panda_skin"
+    },
+    {
+      "item": "butchery:sniffer_fur"
+    }
+  ],
+  "size": "large"
+}

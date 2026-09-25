@@ -1,0 +1,9 @@
+{
+  "entities": [
+    "lycanitesmobs:maka",
+    "lycanitesmobs:barghest"
+  ],
+  "size": "large",
+  "count": 1,
+  "priority": 5
+}

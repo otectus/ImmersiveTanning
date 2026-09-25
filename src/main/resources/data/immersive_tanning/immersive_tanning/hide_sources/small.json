@@ -1,0 +1,10 @@
+{
+  "entities": [
+    "minecraft:rabbit",
+    "minecraft:fox",
+    "#forge:rabbit",
+    "#forge:foxes"
+  ],
+  "size": "small",
+  "count": 1
+}

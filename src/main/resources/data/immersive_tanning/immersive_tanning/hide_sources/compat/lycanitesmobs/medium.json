@@ -1,0 +1,10 @@
+{
+  "entities": [
+    "lycanitesmobs:feradon",
+    "lycanitesmobs:brucha",
+    "lycanitesmobs:chupacabra"
+  ],
+  "size": "medium",
+  "count": 1,
+  "priority": 5
+}

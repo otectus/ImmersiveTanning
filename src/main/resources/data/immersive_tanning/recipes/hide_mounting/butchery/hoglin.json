@@ -1,0 +1,19 @@
+{
+  "type": "immersive_tanning:hide_mounting",
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "butchery"
+    }
+  ],
+  "ingredient": [
+    {
+      "item": "butchery:hoglin_skin"
+    },
+    {
+      "item": "butchery:zoglin_skin"
+    }
+  ],
+  "size": "large",
+  "trait": "immersive_tanning:tough"
+}

@@ -1,0 +1,23 @@
+{
+  "parent": "immersive_tanning:root",
+  "display": {
+    "icon": {
+      "item": "immersive_tanning:tanners_knife"
+    },
+    "title": {
+      "translate": "advancements.immersive_tanning.scraping_by.title"
+    },
+    "description": {
+      "translate": "advancements.immersive_tanning.scraping_by.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

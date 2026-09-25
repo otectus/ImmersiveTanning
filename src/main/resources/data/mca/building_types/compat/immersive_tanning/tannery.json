@@ -1,0 +1,9 @@
+{
+  "color": "ff8c6a3a",
+  "visible": true,
+  "priority": 3,
+  "blocks": {
+    "immersive_tanning:tanners_rack": 2,
+    "immersive_tanning:tanners_vat": 1
+  }
+}

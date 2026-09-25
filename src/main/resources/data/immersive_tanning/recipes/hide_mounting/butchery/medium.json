@@ -1,0 +1,27 @@
+{
+  "type": "immersive_tanning:hide_mounting",
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "butchery"
+    }
+  ],
+  "ingredient": [
+    {
+      "item": "butchery:pig_skin"
+    },
+    {
+      "item": "butchery:sheep_skin"
+    },
+    {
+      "item": "butchery:goat_skin"
+    },
+    {
+      "item": "butchery:wolf_pelt"
+    },
+    {
+      "item": "butchery:ocelot_skin"
+    }
+  ],
+  "size": "medium"
+}

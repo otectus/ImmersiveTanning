@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "tag": "immersive_tanning:finished_leather"
+    }
+  ],
+  "result": {
+    "item": "immersive_tanning:binding_leather"
+  }
+}

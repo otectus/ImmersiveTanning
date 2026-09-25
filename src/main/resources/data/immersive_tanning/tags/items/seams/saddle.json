@@ -1,0 +1,20 @@
+{
+  "values": [
+    {
+      "id": "dragnlivestock:light_saddle",
+      "required": false
+    },
+    {
+      "id": "dragnlivestock:heavy_saddle",
+      "required": false
+    },
+    {
+      "id": "dragnlivestock:rodeo_harness",
+      "required": false
+    },
+    {
+      "id": "dragnlivestock:wagon_harness",
+      "required": false
+    }
+  ]
+}
