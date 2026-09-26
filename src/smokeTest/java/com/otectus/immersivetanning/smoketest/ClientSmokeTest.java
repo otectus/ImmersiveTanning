@@ -85,6 +85,9 @@ public final class ClientSmokeTest {
     private static int worldTicks = -1;
     private static boolean worldRequested;
     private static boolean finished;
+    private static Integer originalGuiScale;
+    private static Boolean originalVsync;
+    private static Integer originalFrameLimit;
     private static int settledAt = -1;
     private static int quietTicks;
     private static BlockPos base;
@@ -95,7 +98,15 @@ public final class ClientSmokeTest {
         Minecraft mc = Minecraft.getInstance();
         try {
             if (mc.player == null || mc.level == null) {
-                if (mc.screen instanceof TitleScreen && ++titleTicks == 1) mc.getWindow().setWindowed(1280, 720);
+                if (mc.screen instanceof TitleScreen && ++titleTicks == 1) {
+                    originalVsync = mc.options.enableVsync().get();
+                    originalFrameLimit = mc.options.framerateLimit().get();
+                    mc.options.enableVsync().set(false);
+                    mc.options.framerateLimit().set(120);
+                    mc.getTutorial().setStep(net.minecraft.client.tutorial.TutorialSteps.NONE);
+                    mc.getToasts().clear();
+                    sizeWindow(mc);
+                }
                 if (mc.screen instanceof TitleScreen && titleTicks == 40 && !worldRequested) {
                     worldRequested = true;
                     checks.put("title_ms", Util.getMillis() - START);
@@ -252,10 +263,59 @@ public final class ClientSmokeTest {
                 mc.setScreen(new ArtSheet());
             }
             case 466 -> shot(mc, "smoketest_art");
-            case 478 -> finish(mc, allPassed(), "complete");
+            case 478 -> {
+                originalGuiScale = mc.options.guiScale().get();
+                mc.options.guiScale().set(3);
+                mc.resizeDisplay();
+                mc.setScreen(new FleshingScreen(new OpenFleshingPacket(999_002, BlockPos.ZERO, HideSize.LARGE, 42L, 25_000, 0, null)));
+            }
+            case 484 -> scrape(mc);
+            case 488 -> {
+                checks.put("scaled_fleshing_input", mc.screen != null && mc.screen.children().stream().anyMatch(child ->
+                        child instanceof net.minecraft.client.gui.components.Button button && button.visible && button.active
+                                && button.getMessage().getString().equals(Component.translatable("screen.immersive_tanning.fleshing.finish").getString())));
+            }
+            case 492 -> {
+                checks.put("gui_scale3_active", mc.getWindow().getGuiScale() == 3D);
+                shot(mc, "smoketest_fleshing_scale3");
+            }
+            case 496 -> mc.setScreen(new FinishSelectScreen(new OpenFinishPacket(BlockPos.ZERO,
+                    new HideData(HideSize.LARGE, 90, null), Finish.HARNESS)));
+            case 510 -> shot(mc, "smoketest_finish_scale3");
+            case 514 -> mc.setScreen(new LeatherworkScreen(benchOffer()));
+            case 528 -> shot(mc, "smoketest_bench_scale3");
+            case 536 -> finish(mc, allPassed(), "complete");
             default -> {
             }
         }
+    }
+
+    /**
+     * A landscape 1280x720 window. A tiling Wayland compositor ignores the requested size, so on Hyprland this
+     * client's own window (matched by process id) is floated and sized; nothing else on the desktop is touched.
+     */
+    private static void sizeWindow(Minecraft mc) {
+        mc.getWindow().setWindowed(1280, 720);
+        if (System.getenv("HYPRLAND_INSTANCE_SIGNATURE") == null) return;
+        String target = "window = \"pid:" + ProcessHandle.current().pid() + "\"";
+        Thread thread = new Thread(() -> {
+            // Hyprland 0.55+ takes Lua dispatchers.
+            for (String dispatch : new String[]{"hl.dsp.window.float({ action = \"enable\", " + target + " })",
+                    "hl.dsp.window.resize({ x = 1280, y = 720, " + target + " })", "hl.dsp.window.move({ x = 40, y = 40, " + target + " })"}) {
+                try {
+                    new ProcessBuilder("hyprctl", "dispatch", dispatch).redirectErrorStream(true).redirectOutput(ProcessBuilder.Redirect.DISCARD)
+                            .start().waitFor();
+                } catch (IOException e) {
+                    log("hyprctl unavailable: " + e.getMessage());
+                    return;
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+        }, "smoketest-window");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     private static void createWorld(Minecraft mc) {
@@ -409,6 +469,7 @@ public final class ClientSmokeTest {
     }
 
     private static void shot(Minecraft mc, String name) {
+        mc.getToasts().clear();
         Screenshot.grab(mc.gameDirectory, name + ".png", mc.getMainRenderTarget(), msg -> log("screenshot " + name));
     }
 
@@ -421,6 +482,9 @@ public final class ClientSmokeTest {
 
     private static void finish(Minecraft mc, boolean pass, String reason) {
         finished = true;
+        if (originalGuiScale != null) { mc.options.guiScale().set(originalGuiScale); mc.resizeDisplay(); }
+        if (originalVsync != null) mc.options.enableVsync().set(originalVsync);
+        if (originalFrameLimit != null) mc.options.framerateLimit().set(originalFrameLimit);
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("pass", pass);
         result.put("reason", reason);

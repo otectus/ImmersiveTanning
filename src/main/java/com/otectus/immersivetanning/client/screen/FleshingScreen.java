@@ -31,11 +31,11 @@ import java.util.List;
  * because scraping clean hide is overworking. The screen predicts the result locally with the same surface the server
  * replays; only the server's Integrity counts.
  */
-public class FleshingScreen extends Screen {
+public class FleshingScreen extends WorkshopScreen {
     private enum Stage { READY, PLAYING, WAITING, RESULT }
 
     private static final int MAX_WIDTH = 368;
-    private static final int MAX_HEIGHT = 236;
+    private static final int MAX_HEIGHT = 248;
     private static final int FLUSH_MS = 80;
     private static final float MIN_STEP_CELLS = 0.45F;
 
@@ -71,7 +71,7 @@ public class FleshingScreen extends Screen {
     private boolean closedByServer;
 
     public FleshingScreen(OpenFleshingPacket session) {
-        super(Component.translatable("screen.immersive_tanning.fleshing"));
+        super(Component.translatable("screen.immersive_tanning.fleshing"), 384, 264);
         this.session = session;
         this.surface = new FleshingSurface(session.size(), session.seed());
         this.clientStartMs = Util.getMillis() + session.readyDelayMs();
@@ -86,15 +86,15 @@ public class FleshingScreen extends Screen {
 
     /** The work area in screen coordinates: x, y, width, height. */
     public int[] workArea() {
-        return new int[]{areaX, areaY, areaW, areaH};
+        return screenArea(areaX, areaY, areaW, areaH);
     }
 
     @Override
-    protected void init() {
-        panelWidth = Math.min(MAX_WIDTH, width - 12);
-        panelHeight = Math.min(MAX_HEIGHT, height - 8);
-        left = (width - panelWidth) / 2;
-        top = (height - panelHeight) / 2;
+    protected void initPanel() {
+        panelWidth = Math.min(MAX_WIDTH, canvasWidth - 12);
+        panelHeight = Math.min(MAX_HEIGHT, canvasHeight - 8);
+        left = (canvasWidth - panelWidth) / 2;
+        top = (canvasHeight - panelHeight) / 2;
         int sidebar = Math.max(92, panelWidth / 4);
         int availableW = panelWidth - sidebar - 30;
         int availableH = panelHeight - 50;
@@ -111,9 +111,9 @@ public class FleshingScreen extends Screen {
         areaY = top + 28 + (availableH - areaH) / 2;
         int sx = areaX + areaW + 12;
         int sw = left + panelWidth - 12 - sx;
-        finishButton = TanningGui.button(sx, top + panelHeight - 50, sw, 18, Component.translatable("screen.immersive_tanning.fleshing.finish"), b -> finishEarly());
-        doneButton = TanningGui.button(sx, top + panelHeight - 28, sw, 18, Component.translatable("gui.done"), b -> onClose());
-        nextButton = TanningGui.button(sx, top + panelHeight - 50, sw, 18, Component.translatable("screen.immersive_tanning.fleshing.next_hide"), b -> nextHide());
+        finishButton = TanningGui.button(sx, top + panelHeight - 50, sw, 20, Component.translatable("screen.immersive_tanning.fleshing.finish"), b -> finishEarly());
+        doneButton = TanningGui.button(sx, top + panelHeight - 28, sw, 20, Component.translatable("gui.done"), b -> onClose());
+        nextButton = TanningGui.button(sx, top + panelHeight - 50, sw, 20, Component.translatable("screen.immersive_tanning.fleshing.next_hide"), b -> nextHide());
         addRenderableWidget(finishButton);
         addRenderableWidget(doneButton);
         addRenderableWidget(nextButton);
@@ -180,7 +180,7 @@ public class FleshingScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    protected boolean panelClicked(double mouseX, double mouseY, int button) {
         if (stage == Stage.PLAYING && button == 0 && inArea(mouseX, mouseY) && !timeUp()) {
             int[] q = toQuantized(mouseX, mouseY);
             flush(false);
@@ -192,11 +192,11 @@ public class FleshingScreen extends Screen {
             lastQY = q[1];
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.panelClicked(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+    protected boolean panelDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (pressing && stage == Stage.PLAYING && button == 0) {
             if (timeUp()) {
                 release();
@@ -226,16 +226,16 @@ public class FleshingScreen extends Screen {
             }
             return true;
         }
-        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        return super.panelDragged(mouseX, mouseY, button, dragX, dragY);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    protected boolean panelReleased(double mouseX, double mouseY, int button) {
         if (pressing && button == 0) {
             release();
             return true;
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.panelReleased(mouseX, mouseY, button);
     }
 
     private void release() {
@@ -324,15 +324,14 @@ public class FleshingScreen extends Screen {
     // ------------------------------------------------------------------ rendering
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        renderBackground(g);
+    protected void renderPanel(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         TanningGui.panel(g, left, top, panelWidth, panelHeight);
         Component title = Component.translatable("screen.immersive_tanning.fleshing.title", session.size().displayName());
         g.drawString(font, TanningGui.clipped(font, title, panelWidth - 24), left + 12, top + 10, TanningGui.TEXT_WARM, false);
         TanningGui.rule(g, left + 10, top + 21, panelWidth - 20);
 
         TanningGui.well(g, areaX - 3, areaY - 3, areaW + 6, areaH + 6);
-        g.fillGradient(areaX, areaY, areaX + areaW, areaY + areaH, 0xFF4A3322, 0xFF2E1F14);
+        g.fillGradient(areaX, areaY, areaX + areaW, areaY + areaH, StonebornGui.SURFACE, StonebornGui.INSET);
         // The beam under the hide.
         g.fillGradient(areaX, areaY + areaH / 2 - areaH / 10, areaX + areaW, areaY + areaH / 2 + areaH / 10, 0x405A3C26, 0x20000000);
         refreshTexture();
@@ -356,7 +355,7 @@ public class FleshingScreen extends Screen {
             case RESULT -> renderResult(g);
         }
         renderSidebar(g);
-        super.render(g, mouseX, mouseY, partialTick);
+        super.renderPanel(g, mouseX, mouseY, partialTick);
     }
 
     private void refreshTexture() {
@@ -471,10 +470,10 @@ public class FleshingScreen extends Screen {
         y += 44;
         if (session.trait() != null) {
             y += 10 * TanningGui.drawWrapped(g, font, Component.translatable("tooltip.immersive_tanning.trait", session.trait().displayName()),
-                    sx, y, sw, TanningGui.TEXT) + 4;
+                    sx, y, sw, TanningGui.TEXT, 2) + 4;
         }
         if (stage == Stage.PLAYING || stage == Stage.READY) {
-            TanningGui.drawWrapped(g, font, Component.translatable("screen.immersive_tanning.fleshing.hint"), sx, y, sw, TanningGui.TEXT_DIM);
+            TanningGui.drawWrapped(g, font, Component.translatable("screen.immersive_tanning.fleshing.hint"), sx, y, sw, TanningGui.TEXT_DIM, Math.max(0, (top + panelHeight - 58 - y) / 10));
         }
     }
 }

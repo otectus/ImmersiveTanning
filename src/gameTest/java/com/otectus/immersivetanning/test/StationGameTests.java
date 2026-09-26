@@ -254,6 +254,8 @@ public final class StationGameTests {
         LeatherworkData data = LeatherworkData.get(boots).orElse(null);
         h.assertTrue(data != null && data.finish() == Finish.SUPPLE && data.workmanship() == 100, "On-beat stitching gives Workmanship 100");
         h.assertTrue(data.integrity() == 85, "Integrity is the mean of the best leather cut (90,90,90,70), got " + data.integrity());
+        h.assertTrue(LeatherworkData.crafterId(boots).map(player.getUUID()::equals).orElse(false)
+                && com.otectus.immersivetanning.api.ImmersiveTanningAPI.playerMade(boots), "The bench records the player who stitched it");
         h.assertTrue(((net.minecraft.world.item.DyeableLeatherItem) Items.LEATHER_BOOTS).getColor(boots) == Finish.SUPPLE.leatherColor(),
                 "Leather armor takes the colour of its finish");
         h.assertTrue(findItem(player.getInventory(), ModItems.LEATHER_SCRAPS.get()).getCount() == 1, "Offcuts come back as scraps");

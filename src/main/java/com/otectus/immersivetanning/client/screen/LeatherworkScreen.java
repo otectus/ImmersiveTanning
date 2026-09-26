@@ -33,11 +33,11 @@ import java.util.List;
  * as it reaches each stitch hole. Misses leave uneven stitches but never abort the piece. Presses are predicted
  * locally and corrected by the server, which alone decides the Workmanship.
  */
-public class LeatherworkScreen extends Screen {
+public class LeatherworkScreen extends WorkshopScreen {
     private enum Stage { SELECT, WAITING, READY, PLAYING, RESULT }
 
-    private static final int MAX_WIDTH = 368;
-    private static final int MAX_HEIGHT = 240;
+    private static final int MAX_WIDTH = 384;
+    private static final int MAX_HEIGHT = 256;
     private static final int ROW_HEIGHT = 24;
 
     private final OpenBenchPacket offer;
@@ -63,7 +63,7 @@ public class LeatherworkScreen extends Screen {
     private boolean closedByServer;
 
     public LeatherworkScreen(OpenBenchPacket offer) {
-        super(Component.translatable("screen.immersive_tanning.bench"));
+        super(Component.translatable("screen.immersive_tanning.bench"), 400, 272);
         this.offer = offer;
     }
 
@@ -72,12 +72,12 @@ public class LeatherworkScreen extends Screen {
     }
 
     @Override
-    protected void init() {
-        panelWidth = Math.min(MAX_WIDTH, width - 12);
-        panelHeight = Math.min(MAX_HEIGHT, height - 8);
-        left = (width - panelWidth) / 2;
-        top = (height - panelHeight) / 2;
-        doneButton = TanningGui.button(left + panelWidth - 102, top + panelHeight - 28, 90, 18, Component.translatable("gui.done"), b -> onClose());
+    protected void initPanel() {
+        panelWidth = Math.min(MAX_WIDTH, canvasWidth - 12);
+        panelHeight = Math.min(MAX_HEIGHT, canvasHeight - 8);
+        left = (canvasWidth - panelWidth) / 2;
+        top = (canvasHeight - panelHeight) / 2;
+        doneButton = TanningGui.button(left + panelWidth - 102, top + panelHeight - 28, 90, 20, Component.translatable("gui.done"), b -> onClose());
         addRenderableWidget(doneButton);
         doneButton.visible = stage == Stage.RESULT;
     }
@@ -155,7 +155,7 @@ public class LeatherworkScreen extends Screen {
     // ------------------------------------------------------------------ input
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    protected boolean panelClicked(double mouseX, double mouseY, int button) {
         if (stage == Stage.SELECT && button == 0) {
             int row = rowAt(mouseX, mouseY);
             if (row >= 0) {
@@ -171,7 +171,7 @@ public class LeatherworkScreen extends Screen {
             press();
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.panelClicked(mouseX, mouseY, button);
     }
 
     @Override
@@ -188,12 +188,12 @@ public class LeatherworkScreen extends Screen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    protected boolean panelScrolled(double mouseX, double mouseY, double delta) {
         if (stage == Stage.SELECT) {
             scroll = Mth.clamp(scroll - (int) Math.signum(delta), 0, Math.max(0, offer.entries().size() - visibleRows()));
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        return super.panelScrolled(mouseX, mouseY, delta);
     }
 
     private void press() {
@@ -231,8 +231,7 @@ public class LeatherworkScreen extends Screen {
     // ------------------------------------------------------------------ rendering
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        renderBackground(g);
+    protected void renderPanel(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         TanningGui.panel(g, left, top, panelWidth, panelHeight);
         Component title = start == null ? Component.translatable("screen.immersive_tanning.bench.select")
                 : Component.translatable("screen.immersive_tanning.bench.title", start.finish().displayName(), start.result().getHoverName());
@@ -244,7 +243,7 @@ public class LeatherworkScreen extends Screen {
                     left + panelWidth / 2, top + panelHeight / 2, TanningGui.TEXT);
             case READY, PLAYING, RESULT -> renderStitching(g);
         }
-        super.render(g, mouseX, mouseY, partialTick);
+        super.renderPanel(g, mouseX, mouseY, partialTick);
     }
 
     // --- selection
@@ -276,17 +275,17 @@ public class LeatherworkScreen extends Screen {
             OpenBenchPacket.Entry e = entries.get(index);
             int ry = y + r * ROW_HEIGHT;
             TanningGui.well(g, x, ry, w, ROW_HEIGHT - 2);
-            if (index == hovered) g.fill(x + 1, ry + 1, x + w - 1, ry + ROW_HEIGHT - 3, 0x40F0B879);
+            if (index == hovered) g.fill(x + 1, ry + 1, x + w - 1, ry + ROW_HEIGHT - 3, StonebornGui.ROW_HOVER);
             g.fill(x + 1, ry + 1, x + 4, ry + ROW_HEIGHT - 3, 0xFF000000 | e.finish().leatherColor());
             g.renderItem(e.result(), x + 7, ry + 3);
             MutableComponent name = Component.translatable("screen.immersive_tanning.bench.entry", e.finish().displayName(), e.result().getHoverName());
             if (e.trait() != null) name = Component.translatable("screen.immersive_tanning.bench.entry_trait", name, e.trait().displayName());
-            int textW = w - 30 - auxWidth(e);
+            int textW = w - 36 - auxWidth(e);
             g.drawString(font, TanningGui.clipped(font, name, textW), x + 27, ry + 3, TanningGui.TEXT, false);
             Component detail = Component.translatable("screen.immersive_tanning.bench.detail", e.leather(), Scores.label(e.integrity()));
             g.drawString(font, TanningGui.clipped(font, detail, textW), x + 27, ry + 12, TanningGui.TEXT_DIM, false);
             int ax = x + w - 4 - auxWidth(e);
-            for (ItemStack aux : e.auxiliary()) {
+            for (ItemStack aux : e.auxiliary().stream().limit(4).toList()) {
                 g.renderItem(aux, ax, ry + 3);
                 g.renderItemDecorations(font, aux, ax, ry + 3);
                 ax += 18;
@@ -301,11 +300,18 @@ public class LeatherworkScreen extends Screen {
         if (hovered >= 0) {
             OpenBenchPacket.Entry e = entries.get(hovered);
             if (mouseX >= x + 7 && mouseX < x + 23) g.renderTooltip(font, e.result(), mouseX, mouseY);
+            else {
+                java.util.List<Component> details = new java.util.ArrayList<>();
+                details.add(Component.translatable("screen.immersive_tanning.bench.entry", e.finish().displayName(), e.result().getHoverName()));
+                if (e.trait() != null) details.add(Component.translatable("tooltip.immersive_tanning.trait", e.trait().displayName()));
+                for (ItemStack aux : e.auxiliary()) details.add(Component.translatable("screen.immersive_tanning.bench.component", aux.getCount(), aux.getHoverName()));
+                g.renderComponentTooltip(font, details, mouseX, mouseY);
+            }
         }
     }
 
     private int auxWidth(OpenBenchPacket.Entry e) {
-        return e.auxiliary().size() * 18;
+        return Math.min(4, e.auxiliary().size()) * 18;
     }
 
     // --- stitching
@@ -316,7 +322,7 @@ public class LeatherworkScreen extends Screen {
         int aw = areaW();
         int ah = areaH();
         TanningGui.well(g, ax - 2, ay - 2, aw + 4, ah + 4);
-        g.fillGradient(ax, ay, ax + aw, ay + ah, 0xFF3A2A1E, 0xFF231810);
+        g.fillGradient(ax, ay, ax + aw, ay + ah, StonebornGui.SURFACE, StonebornGui.INSET);
         StitchPattern pattern = start.pattern();
         Finish finish = start.finish();
         int leather = 0xFF000000 | finish.leatherColor();
@@ -483,7 +489,7 @@ public class LeatherworkScreen extends Screen {
         y += 38;
         TraitRef trait = start.trait();
         if (trait != null) {
-            y += 10 * TanningGui.drawWrapped(g, font, Component.translatable("tooltip.immersive_tanning.trait", trait.displayName()), sx, y, sw, TanningGui.TEXT) + 4;
+            y += 10 * TanningGui.drawWrapped(g, font, Component.translatable("tooltip.immersive_tanning.trait", trait.displayName()), sx, y, sw, TanningGui.TEXT, 2) + 4;
         }
         if (stage == Stage.PLAYING) {
             boolean feedback = lastAccuracy >= 0 && Util.getMillis() - lastFeedbackMs < 800;

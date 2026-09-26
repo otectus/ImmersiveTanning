@@ -414,6 +414,7 @@ public final class SessionManager {
         ItemStack result = session.recipe.result().copy();
         LeatherworkData data = new LeatherworkData(session.finish, session.integrity, workmanship, session.trait, player.getGameProfile().getName());
         data.apply(result);
+        LeatherworkData.stampCrafter(result, player.getUUID());
         if (result.getItem() instanceof DyeableLeatherItem dyeable) dyeable.setColor(result, session.finish.leatherColor());
         ItemHandlerHelper.giveItemToPlayer(player, result);
         int perOffcut = ServerConfig.get(ServerConfig.LEATHER_PER_OFFCUT);

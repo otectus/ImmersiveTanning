@@ -154,6 +154,7 @@
   "screen.immersive_tanning.bench.entry_trait": "%s (%s)",
   "screen.immersive_tanning.bench.detail": "%s leather, Integrity %s",
   "screen.immersive_tanning.bench.scroll": "%s-%s of %s (scroll)",
+  "screen.immersive_tanning.bench.component": "%s × %s",
   "screen.immersive_tanning.bench.choose": "Click a piece to cut it",
   "screen.immersive_tanning.bench.cutting": "Cutting the leather...",
   "screen.immersive_tanning.bench.title": "Stitching %s %s",

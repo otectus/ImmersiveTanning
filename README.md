@@ -198,8 +198,9 @@ follows the axe's mapping, so modded logs work.
 ## For mod developers
 
 `ImmersiveTanningAPI.registerTraitEffect(id, effect)` adds a trait effect that datapacks can name.
-`ImmersiveTanningAPI.leatherwork(stack)` reads a piece's finish, Integrity, Workmanship and trait. Everything else is
-implementation detail.
+`ImmersiveTanningAPI.leatherwork(stack)` reads a piece's finish, Integrity, Workmanship and trait.
+`ImmersiveTanningAPI.playerMade(stack)` tells whether a player stitched it at the bench (the bench records the player;
+villager and loot leatherwork carry only a crafter's name). Everything else is implementation detail.
 
 ## Building
 

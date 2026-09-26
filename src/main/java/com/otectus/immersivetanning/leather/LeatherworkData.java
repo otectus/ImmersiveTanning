@@ -8,6 +8,7 @@ import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * The long-term identity of a piece made at the Leatherworker's Bench: Integrity (how well the hide was prepared),
@@ -45,6 +46,22 @@ public record LeatherworkData(Finish finish, int integrity, int workmanship, @Nu
         if (finish == null) return Optional.empty();
         String crafter = root.contains("Crafter", Tag.TAG_STRING) ? root.getString("Crafter") : null;
         return Optional.of(new LeatherworkData(finish, root.getInt("Integrity"), root.getInt("Workmanship"), TraitRef.load(root), crafter));
+    }
+
+    /** The UUID of the player who stitched the piece at the bench. Villager and loot leatherwork have none. */
+    public static final String CRAFTER_UUID = "CrafterUUID";
+
+    /** Records the player who stitched the piece. Only the bench calls this; {@link #apply} leaves it in place. */
+    public static void stampCrafter(ItemStack stack, UUID player) {
+        stack.getOrCreateTagElement(ROOT).putUUID(CRAFTER_UUID, player);
+    }
+
+    /** The player who stitched the piece, when a player did. */
+    public static Optional<UUID> crafterId(ItemStack stack) {
+        CompoundTag tag = stack.getTag();
+        if (tag == null || !tag.contains(ROOT, Tag.TAG_COMPOUND)) return Optional.empty();
+        CompoundTag root = tag.getCompound(ROOT);
+        return root.hasUUID(CRAFTER_UUID) ? Optional.of(root.getUUID(CRAFTER_UUID)) : Optional.empty();
     }
 
     /** Writes this identity onto the stack, keeping any durability carry already accumulated. */

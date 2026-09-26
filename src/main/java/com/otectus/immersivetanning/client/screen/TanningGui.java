@@ -14,54 +14,21 @@ import net.minecraft.util.Mth;
 
 import java.util.List;
 
-/**
- * Shared look of the tannery screens: dark walnut panels, tanned-leather trim and parchment text. Everything is drawn
- * with fills, so the screens need no texture atlas and scale cleanly at every GUI scale.
- */
-public final class TanningGui {
-    public static final int WALNUT = 0xFF2A1D15;
-    public static final int WALNUT_DEEP = 0xFF1A120D;
-    public static final int WALNUT_LIGHT = 0xFF3C2A1E;
-    public static final int LEATHER = 0xFFB07A4A;
-    public static final int LEATHER_DARK = 0xFF6E4527;
-    public static final int STITCH = 0xFFE8D6B0;
-    public static final int TEXT = 0xFFF3E6CF;
-    public static final int TEXT_DIM = 0xFFBFAE95;
-    public static final int TEXT_WARM = 0xFFF0B879;
+/** Stoneborn workshop surfaces, with minigame colors and cues kept accessible. */
+public final class TanningGui extends StonebornGui {
+    public static final int WALNUT = SURFACE;
+    public static final int WALNUT_DEEP = INSET;
+    public static final int WALNUT_LIGHT = ROW_HOVER;
+    public static final int LEATHER = BRASS;
+    public static final int LEATHER_DARK = BORDER;
+    public static final int STITCH = TEXT;
 
-    /** A walnut panel with a stitched leather border. */
+    /** Masonry surround with solid fields behind controls and text. */
     public static void panel(GuiGraphics g, int x, int y, int w, int h) {
-        g.fill(x, y, x + w, y + h, WALNUT_DEEP);
-        g.fill(x + 1, y + 1, x + w - 1, y + h - 1, LEATHER_DARK);
-        g.fill(x + 3, y + 3, x + w - 3, y + h - 3, WALNUT);
-        g.fillGradient(x + 3, y + 3, x + w - 3, y + 24, WALNUT_LIGHT, WALNUT);
-        for (int i = x + 6; i < x + w - 6; i += 6) {
-            g.fill(i, y + 2, i + 3, y + 3, STITCH & 0x90FFFFFF);
-            g.fill(i, y + h - 3, i + 3, y + h - 2, STITCH & 0x90FFFFFF);
-        }
-        for (int j = y + 6; j < y + h - 6; j += 6) {
-            g.fill(x + 2, j, x + 3, j + 3, STITCH & 0x90FFFFFF);
-            g.fill(x + w - 3, j, x + w - 2, j + 3, STITCH & 0x90FFFFFF);
-        }
+        StonebornGui.panel(g, x, y, w, h);
+        g.fill(x + 6, y + 6, x + w - 6, y + 22, SURFACE);
+        g.fill(x + 8, y + 24, x + w - 8, y + h - 8, SURFACE);
     }
-
-    /** A recessed area. */
-    public static void well(GuiGraphics g, int x, int y, int w, int h) {
-        g.fill(x, y, x + w, y + h, 0xFF120C08);
-        g.fill(x + 1, y + 1, x + w, y + h, 0xFF4A3526);
-        g.fill(x + 1, y + 1, x + w - 1, y + h - 1, 0xFF20160F);
-    }
-
-    public static void rule(GuiGraphics g, int x, int y, int width) {
-        g.fill(x, y, x + width, y + 1, 0x80140E0A);
-        g.fill(x, y + 1, x + width, y + 2, 0x80B07A4A);
-    }
-
-    public static String clipped(Font font, Component text, int width) {
-        if (font.width(text) <= width) return text.getString();
-        return font.plainSubstrByWidth(text.getString(), Math.max(0, width - font.width("..."))) + "...";
-    }
-
     public static int drawWrapped(GuiGraphics g, Font font, Component text, int x, int y, int width, int color) {
         List<FormattedCharSequence> lines = font.split(text, width);
         for (int i = 0; i < lines.size(); i++) g.drawString(font, lines.get(i), x, y + i * 10, color, false);
@@ -171,28 +138,6 @@ public final class TanningGui {
             for (int i = 0; i + 1 < count; i += 2) {
                 g.fill(Math.round(xs[i]), y, Math.round(xs[i + 1]), y + 1, color);
             }
-        }
-    }
-
-    public static Button button(int x, int y, int width, int height, Component label, Button.OnPress onPress) {
-        return new LeatherButton(x, y, width, height, label, onPress);
-    }
-
-    private static final class LeatherButton extends Button {
-        private LeatherButton(int x, int y, int width, int height, Component label, OnPress onPress) {
-            super(x, y, width, height, label, onPress, DEFAULT_NARRATION);
-        }
-
-        @Override
-        protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-            int x = getX();
-            int y = getY();
-            boolean hot = active && isHoveredOrFocused();
-            g.fill(x, y, x + getWidth(), y + getHeight(), hot ? TEXT_WARM : LEATHER_DARK);
-            g.fill(x + 1, y + 1, x + getWidth() - 1, y + getHeight() - 1, !active ? WALNUT_DEEP : hot ? 0xFF7A5234 : 0xFF5A3C26);
-            for (int i = x + 3; i < x + getWidth() - 3; i += 4) g.fill(i, y + 2, i + 2, y + 3, 0x60E8D6B0);
-            Font font = Minecraft.getInstance().font;
-            g.drawCenteredString(font, clipped(font, getMessage(), getWidth() - 8), x + getWidth() / 2, y + (getHeight() - 8) / 2, active ? TEXT : TEXT_DIM);
         }
     }
 

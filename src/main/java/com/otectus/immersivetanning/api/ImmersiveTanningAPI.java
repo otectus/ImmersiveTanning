@@ -26,5 +26,13 @@ public final class ImmersiveTanningAPI {
         return LeatherworkData.get(stack);
     }
 
+    /**
+     * Whether a player stitched the piece at the Leatherworker's Bench. Villager and loot leatherwork also carry a
+     * crafter's name (an MCA villager's, for instance), so the name alone does not tell.
+     */
+    public static boolean playerMade(ItemStack stack) {
+        return LeatherworkData.crafterId(stack).isPresent();
+    }
+
     private ImmersiveTanningAPI() {}
 }
