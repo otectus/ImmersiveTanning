@@ -3,79 +3,34 @@ package com.otectus.immersivetanning.client.screen;
 import com.otectus.immersivetanning.config.ClientConfig;
 import com.otectus.immersivetanning.registry.ModSounds;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 
-import java.util.List;
+/**
+ * The minigames' own indicators, drawn inside the dark displays of the vanilla screens ({@link VanillaGui#display}):
+ * the hide, panels, seams, stitches, needle and knife, plus ratings and cue sounds. Colours honour the client's
+ * high-contrast and colorblind options, every state also has a label or a shape, and none of this changes scoring.
+ */
+public final class TanningGui {
+    /** Thread on the stitching board, and a stitch placed well. */
+    public static final int STITCH = 0xFFE5DFD2;
+    /** The frame a hide is laced into on the finish cards. */
+    public static final int FRAME = 0xFF6B4A2E;
 
-/** Stoneborn workshop surfaces, with minigame colors and cues kept accessible. */
-public final class TanningGui extends StonebornGui {
-    public static final int WALNUT = SURFACE;
-    public static final int WALNUT_DEEP = INSET;
-    public static final int WALNUT_LIGHT = ROW_HOVER;
-    public static final int LEATHER = BRASS;
-    public static final int LEATHER_DARK = BORDER;
-    public static final int STITCH = TEXT;
-
-    /** Masonry surround with solid fields behind controls and text. */
-    public static void panel(GuiGraphics g, int x, int y, int w, int h) {
-        StonebornGui.panel(g, x, y, w, h);
-        g.fill(x + 6, y + 6, x + w - 6, y + 22, SURFACE);
-        g.fill(x + 8, y + 24, x + w - 8, y + h - 8, SURFACE);
-    }
-    public static int drawWrapped(GuiGraphics g, Font font, Component text, int x, int y, int width, int color) {
-        List<FormattedCharSequence> lines = font.split(text, width);
-        for (int i = 0; i < lines.size(); i++) g.drawString(font, lines.get(i), x, y + i * 10, color, false);
-        return lines.size();
-    }
-
-    /** Wrapped text limited to {@code maxLines}; a clipped last line ends in "...". */
-    public static int drawWrapped(GuiGraphics g, Font font, Component text, int x, int y, int width, int color, int maxLines) {
-        List<FormattedCharSequence> lines = font.split(text, width);
-        int n = Math.min(lines.size(), Math.max(0, maxLines));
-        for (int i = 0; i < n; i++) {
-            if (i == n - 1 && n < lines.size()) {
-                StringBuilder sb = new StringBuilder();
-                lines.get(i).accept((index, style, cp) -> {
-                    sb.appendCodePoint(cp);
-                    return true;
-                });
-                String clipped = font.plainSubstrByWidth(sb.toString(), Math.max(0, width - font.width("..."))) + "...";
-                g.drawString(font, clipped, x, y + i * 10, color, false);
-            } else {
-                g.drawString(font, lines.get(i), x, y + i * 10, color, false);
-            }
-        }
-        return n;
-    }
-
-    public static int drawWrappedCentered(GuiGraphics g, Font font, Component text, int centerX, int y, int width, int color) {
-        List<FormattedCharSequence> lines = font.split(text, width);
-        for (int i = 0; i < lines.size(); i++) g.drawCenteredString(font, lines.get(i), centerX, y + i * 10, color);
-        return lines.size();
-    }
-
-    /** A horizontal bar, filled to {@code value} (0..1). */
+    /** A vanilla bar filled to {@code value} (0..1). */
     public static void bar(GuiGraphics g, int x, int y, int w, int h, float value, int color) {
-        well(g, x - 1, y - 1, w + 2, h + 2);
-        int filled = Math.round(w * Mth.clamp(value, 0F, 1F));
-        if (filled > 0) {
-            g.fill(x, y, x + filled, y + h, color);
-            if (h > 2) g.fill(x, y, x + filled, y + 1, lighten(color));
-        }
+        VanillaGui.bar(g, x, y, w, h, value, color);
     }
 
-    /** A time bar that warms from gold to red as it empties. */
+    /** The time left as a vanilla bar: amber while there is time, then red (orange when colorblind-safe). */
     public static void timeBar(GuiGraphics g, int x, int y, int w, int h, float remaining) {
-        int color = remaining > 0.25F ? 0xFFD9A441 : (ClientConfig.get(ClientConfig.COLORBLIND_SAFE_COLORS) ? 0xFFFF9F1C : 0xFFC8452F);
-        bar(g, x, y, w, h, remaining, color);
-        for (int i = 1; i < 4; i++) g.fill(x + w * i / 4, y, x + w * i / 4 + 1, y + h, 0x80302A24);
+        int color = remaining > 0.25F ? 0xFFE0A030 : (ClientConfig.get(ClientConfig.COLORBLIND_SAFE_COLORS) ? 0xFFFF9F1C : 0xFFD04030);
+        VanillaGui.bar(g, x, y, w, h, remaining, color);
+        // Quarter marks make the remaining time readable without colour.
+        for (int i = 1; i < 4; i++) g.fill(x + w * i / 4, y, x + w * i / 4 + 1, y + h, 0x80000000);
     }
 
     /** A straight line of 1px squares (every {@code step} pixels, dashed when step > 1). */
@@ -171,7 +126,7 @@ public final class TanningGui extends StonebornGui {
     /** Text colour of the grade a score falls in. */
     public static int qualityColor(int score) {
         Integer rgb = com.otectus.immersivetanning.leather.TanningQuality.fromScore(score).color().getColor();
-        return rgb == null ? TEXT : 0xFF000000 | rgb;
+        return rgb == null ? VanillaGui.DISPLAY_TEXT : 0xFF000000 | rgb;
     }
 
     public static float markerScale() {
@@ -180,13 +135,6 @@ public final class TanningGui extends StonebornGui {
 
     public static int withAlpha(int rgb, int alpha) {
         return (Mth.clamp(alpha, 0, 255) << 24) | (rgb & 0xFFFFFF);
-    }
-
-    public static int lighten(int argb) {
-        int r = Math.min(255, ((argb >> 16) & 255) + 40);
-        int gr = Math.min(255, ((argb >> 8) & 255) + 40);
-        int b = Math.min(255, (argb & 255) + 40);
-        return (argb & 0xFF000000) | (r << 16) | (gr << 8) | b;
     }
 
     public static int darken(int argb, float factor) {

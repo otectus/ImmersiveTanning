@@ -7,6 +7,7 @@ import com.otectus.immersivetanning.block.TannersRackBlock;
 import com.otectus.immersivetanning.blockentity.LeatherworkersBenchBlockEntity;
 import com.otectus.immersivetanning.blockentity.TannersRackBlockEntity;
 import com.otectus.immersivetanning.blockentity.TannersVatBlockEntity;
+import com.otectus.immersivetanning.client.StationNotices;
 import com.otectus.immersivetanning.client.compat.jei.LeatherworkingCategory;
 import com.otectus.immersivetanning.client.compat.jei.TanneryCategory;
 import com.otectus.immersivetanning.client.screen.FinishSelectScreen;
@@ -59,6 +60,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -116,6 +118,10 @@ public final class ClientSmokeTest {
             }
             worldTicks++;
             if (settledAt < 0 && !settle(mc)) return;
+            if (StoreScreenshots.enabled()) {
+                StoreScreenshots.tick(mc);
+                return;
+            }
             step(mc, worldTicks - settledAt + 40);
         } catch (Exception e) {
             ImmersiveTanning.LOGGER.error("SMOKETEST failed at world tick {}", worldTicks, e);
@@ -284,7 +290,61 @@ public final class ClientSmokeTest {
             case 510 -> shot(mc, "smoketest_finish_scale3");
             case 514 -> mc.setScreen(new LeatherworkScreen(benchOffer()));
             case 528 -> shot(mc, "smoketest_bench_scale3");
-            case 536 -> finish(mc, allPassed(), "complete");
+            // Vat messages through the real block interaction: they must stay on screen, several at once.
+            case 532 -> {
+                mc.setScreen(null);
+                vatNotices(mc);
+            }
+            case 540 -> {
+                checks.put("vat_notices_shown", StationNotices.count() >= 2);
+                shot(mc, "smoketest_vat_notices_scale3");
+            }
+            // One press, one stitch, through the real screen input path (generic seam: first hole at 900 ms, 520 ms beat).
+            case 544 -> {
+                mc.setScreen(new LeatherworkScreen(benchOffer()));
+                if (mc.screen instanceof LeatherworkScreen s) {
+                    s.onStart(new StitchStartPacket(999_002, SeamPatterns.get(ImmersiveTanning.id("generic")), 0,
+                            new ItemStack(Items.LEATHER_BOOTS), Finish.SUPPLE, null, 80));
+                }
+            }
+            case 546 -> {
+                if (mc.screen instanceof LeatherworkScreen s) {
+                    s.keyPressed(GLFW.GLFW_KEY_SPACE, 0, 0);
+                    s.keyReleased(GLFW.GLFW_KEY_SPACE, 0, 0);
+                    checks.put("stitch_early_press_explained_not_counted", s.run() != null && s.run().next() == 0 && s.tooEarlyShown());
+                }
+            }
+            case 548 -> shot(mc, "smoketest_bench_too_early");
+            case 562 -> {
+                if (mc.screen instanceof LeatherworkScreen s) {
+                    for (int i = 0; i < 4; i++) s.keyPressed(GLFW.GLFW_KEY_SPACE, 0, 0); // a press and three auto-repeats
+                    checks.put("stitch_held_space_counts_once", s.run().next() == 1 && s.run().accuracy(0) > 0F);
+                }
+            }
+            case 572 -> {
+                if (mc.screen instanceof LeatherworkScreen s) {
+                    s.keyReleased(GLFW.GLFW_KEY_SPACE, 0, 0);
+                    s.keyPressed(GLFW.GLFW_KEY_SPACE, 0, 0);
+                    s.mouseClicked(s.width / 2.0, s.height / 2.0, 0); // a click landing with the key press
+                    checks.put("stitch_click_with_space_counts_once", s.run().next() == 2 && !s.tooEarlyShown());
+                }
+            }
+            case 574 -> {
+                if (mc.screen instanceof LeatherworkScreen s) {
+                    s.onResult(new SessionResultPacket(999_002, TanningSession.Kind.STITCHING, 75, 0F, 0F, 0F, false));
+                    s.keyPressed(GLFW.GLFW_KEY_SPACE, 0, 0); // Space is still held from the last stitch
+                }
+            }
+            case 576 -> checks.put("stitch_result_survives_held_space", mc.screen instanceof LeatherworkScreen);
+            case 577 -> {
+                if (mc.screen instanceof LeatherworkScreen s) s.keyReleased(GLFW.GLFW_KEY_SPACE, 0, 0);
+            }
+            case 578 -> shot(mc, "smoketest_bench_result_held_space");
+            case 592 -> {
+                if (mc.screen instanceof LeatherworkScreen s) s.keyPressed(GLFW.GLFW_KEY_SPACE, 0, 0);
+            }
+            case 594 -> checks.put("stitch_result_closes_on_fresh_press", !(mc.screen instanceof LeatherworkScreen));
+            case 598 -> finish(mc, allPassed(), "complete");
             default -> {
             }
         }
@@ -427,6 +487,30 @@ public final class ClientSmokeTest {
 
     private static void place(ServerLevel level, BlockPos pos, BlockState state) {
         level.setBlockAndUpdate(pos, state);
+    }
+
+    /** The player fills the empty vat, adds one bark, a large hide (waits for a second bark), then a small hide (starts). */
+    private static void vatNotices(Minecraft mc) {
+        IntegratedServer server = mc.getSingleplayerServer();
+        if (server == null || base == null) return;
+        server.execute(() -> {
+            ServerLevel level = server.overworld();
+            ServerPlayer player = server.getPlayerList().getPlayers().get(0);
+            player.setGameMode(GameType.CREATIVE);
+            player.teleportTo(level, base.getX() + 8.5, base.getY(), base.getZ() + 0.5, 180F, 40F);
+            BlockPos vat = base.offset(8, 0, -2);
+            ItemStack[] steps = {new ItemStack(Items.WATER_BUCKET), new ItemStack(ModItems.BARK.get()),
+                    ModItems.SCRAPED_HIDE.get().create(HideSize.LARGE, 80, null), ModItems.SCRAPED_HIDE.get().create(HideSize.SMALL, 80, null)};
+            for (ItemStack held : steps) {
+                player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, held);
+                level.getBlockState(vat).use(level, player, net.minecraft.world.InteractionHand.MAIN_HAND,
+                        new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(vat), Direction.UP, vat, false));
+            }
+            player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+            TannersVatBlockEntity be = (TannersVatBlockEntity) level.getBlockEntity(vat);
+            checks.put("vat_small_starts_past_waiting_large", be.slots().size() == 2 && !be.slots().get(0).started()
+                    && be.slots().get(1).started() && be.tannin() == 0);
+        });
     }
 
     private static OpenBenchPacket benchOffer() {

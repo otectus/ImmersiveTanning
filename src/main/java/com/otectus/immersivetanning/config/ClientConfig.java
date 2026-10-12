@@ -16,6 +16,9 @@ public final class ClientConfig {
     public static final ForgeConfigSpec.BooleanValue LARGE_MINIGAME_MARKERS;
     public static final ForgeConfigSpec.BooleanValue TIMING_CUE_SOUNDS;
     public static final ForgeConfigSpec.DoubleValue SOUND_CUE_VOLUME;
+    public static final ForgeConfigSpec.IntValue FEEDBACK_LABEL_MS;
+    public static final ForgeConfigSpec.BooleanValue STATION_NOTICES;
+    public static final ForgeConfigSpec.IntValue NOTICE_SECONDS;
 
     static {
         ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
@@ -34,6 +37,14 @@ public final class ClientConfig {
                 .define("largeMinigameMarkers", false);
         TIMING_CUE_SOUNDS = b.define("timingCueSounds", true);
         SOUND_CUE_VOLUME = b.defineInRange("soundCueVolume", 0.8, 0.0, 1.0);
+        FEEDBACK_LABEL_MS = b.comment("How long the stitching Perfect/Good/Rough/Miss or \"too early\" label stays readable, in milliseconds.",
+                        "A newer result always replaces it at once.")
+                .defineInRange("feedbackLabelMs", 2500, 500, 10000);
+        STATION_NOTICES = b.comment("Show station messages (vat status, what a hide waits for, errors) above the hotbar, where they stay",
+                        "for noticeSeconds and several can show at once. Off: the vanilla action bar, which the next message replaces.")
+                .define("stationNotices", true);
+        NOTICE_SECONDS = b.comment("How long a station message stays above the hotbar.")
+                .defineInRange("noticeSeconds", 8, 2, 60);
         b.pop();
         SPEC = b.build();
     }
@@ -43,6 +54,10 @@ public final class ClientConfig {
     }
 
     public static double get(ForgeConfigSpec.DoubleValue value) {
+        return SPEC.isLoaded() ? value.get() : value.getDefault();
+    }
+
+    public static int get(ForgeConfigSpec.IntValue value) {
         return SPEC.isLoaded() ? value.get() : value.getDefault();
     }
 

@@ -14,10 +14,12 @@ import com.otectus.immersivetanning.util.StationEffects;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
+import net.minecraft.util.StringUtil;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -42,11 +44,13 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.items.ItemHandlerHelper;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * The Tanner's Vat: a hooped wooden tub. Fill it with a water bucket, charge it with bark, sink a stack of scraped
- * hides into it, and come back for them once they are tanned. It has no screen; its state is visible in the liquor.
+ * hides into it, and come back for them once they are tanned. It has no screen; its state is visible in the liquor,
+ * and every interaction (or an empty hand) reports what is tanning, what waits and exactly what it waits for.
  */
 public class TannersVatBlock extends BaseEntityBlock {
     private static final VoxelShape SHAPE = Shapes.join(
@@ -123,6 +127,7 @@ public class TannersVatBlock extends BaseEntityBlock {
             if (vat.fillWater()) {
                 if (!player.getAbilities().instabuild) player.setItemInHand(hand, ItemUtils.createFilledResult(held, player, new ItemStack(Items.BUCKET)));
                 level.playSound(null, pos, ModSounds.VAT_FILL.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
+                status(player, vat);
             } else {
                 Feedback.info(player, "vat_already_full");
             }
@@ -132,24 +137,26 @@ public class TannersVatBlock extends BaseEntityBlock {
             vat.drainWater();
             if (!player.getAbilities().instabuild) player.setItemInHand(hand, ItemUtils.createFilledResult(held, player, new ItemStack(Items.WATER_BUCKET)));
             level.playSound(null, pos, ModSounds.VAT_FILL.get(), SoundSource.BLOCKS, 1.0F, 0.8F);
-            Feedback.info(player, "vat_drained");
+            int paused = vat.pausedCount();
+            if (paused > 0) Feedback.warn(player, Feedback.message("vat_drained_paused", paused));
+            else Feedback.info(player, "vat_drained");
             return;
         }
         if (held.is(ModTags.TANNIN_SOURCES)) {
             int taken = vat.addTannin(held.getCount());
             if (taken == 0) {
-                Feedback.info(player, "vat_tannin_full");
+                Feedback.info(player, "vat_tannin_full", vat.maxTannin());
                 return;
             }
             if (!player.getAbilities().instabuild) held.shrink(taken);
             level.playSound(null, pos, ModSounds.VAT_BARK.get(), SoundSource.BLOCKS, 0.8F, 0.9F);
-            if (!vat.hasWater()) Feedback.info(player, "vat_needs_water");
-            else status(player, vat);
+            status(player, vat);
             return;
         }
         if (held.is(ModItems.SCRAPED_HIDE.get())) {
+            int offered = held.getCount();
             int added = 0;
-            while (added < held.getCount() && vat.insertHide(ProcessedHideItem.data(held))) added++;
+            while (added < offered && vat.insertHide(ProcessedHideItem.data(held))) added++;
             if (added == 0) {
                 Feedback.fail(player, "vat_full");
                 return;
@@ -157,9 +164,8 @@ public class TannersVatBlock extends BaseEntityBlock {
             if (!player.getAbilities().instabuild) held.shrink(added);
             level.playSound(null, pos, ModSounds.VAT_HIDE.get(), SoundSource.BLOCKS, 0.9F, 1.0F);
             StationEffects.send((ServerLevel) level, pos, StationEffects.SPLASH, added / 4F);
-            if (!vat.hasWater()) Feedback.info(player, "vat_needs_water");
-            else if (vat.waitingCount() > 0) Feedback.info(player, "vat_needs_tannin");
-            else status(player, vat);
+            status(player, vat);
+            if (added < offered) Feedback.info(player, "vat_full");
             return;
         }
         if (HideItems.isMountable(level, held)) {
@@ -186,19 +192,41 @@ public class TannersVatBlock extends BaseEntityBlock {
         status(player, vat);
     }
 
+
+    /** The full state (water, tannin, hides by stage), and the reason anything waits, as its own highlighted notice. */
     private static void status(ServerPlayer player, TannersVatBlockEntity vat) {
-        Component water = Component.translatable(vat.hasWater() ? "message.immersive_tanning.vat_water_yes" : "message.immersive_tanning.vat_water_no");
-        float progress = 0F;
-        int started = 0;
-        long now = player.level().getGameTime();
-        for (TannersVatBlockEntity.Slot s : vat.slots()) {
-            if (s.started()) {
-                progress += s.progress(now);
-                started++;
-            }
+        Feedback.info(player, statusLine(vat));
+        Component reason = waitReason(vat);
+        if (reason != null) Feedback.warn(player, reason);
+    }
+
+    public static Component statusLine(TannersVatBlockEntity vat) {
+        Component water = Feedback.message(vat.hasWater() ? "vat_water_yes" : "vat_water_no");
+        Component head = Feedback.message("vat_status", water, vat.tannin(), vat.maxTannin(), vat.slots().size(), vat.capacity());
+        List<Component> parts = new ArrayList<>();
+        int steeping = vat.steepingCount();
+        if (steeping > 0) parts.add(Feedback.message("vat_status_tanning", steeping, StringUtil.formatTickDuration((int) vat.nextReadyTicks())));
+        if (vat.pausedCount() > 0) parts.add(Feedback.message("vat_status_paused", vat.pausedCount()));
+        if (vat.waitingCount() > 0) parts.add(Feedback.message("vat_status_waiting", vat.waitingCount()));
+        if (vat.finishedCount() > 0) parts.add(Feedback.message("vat_status_ready", vat.finishedCount()));
+        if (parts.isEmpty()) return head;
+        return Feedback.message("vat_status_line", head, ComponentUtils.formatList(parts, Component.literal(", ")));
+    }
+
+    /** Why hides are not tanning, with the next step, or null when nothing waits. */
+    @Nullable
+    public static Component waitReason(TannersVatBlockEntity vat) {
+        int waiting = vat.waitingCount();
+        int paused = vat.pausedCount();
+        if (!vat.hasWater()) {
+            if (paused > 0) return Feedback.message("vat_needs_water_paused");
+            return waiting > 0 ? Feedback.message("vat_needs_water") : null;
         }
-        int percent = started == 0 ? 0 : Math.round(100F * progress / started);
-        Feedback.info(player, "vat_status", water, vat.tannin(), vat.slots().size(), vat.capacity(), percent);
+        if (waiting > 0) {
+            int missing = vat.missingTannin();
+            return missing > 0 ? Feedback.message("vat_needs_tannin", missing) : null;
+        }
+        return null;
     }
 
     @Override

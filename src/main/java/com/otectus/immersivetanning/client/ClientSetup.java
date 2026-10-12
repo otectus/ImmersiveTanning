@@ -18,6 +18,7 @@ public final class ClientSetup {
     public static void init(IEventBus modBus) {
         modBus.addListener(ClientSetup::onClientSetup);
         modBus.addListener(ClientSetup::onRegisterRenderers);
+        modBus.addListener(StationNotices::register);
     }
 
     private static void onClientSetup(FMLClientSetupEvent event) {

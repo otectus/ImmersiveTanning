@@ -16,6 +16,8 @@ sys.path.insert(0, str(ROOT / 'art'))
 import tanning_art  # noqa: E402
 
 TEXTURES = ROOT / 'src/main/resources/assets/immersive_tanning/textures'
+# Textures of the retired Stoneborn GUI. The screens draw Minecraft's own GUI textures now; these must never come back.
+RETIRED = ['gui/stone.png', 'gui/slot.png']
 
 
 def main():
@@ -44,6 +46,8 @@ def main():
             path = TEXTURES / name
             path.parent.mkdir(parents=True, exist_ok=True)
             im.save(path)
+        for name in RETIRED:
+            (TEXTURES / name).unlink(missing_ok=True)
         print(f'wrote {len(art)} textures')
         return 0
 
@@ -57,6 +61,9 @@ def main():
         # RGBA getbbox() defaults to alpha-only: equal alpha could hide changed RGB pixels.
         if on_disk.size != im.size or on_disk.tobytes() != im.tobytes():
             differing.append(f'differs {name}')
+    for name in RETIRED:
+        if (TEXTURES / name).exists():
+            differing.append(f'retired {name}')
     for line in differing:
         print(line)
     print('PASS' if not differing else f'FAIL - {len(differing)} textures differ from art/tanning_art.py')

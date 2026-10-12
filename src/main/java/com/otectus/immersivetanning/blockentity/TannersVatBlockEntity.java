@@ -36,9 +36,17 @@ import java.util.List;
  * of water, one bark per tannin charge, and each hide spends the charges its size needs when it starts. Hides progress
  * independently along world time, so a batch can be topped up at any moment and keeps working while nobody is near.
  * Automation may supply water, bark and scraped hides and take tanned hides out; it never finishes or flesh hides.
+ *
+ * <p>Every change to water, tannin or hides runs one transition ({@link #startWaiting}): waiting hides start in
+ * insertion order, each paying its own cost once, and a hide the tannin cannot pay for yet does not hold back a
+ * cheaper one behind it. Draining the liquor pauses started hides where they are; a refill resumes them for their
+ * remaining time without charging them again.</p>
  */
 public class TannersVatBlockEntity extends StationBlockEntity {
     public static final int WATER_CAPACITY = 1000;
+
+    /** Save format: 2 added paused hides (a drained vat used to keep its clock running). */
+    private static final int SAVE_VERSION = 2;
 
     /** One hide in the vat. It waits (not started) until water and tannin let it begin. */
     public static final class Slot {
@@ -47,6 +55,8 @@ public class TannersVatBlockEntity extends StationBlockEntity {
         long start;
         int duration;
         boolean announced;
+        /** Ticks it had steeped when the liquor was drained, or -1 while it steeps (or has not started). */
+        long pausedElapsed = -1;
 
         Slot(HideData hide) {
             this.hide = hide;
@@ -54,16 +64,33 @@ public class TannersVatBlockEntity extends StationBlockEntity {
 
         public HideData hide() { return hide; }
         public boolean started() { return started; }
+        public boolean paused() { return started && pausedElapsed >= 0; }
+        public int duration() { return duration; }
 
         public float progress(long gameTime) {
             if (!started || duration <= 0) return 0F;
-            return Math.min(1F, Math.max(0F, (gameTime - start) / (float) duration));
+            long elapsed = pausedElapsed >= 0 ? pausedElapsed : gameTime - start;
+            return Math.min(1F, Math.max(0F, elapsed / (float) duration));
+        }
+
+        public boolean finished(long gameTime) {
+            return started && progress(gameTime) >= 1F;
+        }
+
+        /** Ticks until it is tanned while it keeps steeping. */
+        public long remainingTicks(long gameTime) {
+            if (!started) return duration;
+            long elapsed = pausedElapsed >= 0 ? pausedElapsed : gameTime - start;
+            return Math.max(0L, duration - elapsed);
         }
     }
 
     private final List<Slot> slots = new ArrayList<>();
     private int water;
     private int tannin;
+    /** Set by {@link #load}: the first server tick re-runs the start transition (and migrates older dry vats). */
+    private boolean restoreCheck;
+    private boolean migrateDryVat;
 
     private final LazyOptional<IItemHandler> items = LazyOptional.of(AutomationItems::new);
     private final LazyOptional<IFluidHandler> fluids = LazyOptional.of(AutomationWater::new);
@@ -77,13 +104,21 @@ public class TannersVatBlockEntity extends StationBlockEntity {
     public int tannin() { return tannin; }
     public boolean hasWater() { return water >= WATER_CAPACITY; }
     public int capacity() { return ServerConfig.get(ServerConfig.VAT_CAPACITY); }
-    public int maxTannin() { return ServerConfig.get(ServerConfig.VAT_MAX_TANNIN); }
+    public int maxTannin() { return effectiveMaxTannin(); }
     public boolean isFull() { return slots.size() >= capacity(); }
+
+    /**
+     * The configured tannin limit, raised to the largest hide's cost: a limit below it (older configs allowed
+     * {@code vatMaxTannin = 1}) would leave large hides waiting forever.
+     */
+    public static int effectiveMaxTannin() {
+        return Math.max(ServerConfig.get(ServerConfig.VAT_MAX_TANNIN), HideSize.maxTannin());
+    }
 
     public int finishedCount() {
         long now = gameTime();
         int n = 0;
-        for (Slot s : slots) if (s.started() && s.progress(now) >= 1F) n++;
+        for (Slot s : slots) if (s.finished(now)) n++;
         return n;
     }
 
@@ -93,8 +128,42 @@ public class TannersVatBlockEntity extends StationBlockEntity {
         return n;
     }
 
+    /** Started hides whose clock is running (water in the vat, not yet tanned). */
+    public int steepingCount() {
+        long now = gameTime();
+        int n = 0;
+        for (Slot s : slots) if (s.started() && !s.paused() && !s.finished(now)) n++;
+        return n;
+    }
+
+    public int pausedCount() {
+        int n = 0;
+        for (Slot s : slots) if (s.paused()) n++;
+        return n;
+    }
+
+    /** Tannin charges still missing to start every waiting hide (0 when none waits or water is what is missing). */
+    public int missingTannin() {
+        int need = 0;
+        for (Slot s : slots) if (!s.started()) need += s.hide.size().tannin();
+        return Math.max(0, need - tannin);
+    }
+
+    /** Ticks until the next steeping hide is tanned, or -1 when none is steeping. */
+    public long nextReadyTicks() {
+        long now = gameTime();
+        long best = -1;
+        for (Slot s : slots) {
+            if (!s.started() || s.paused() || s.finished(now)) continue;
+            long left = s.remainingTicks(now);
+            if (best < 0 || left < best) best = left;
+        }
+        return best;
+    }
+
     // ------------------------------------------------------------------ interactions
 
+    /** Fills the vat with a bucket of water; paused hides resume and waiting hides start. */
     public boolean fillWater() {
         if (hasWater()) return false;
         water = WATER_CAPACITY;
@@ -103,9 +172,13 @@ public class TannersVatBlockEntity extends StationBlockEntity {
         return true;
     }
 
-    /** Empties the vat's liquor (water and tannin). Hides stay and wait for a refill. */
+    /**
+     * Empties the vat's liquor (water and unspent tannin). Hides stay: waiting ones keep waiting, started ones pause
+     * where they are and resume for their remaining time after a refill. Tannin they already spent stays spent.
+     */
     public boolean drainWater() {
         if (!hasWater()) return false;
+        pauseStarted();
         water = 0;
         tannin = 0;
         sync();
@@ -136,7 +209,7 @@ public class TannersVatBlockEntity extends StationBlockEntity {
         long now = gameTime();
         List<ItemStack> out = new ArrayList<>();
         slots.removeIf(s -> {
-            if (s.started() && s.progress(now) >= 1F) {
+            if (s.finished(now)) {
                 out.add(ModItems.WET_TANNED_HIDE.get().create(s.hide));
                 return true;
             }
@@ -154,7 +227,7 @@ public class TannersVatBlockEntity extends StationBlockEntity {
         long now = gameTime();
         for (int i = slots.size() - 1; i >= 0; i--) {
             Slot s = slots.get(i);
-            if (s.started() && s.progress(now) >= 1F) continue;
+            if (s.finished(now)) continue;
             slots.remove(i);
             sync();
             return ModItems.SCRAPED_HIDE.get().create(s.hide);
@@ -162,36 +235,66 @@ public class TannersVatBlockEntity extends StationBlockEntity {
         return ItemStack.EMPTY;
     }
 
-    /** Starts every waiting hide that the water and tannin allow, in insertion order. */
-    private void startWaiting() {
-        if (!hasWater()) return;
+    /**
+     * The vat's one start transition, run after every change to water, tannin or hides. With water in the vat,
+     * paused hides resume for their remaining time, then waiting hides start in insertion order, each spending its
+     * size's tannin exactly once. A hide the tannin cannot pay for yet is skipped, not a barrier: a cheaper hide
+     * behind it may still start. Returns how many hides started or resumed.
+     */
+    private int startWaiting() {
+        if (!hasWater()) return 0;
         long now = gameTime();
-        boolean started = false;
+        int changed = 0;
+        for (Slot s : slots) {
+            if (s.paused()) {
+                s.start = now - s.pausedElapsed;
+                s.pausedElapsed = -1;
+                changed++;
+            }
+        }
         for (Slot s : slots) {
             if (s.started()) continue;
             int need = s.hide.size().tannin();
-            if (tannin < need) break;
+            if (tannin < need) continue;
             tannin -= need;
             s.started = true;
             s.start = now;
             s.duration = ServerConfig.get(ServerConfig.TANNING_TICKS);
-            started = true;
+            changed++;
         }
-        if (started) setChanged();
+        if (changed > 0) setChanged();
+        return changed;
     }
 
-    /** Test and command hook: moves every started hide's clock forward. */
+    /** Stops the clock of every started, unfinished hide at its current progress. */
+    private void pauseStarted() {
+        long now = gameTime();
+        for (Slot s : slots) {
+            if (!s.started() || s.paused() || s.finished(now)) continue;
+            s.pausedElapsed = Math.max(0L, Math.min(s.duration, now - s.start));
+        }
+        setChanged();
+    }
+
+    /** Test and command hook: moves the clock of every steeping hide forward. Paused hides have no liquor to steep in. */
     public void advance(int ticks) {
-        for (Slot s : slots) if (s.started()) s.start -= ticks;
+        for (Slot s : slots) if (s.started() && !s.paused()) s.start -= ticks;
         setChanged();
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, TannersVatBlockEntity vat) {
+        if (vat.restoreCheck) {
+            vat.restoreCheck = false;
+            // Vats saved before paused hides existed kept tanning while dry; from now on they wait for water.
+            if (vat.migrateDryVat && !vat.hasWater()) vat.pauseStarted();
+            vat.migrateDryVat = false;
+            if (vat.startWaiting() > 0) vat.sync();
+        }
         if (vat.slots.isEmpty() || level.getGameTime() % 10 != 0) return;
         long now = level.getGameTime();
         boolean changed = false;
         for (Slot s : vat.slots) {
-            if (s.started() && !s.announced && s.progress(now) >= 1F) {
+            if (s.finished(now) && !s.announced) {
                 s.announced = true;
                 changed = true;
             }
@@ -224,6 +327,7 @@ public class TannersVatBlockEntity extends StationBlockEntity {
     @Override
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
+        tag.putInt("Version", SAVE_VERSION);
         tag.putInt("Water", water);
         tag.putInt("Tannin", tannin);
         ListTag list = new ListTag();
@@ -233,6 +337,7 @@ public class TannersVatBlockEntity extends StationBlockEntity {
             entry.putLong("Start", s.start);
             entry.putInt("Duration", s.duration);
             entry.putBoolean("Announced", s.announced);
+            if (s.pausedElapsed >= 0) entry.putLong("PausedElapsed", s.pausedElapsed);
             list.add(entry);
         }
         tag.put("Hides", list);
@@ -252,8 +357,11 @@ public class TannersVatBlockEntity extends StationBlockEntity {
             s.start = entry.getLong("Start");
             s.duration = entry.getInt("Duration");
             s.announced = entry.getBoolean("Announced");
+            s.pausedElapsed = s.started && entry.contains("PausedElapsed", Tag.TAG_ANY_NUMERIC) ? entry.getLong("PausedElapsed") : -1L;
             slots.add(s);
         }
+        restoreCheck = true;
+        migrateDryVat = tag.getInt("Version") < SAVE_VERSION;
     }
 
     // ------------------------------------------------------------------ automation
@@ -286,7 +394,7 @@ public class TannersVatBlockEntity extends StationBlockEntity {
             if (slot != 1) return ItemStack.EMPTY;
             long now = gameTime();
             for (Slot s : slots) {
-                if (s.started() && s.progress(now) >= 1F) return ModItems.WET_TANNED_HIDE.get().create(s.hide);
+                if (s.finished(now)) return ModItems.WET_TANNED_HIDE.get().create(s.hide);
             }
             return ItemStack.EMPTY;
         }
@@ -318,7 +426,7 @@ public class TannersVatBlockEntity extends StationBlockEntity {
             long now = gameTime();
             for (int i = 0; i < slots.size(); i++) {
                 Slot s = slots.get(i);
-                if (!s.started() || s.progress(now) < 1F) continue;
+                if (!s.finished(now)) continue;
                 ItemStack out = ModItems.WET_TANNED_HIDE.get().create(s.hide);
                 if (!simulate) {
                     slots.remove(i);

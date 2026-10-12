@@ -1,6 +1,9 @@
 package com.otectus.immersivetanning.minigame;
 
 import com.otectus.immersivetanning.advancement.ModAdvancements;
+import com.otectus.immersivetanning.api.ImmersiveTanningAPI;
+import com.otectus.immersivetanning.api.event.HideFleshedEvent;
+import com.otectus.immersivetanning.api.event.LeatherworkStitchedEvent;
 import com.otectus.immersivetanning.blockentity.LeatherworkersBenchBlockEntity;
 import com.otectus.immersivetanning.blockentity.TannersRackBlockEntity;
 import com.otectus.immersivetanning.config.ServerConfig;
@@ -51,6 +54,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.server.ServerLifecycleHooks;
@@ -115,7 +119,7 @@ public final class SessionManager {
         cancelExisting(player);
         FleshingSession session = new FleshingSession(nextId(), player.getUUID(), player.level().dimension(), rack.getBlockPos(),
                 hand, RANDOM.nextLong(), Util.getMillis(), hide.size());
-        session.allowedMs = ServerConfig.get(ServerConfig.FLESHING_TIME_SECONDS) * 1000;
+        session.allowedMs = ImmersiveTanningAPI.assistedFleshingMs(player, ServerConfig.get(ServerConfig.FLESHING_TIME_SECONDS) * 1000);
         int ready = ServerConfig.get(ServerConfig.READY_DELAY_MS);
         session.startMs = Util.getMillis() + ready;
         register(session);
@@ -204,7 +208,10 @@ public final class SessionManager {
         }
         unregister(session);
         FleshingSurface surface = session.surface;
-        HideData scraped = rack.hide().fleshed(surface.score());
+        // Progression mods hear the score before Integrity is rounded from it and may adjust it.
+        HideFleshedEvent fleshed = new HideFleshedEvent(player, rack.hide(), surface.score(), session.pos, timedOut);
+        MinecraftForge.EVENT_BUS.post(fleshed);
+        HideData scraped = rack.hide().fleshed(fleshed.getScore());
         rack.unlock();
         rack.clear();
         ItemHandlerHelper.giveItemToPlayer(player, ModItems.SCRAPED_HIDE.get().create(scraped));
@@ -288,7 +295,14 @@ public final class SessionManager {
         List<OpenBenchPacket.Entry> entries = new ArrayList<>();
         List<StitchingSession.Offer> offers = new ArrayList<>();
         boolean missingAux = false;
+        Component denied = null;
         for (LeatherworkingRecipe recipe : recipes) {
+            // A gated recipe is left off the list; the first reason is what the player hears if nothing is left.
+            Optional<Component> denial = ImmersiveTanningAPI.recipeDenial(player, recipe);
+            if (denial.isPresent()) {
+                if (denied == null) denied = denial.get();
+                continue;
+            }
             for (LeatherStock.Group group : groups) {
                 if (group.count() < recipe.leather()) continue;
                 if (!AuxInventory.hasAll(player, recipe.auxiliary(), protectedSlot)) {
@@ -304,7 +318,8 @@ public final class SessionManager {
             }
         }
         if (entries.isEmpty()) {
-            Feedback.fail(player, missingAux ? "missing_auxiliary" : "need_more_leather");
+            if (denied != null && !missingAux) Feedback.fail(player, denied);
+            else Feedback.fail(player, missingAux ? "missing_auxiliary" : "need_more_leather");
             return;
         }
         StitchingSession session = new StitchingSession(nextId(), player.getUUID(), player.level().dimension(), bench.getBlockPos(),
@@ -331,6 +346,12 @@ public final class SessionManager {
         }
         if (!toolValid(player, session)) {
             cancel(session, player, message("tool_changed"));
+            return;
+        }
+        // The authoritative gate check: the offer list was filtered, but levels and rules may have moved since.
+        Optional<Component> denied = ImmersiveTanningAPI.recipeDenial(player, recipe);
+        if (denied.isPresent()) {
+            cancel(session, player, denied.get());
             return;
         }
         LeatherStock.Group group = null;
@@ -412,6 +433,12 @@ public final class SessionManager {
         bench.completeSession();
 
         ItemStack result = session.recipe.result().copy();
+        // Progression mods hear about the piece before its leatherwork is written and may change the stack or the
+        // workmanship; the experience and the Masterwork advancement below follow the final value.
+        LeatherworkStitchedEvent stitched = new LeatherworkStitchedEvent(player, result, session.recipe.getId(), session.finish,
+                session.integrity, workmanship, session.trait, session.leatherUsed, session.pos, timedOut);
+        MinecraftForge.EVENT_BUS.post(stitched);
+        workmanship = stitched.getWorkmanship();
         LeatherworkData data = new LeatherworkData(session.finish, session.integrity, workmanship, session.trait, player.getGameProfile().getName());
         data.apply(result);
         LeatherworkData.stampCrafter(result, player.getUUID());

@@ -15,7 +15,6 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -35,7 +34,8 @@ public class FleshingScreen extends WorkshopScreen {
     private enum Stage { READY, PLAYING, WAITING, RESULT }
 
     private static final int MAX_WIDTH = 368;
-    private static final int MAX_HEIGHT = 248;
+    private static final int MAX_HEIGHT = 236;
+    private static final int SIDEBAR_MIN = 86;
     private static final int FLUSH_MS = 80;
     private static final float MIN_STEP_CELLS = 0.45F;
 
@@ -71,7 +71,7 @@ public class FleshingScreen extends WorkshopScreen {
     private boolean closedByServer;
 
     public FleshingScreen(OpenFleshingPacket session) {
-        super(Component.translatable("screen.immersive_tanning.fleshing"), 384, 264);
+        super(Component.translatable("screen.immersive_tanning.fleshing"), 320, 240);
         this.session = session;
         this.surface = new FleshingSurface(session.size(), session.seed());
         this.clientStartMs = Util.getMillis() + session.readyDelayMs();
@@ -92,12 +92,12 @@ public class FleshingScreen extends WorkshopScreen {
     @Override
     protected void initPanel() {
         panelWidth = Math.min(MAX_WIDTH, canvasWidth - 12);
-        panelHeight = Math.min(MAX_HEIGHT, canvasHeight - 8);
+        panelHeight = Math.min(MAX_HEIGHT, canvasHeight - 4);
         left = (canvasWidth - panelWidth) / 2;
         top = (canvasHeight - panelHeight) / 2;
-        int sidebar = Math.max(92, panelWidth / 4);
-        int availableW = panelWidth - sidebar - 30;
-        int availableH = panelHeight - 50;
+        int sidebar = Math.max(SIDEBAR_MIN, panelWidth / 4);
+        int availableW = panelWidth - sidebar - 28;
+        int availableH = panelHeight - 30;
         int scale = Math.max(1, Math.min(availableW / FleshingSurface.W, availableH / FleshingSurface.H));
         if (availableW >= FleshingSurface.W * 3 && availableH >= FleshingSurface.H * 3) scale = Math.max(scale, 3);
         areaW = FleshingSurface.W * scale;
@@ -107,17 +107,28 @@ public class FleshingScreen extends WorkshopScreen {
             areaW = Math.round(FleshingSurface.W * fit);
             areaH = Math.round(FleshingSurface.H * fit);
         }
-        areaX = left + 12;
-        areaY = top + 28 + (availableH - areaH) / 2;
-        int sx = areaX + areaW + 12;
-        int sw = left + panelWidth - 12 - sx;
-        finishButton = TanningGui.button(sx, top + panelHeight - 50, sw, 20, Component.translatable("screen.immersive_tanning.fleshing.finish"), b -> finishEarly());
-        doneButton = TanningGui.button(sx, top + panelHeight - 28, sw, 20, Component.translatable("gui.done"), b -> onClose());
-        nextButton = TanningGui.button(sx, top + panelHeight - 50, sw, 20, Component.translatable("screen.immersive_tanning.fleshing.next_hide"), b -> nextHide());
+        // The panel closes up under the beam, but keeps room for the sidebar's readouts, hint and two buttons.
+        panelHeight = Math.min(canvasHeight - 4, Math.max(areaH + 30, 200));
+        top = (canvasHeight - panelHeight) / 2;
+        areaX = left + 10;
+        areaY = top + 20;
+        int sx = sidebarX();
+        int sw = sidebarWidth();
+        finishButton = VanillaGui.button(sx, top + panelHeight - 50, sw, 20, Component.translatable("screen.immersive_tanning.fleshing.finish"), b -> finishEarly());
+        doneButton = VanillaGui.button(sx, top + panelHeight - 28, sw, 20, Component.translatable("gui.done"), b -> onClose());
+        nextButton = VanillaGui.button(sx, top + panelHeight - 50, sw, 20, Component.translatable("screen.immersive_tanning.fleshing.next_hide"), b -> nextHide());
         addRenderableWidget(finishButton);
         addRenderableWidget(doneButton);
         addRenderableWidget(nextButton);
         updateButtons();
+    }
+
+    private int sidebarX() {
+        return areaX + areaW + 10;
+    }
+
+    private int sidebarWidth() {
+        return left + panelWidth - 8 - sidebarX();
     }
 
     private void updateButtons() {
@@ -325,13 +336,12 @@ public class FleshingScreen extends WorkshopScreen {
 
     @Override
     protected void renderPanel(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        TanningGui.panel(g, left, top, panelWidth, panelHeight);
+        VanillaGui.panel(g, left, top, panelWidth, panelHeight);
         Component title = Component.translatable("screen.immersive_tanning.fleshing.title", session.size().displayName());
-        g.drawString(font, TanningGui.clipped(font, title, panelWidth - 24), left + 12, top + 10, TanningGui.TEXT_WARM, false);
-        TanningGui.rule(g, left + 10, top + 21, panelWidth - 20);
+        int titleWidth = panelWidth - 16;
+        g.drawString(font, VanillaGui.clipped(font, title, titleWidth), left + 8, top + 7, VanillaGui.LABEL, false);
 
-        TanningGui.well(g, areaX - 3, areaY - 3, areaW + 6, areaH + 6);
-        g.fillGradient(areaX, areaY, areaX + areaW, areaY + areaH, StonebornGui.SURFACE, StonebornGui.INSET);
+        VanillaGui.display(g, areaX - 2, areaY - 2, areaW + 4, areaH + 4);
         // The beam under the hide.
         g.fillGradient(areaX, areaY + areaH / 2 - areaH / 10, areaX + areaW, areaY + areaH / 2 + areaH / 10, 0x405A3C26, 0x20000000);
         refreshTexture();
@@ -341,21 +351,25 @@ public class FleshingScreen extends WorkshopScreen {
             case READY -> {
                 g.fill(areaX, areaY, areaX + areaW, areaY + areaH, 0x90000000);
                 int remaining = -elapsed();
-                g.drawCenteredString(font, Component.translatable("screen.immersive_tanning.ready", Math.max(1, (remaining + 999) / 1000)),
-                        areaX + areaW / 2, areaY + areaH / 2 - 16, TanningGui.TEXT_WARM);
-                TanningGui.drawWrappedCentered(g, font, Component.translatable("screen.immersive_tanning.fleshing.instructions"),
-                        areaX + areaW / 2, areaY + areaH / 2, areaW - 24, TanningGui.TEXT);
+                VanillaGui.centered(g, font, Component.translatable("screen.immersive_tanning.ready", Math.max(1, (remaining + 999) / 1000)),
+                        areaX + areaW / 2, areaY + areaH / 2 - 16, VanillaGui.DISPLAY_HEADING);
+                VanillaGui.wrappedCentered(g, font, Component.translatable("screen.immersive_tanning.fleshing.instructions"),
+                        areaX + areaW / 2, areaY + areaH / 2, areaW - 16, VanillaGui.DISPLAY_TEXT, false);
             }
             case PLAYING -> renderKnife(g, mouseX, mouseY);
             case WAITING -> {
                 g.fill(areaX, areaY, areaX + areaW, areaY + areaH, 0x60000000);
-                g.drawCenteredString(font, Component.translatable(timeUp() ? "screen.immersive_tanning.times_up" : "screen.immersive_tanning.finishing"),
-                        areaX + areaW / 2, areaY + areaH / 2 - 4, TanningGui.TEXT);
+                VanillaGui.centered(g, font, Component.translatable(timeUp() ? "screen.immersive_tanning.times_up" : "screen.immersive_tanning.finishing"),
+                        areaX + areaW / 2, areaY + areaH / 2 - 4, VanillaGui.DISPLAY_TEXT);
             }
             case RESULT -> renderResult(g);
         }
-        renderSidebar(g);
+        renderSidebar(g, mouseX, mouseY);
         super.renderPanel(g, mouseX, mouseY, partialTick);
+        if (VanillaGui.isClipped(font, title, titleWidth) && mouseX >= left + 8 && mouseX < left + 8 + titleWidth
+                && mouseY >= top + 5 && mouseY < top + 17) {
+            tooltip(title);
+        }
     }
 
     private void refreshTexture() {
@@ -426,17 +440,20 @@ public class FleshingScreen extends WorkshopScreen {
     private void renderResult(GuiGraphics g) {
         g.fill(areaX, areaY, areaX + areaW, areaY + areaH, 0xB0000000);
         int cx = areaX + areaW / 2;
-        int y = areaY + areaH / 2 - 42;
-        g.drawCenteredString(font, Component.translatable(result.timedOut() ? "screen.immersive_tanning.fleshing.times_up_result"
-                : "screen.immersive_tanning.fleshing.complete"), cx, y, TanningGui.TEXT_WARM);
-        y += 16;
-        g.drawCenteredString(font, Component.translatable("screen.immersive_tanning.integrity", Scores.label(result.score())), cx, y,
+        int width = areaW - 16;
+        Component heading = Component.translatable(result.timedOut() ? "screen.immersive_tanning.fleshing.times_up_result"
+                : "screen.immersive_tanning.fleshing.complete");
+        Component next = Component.translatable("screen.immersive_tanning.fleshing.next");
+        int height = font.split(heading, width).size() * 10 + 6 + 10 + 6 + 33 + 6 + font.split(next, width).size() * 10;
+        int y = areaY + Math.max(6, (areaH - height) / 2);
+        y += 10 * VanillaGui.wrappedCentered(g, font, heading, cx, y, width, VanillaGui.DISPLAY_HEADING, false) + 6;
+        VanillaGui.centered(g, font, Component.translatable("screen.immersive_tanning.integrity", Scores.label(result.score())), cx, y,
                 TanningGui.qualityColor(result.score()));
         y += 16;
-        g.drawCenteredString(font, measure("coverage", result.coverage(), false), cx, y, TanningGui.TEXT);
-        g.drawCenteredString(font, measure("control", result.control(), false), cx, y + 11, TanningGui.TEXT);
-        g.drawCenteredString(font, measure("overwork", result.overwork(), true), cx, y + 22, TanningGui.TEXT);
-        TanningGui.drawWrappedCentered(g, font, Component.translatable("screen.immersive_tanning.fleshing.next"), cx, y + 40, areaW - 24, TanningGui.TEXT_DIM);
+        VanillaGui.centered(g, font, measure("coverage", result.coverage(), false), cx, y, VanillaGui.DISPLAY_TEXT);
+        VanillaGui.centered(g, font, measure("control", result.control(), false), cx, y + 11, VanillaGui.DISPLAY_TEXT);
+        VanillaGui.centered(g, font, measure("overwork", result.overwork(), true), cx, y + 22, VanillaGui.DISPLAY_TEXT);
+        VanillaGui.wrappedCentered(g, font, next, cx, y + 39, width, VanillaGui.DISPLAY_TEXT_DIM, false);
     }
 
     /** "Coverage: 97%"-style lines; for overworking lower is better. */
@@ -448,32 +465,34 @@ public class FleshingScreen extends WorkshopScreen {
                 Component.translatable("screen.immersive_tanning.measure." + word));
     }
 
-    private void renderSidebar(GuiGraphics g) {
-        int sx = areaX + areaW + 12;
-        int sw = left + panelWidth - 12 - sx;
-        int y = top + 30;
-        g.drawString(font, TanningGui.clipped(font, Component.translatable("screen.immersive_tanning.fleshing.step"), sw), sx, y, TanningGui.TEXT_WARM, false);
-        y += 14;
-        TanningGui.well(g, sx, y, sw, 36);
-        g.drawString(font, Component.translatable("screen.immersive_tanning.time"), sx + 5, y + 5, TanningGui.TEXT_DIM, false);
+    private void renderSidebar(GuiGraphics g, int mouseX, int mouseY) {
+        int sx = sidebarX();
+        int sw = sidebarWidth();
+        int y = top + 20;
+        g.drawString(font, VanillaGui.clipped(font, Component.translatable("screen.immersive_tanning.fleshing.step"), sw), sx, y, VanillaGui.LABEL, false);
+        y += 16;
+        g.drawString(font, Component.translatable("screen.immersive_tanning.time"), sx, y, VanillaGui.LABEL, false);
         int now = stage == Stage.READY ? 0 : Math.max(0, elapsed());
         Component seconds = Component.translatable("screen.immersive_tanning.seconds_short", Math.max(0, (session.allowedMs() - now + 999) / 1000));
-        g.drawString(font, seconds, sx + sw - 5 - font.width(seconds), y + 5, TanningGui.TEXT, false);
-        TanningGui.timeBar(g, sx + 5, y + 22, sw - 10, 5, stage == Stage.RESULT ? 0F : 1F - now / (float) Math.max(1, session.allowedMs()));
-        y += 44;
-        TanningGui.well(g, sx, y, sw, 36);
-        g.drawString(font, Component.translatable("screen.immersive_tanning.fleshing.cleaned"), sx + 5, y + 5, TanningGui.TEXT_DIM, false);
+        g.drawString(font, seconds, sx + sw - font.width(seconds), y, VanillaGui.LABEL, false);
+        TanningGui.timeBar(g, sx + 1, y + 12, sw - 2, 5, stage == Stage.RESULT ? 0F : 1F - now / (float) Math.max(1, session.allowedMs()));
+        y += 26;
+        g.drawString(font, Component.translatable("screen.immersive_tanning.fleshing.cleaned"), sx, y, VanillaGui.LABEL, false);
         float coverage = result != null ? result.coverage() : surface.coverage();
         Component percent = Component.literal(Math.round(coverage * 100F) + "%");
-        g.drawString(font, percent, sx + sw - 5 - font.width(percent), y + 5, TanningGui.TEXT, false);
-        TanningGui.bar(g, sx + 5, y + 22, sw - 10, 5, coverage, TanningGui.goodColor());
-        y += 44;
+        g.drawString(font, percent, sx + sw - font.width(percent), y, VanillaGui.LABEL, false);
+        TanningGui.bar(g, sx + 1, y + 12, sw - 2, 5, coverage, TanningGui.goodColor());
+        y += 28;
         if (session.trait() != null) {
-            y += 10 * TanningGui.drawWrapped(g, font, Component.translatable("tooltip.immersive_tanning.trait", session.trait().displayName()),
-                    sx, y, sw, TanningGui.TEXT, 2) + 4;
+            y += VanillaGui.readout(g, font, Component.translatable("tooltip.immersive_tanning.trait", session.trait().displayName()), sx, y, sw, 2) + 6;
         }
         if (stage == Stage.PLAYING || stage == Stage.READY) {
-            TanningGui.drawWrapped(g, font, Component.translatable("screen.immersive_tanning.fleshing.hint"), sx, y, sw, TanningGui.TEXT_DIM, Math.max(0, (top + panelHeight - 58 - y) / 10));
+            Component hint = Component.translatable("screen.immersive_tanning.fleshing.hint");
+            int lines = Math.max(0, (top + panelHeight - 54 - y) / 10);
+            int drawn = VanillaGui.wrapped(g, font, hint, sx, y, sw, VanillaGui.LABEL_DIM, lines);
+            if (VanillaGui.isWrapClipped(font, hint, sw, lines) && mouseX >= sx && mouseX < sx + sw && mouseY >= y && mouseY < y + drawn * 10) {
+                tooltip(hint);
+            }
         }
     }
 }

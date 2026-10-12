@@ -13,6 +13,7 @@ import com.otectus.immersivetanning.network.packet.SelectBenchRecipePacket;
 import com.otectus.immersivetanning.network.packet.SelectFinishPacket;
 import com.otectus.immersivetanning.network.packet.SessionResultPacket;
 import com.otectus.immersivetanning.network.packet.StationEffectPacket;
+import com.otectus.immersivetanning.network.packet.StationNoticePacket;
 import com.otectus.immersivetanning.network.packet.StitchPressPacket;
 import com.otectus.immersivetanning.network.packet.StitchResultPacket;
 import com.otectus.immersivetanning.network.packet.StitchStartPacket;
@@ -22,7 +23,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 
 /** Small, purpose-specific packets. Clients report inputs only; the server owns every outcome. */
 public final class ModNetwork {
-    public static final String VERSION = "1";
+    public static final String VERSION = "2";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(ImmersiveTanning.id("main"),
             () -> VERSION, VERSION::equals, VERSION::equals);
 
@@ -75,6 +76,10 @@ public final class ModNetwork {
         CHANNEL.messageBuilder(CancelSessionPacket.class, id++, NetworkDirection.PLAY_TO_SERVER)
                 .encoder(CancelSessionPacket::encode).decoder(CancelSessionPacket::decode)
                 .consumerNetworkThread(CancelSessionPacket::handle).add();
+        // Server -> client (protocol 2)
+        CHANNEL.messageBuilder(StationNoticePacket.class, id++, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(StationNoticePacket::encode).decoder(StationNoticePacket::decode)
+                .consumerMainThread(StationNoticePacket::handle).add();
     }
 
     private ModNetwork() {}

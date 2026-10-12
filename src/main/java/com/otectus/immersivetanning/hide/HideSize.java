@@ -33,6 +33,13 @@ public enum HideSize implements StringRepresentable {
 
     public int fleshPatches() { return fleshPatches; }
 
+    /** The largest tannin cost of any size: the least a vat must be able to hold. */
+    public static int maxTannin() {
+        int max = 0;
+        for (HideSize size : values()) max = Math.max(max, size.tannin);
+        return max;
+    }
+
     @Override
     public String getSerializedName() { return name; }
 

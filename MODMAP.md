@@ -193,6 +193,11 @@ of the prototype metrics in the brief (fleshing time 6-12 s after three attempts
 
 ## Decisions
 
+- 1.1.0 progression hooks: `HideFleshedEvent` (posted in `finishFleshing` before Integrity is rounded) and
+  `LeatherworkStitchedEvent` (posted in `finishStitching` before `LeatherworkData` is written; experience and the
+  Masterwork advancement use the final workmanship) are the only events this mod posts. `ILeatherworkRecipeGate` is
+  consulted in `openBench` (filtered preview) and authoritatively in `selectBenchRecipe` before `LeatherStock.take`;
+  `ITanningAssistSource` multiplies `allowedMs` in `openFleshing` only (stitching is pattern-timed; no protocol change).
 - Tanning is shorter than a simulation: raw -> flesh (rack) -> tan (vat) -> finish and dry (rack) -> stitch (bench).
   No soak stage, no tannic powder, no concentration, no repair kit, no spoilage, no random quality.
 - The only strategic choice is the finish, made when a wet hide is mounted (screen, keys 1-3, or sneak-use to repeat
@@ -205,6 +210,11 @@ of the prototype metrics in the brief (fleshing time 6-12 s after three attempts
   damage conversion in `ItemStackMixin` (same approach as Immersive Smithing, own `immersive_tanning` NBT root).
 - Passive stages follow world time (`gameTime`), so vats and racks progress while unloaded. Vat slots carry an explicit
   `started` flag; start times may be negative after `/immersive_tanning advance`.
+- The vat has one start transition (`TannersVatBlockEntity.startWaiting`), run after every water, tannin or hide change
+  and on the first tick after load: waiting hides start in insertion order, each paying its cost once, and one the
+  tannin cannot pay for is skipped rather than blocking cheaper hides. Draining pauses started hides (`PausedElapsed`);
+  a refill resumes their remaining time without a charge. Save `Version` 2; older dry vats pause on first tick.
+  `vatMaxTannin` below 2 acts as 2. Station messages are `StationNotices` (S2C `StationNoticePacket`), not the action bar.
 - Fleshing is deterministic on both sides: `FleshingSurface` uses `java.util.Random`, `Mth` sin/cos tables and
   `StrictMath`; knife positions travel as 12-bit fixed point. The server replays them; a speed cap only refuses
   teleports. Stitching uses the same `StitchRun` on both sides; server corrections never move the run backwards.

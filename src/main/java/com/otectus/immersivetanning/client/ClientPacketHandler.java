@@ -9,6 +9,7 @@ import com.otectus.immersivetanning.network.packet.OpenFinishPacket;
 import com.otectus.immersivetanning.network.packet.OpenFleshingPacket;
 import com.otectus.immersivetanning.network.packet.SessionResultPacket;
 import com.otectus.immersivetanning.network.packet.StationEffectPacket;
+import com.otectus.immersivetanning.network.packet.StationNoticePacket;
 import com.otectus.immersivetanning.network.packet.StitchResultPacket;
 import com.otectus.immersivetanning.network.packet.StitchStartPacket;
 import net.minecraft.client.Minecraft;
@@ -47,7 +48,11 @@ public final class ClientPacketHandler {
         Minecraft mc = Minecraft.getInstance();
         if (mc.screen instanceof FleshingScreen fleshing && fleshing.sessionId() == packet.sessionId()) fleshing.closeByServer();
         else if (mc.screen instanceof LeatherworkScreen bench && bench.sessionId() == packet.sessionId()) bench.closeByServer();
-        if (mc.player != null && !packet.reason().getString().isEmpty()) mc.player.displayClientMessage(packet.reason(), true);
+        if (mc.player != null && !packet.reason().getString().isEmpty()) StationNotices.show(packet.reason(), true);
+    }
+
+    public static void stationNotice(StationNoticePacket packet) {
+        StationNotices.show(packet.message(), packet.failure());
     }
 
     public static void stationEffect(StationEffectPacket packet) {

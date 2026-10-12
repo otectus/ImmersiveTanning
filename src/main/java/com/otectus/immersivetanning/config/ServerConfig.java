@@ -30,6 +30,7 @@ public final class ServerConfig {
     public static final ForgeConfigSpec.IntValue DRYING_TICKS;
 
     public static final ForgeConfigSpec.IntValue FLESHING_TIME_SECONDS;
+    public static final ForgeConfigSpec.DoubleValue MAX_ASSIST_TIME_MULTIPLIER;
     public static final ForgeConfigSpec.IntValue READY_DELAY_MS;
     public static final ForgeConfigSpec.IntValue TIMING_TOLERANCE_MS;
     public static final ForgeConfigSpec.IntValue MAX_LATENCY_COMPENSATION_MS;
@@ -93,7 +94,8 @@ public final class ServerConfig {
                 .defineInRange("tanningTicks", 3600, 20, 72000);
         VAT_CAPACITY = b.comment("Hides one Tanner's Vat holds at once.")
                 .defineInRange("vatCapacity", 4, 1, 16);
-        VAT_MAX_TANNIN = b.comment("Tannin charges (one per bark) a vat can hold.")
+        VAT_MAX_TANNIN = b.comment("Tannin charges (one per bark) a vat can hold. Values below the largest hide's cost (2, a large hide)",
+                        "act as 2, so every hide can start; 1 is still accepted so older configs load unchanged.")
                 .defineInRange("vatMaxTannin", 16, 1, 256);
         BARK_PER_LOG = b.comment("Bark gained when a Tanner's Knife strips a log.")
                 .defineInRange("barkPerLog", 2, 1, 16);
@@ -104,6 +106,9 @@ public final class ServerConfig {
         b.comment("Minigame timing and validation").push("minigames");
         FLESHING_TIME_SECONDS = b.comment("Time allowed to flesh a hide. Running out completes the hide at its current Integrity.")
                 .defineInRange("fleshingTimeSeconds", 25, 5, 300);
+        MAX_ASSIST_TIME_MULTIPLIER = b.comment("Ceiling on the per-player fleshing time other mods may grant (ITanningAssistSource).",
+                        "1 refuses all assistance; 1.5 allows up to half again fleshingTimeSeconds.")
+                .defineInRange("maxAssistTimeMultiplier", 1.5, 1.0, 3.0);
         READY_DELAY_MS = b.comment("Countdown before a minigame starts, in milliseconds.")
                 .defineInRange("readyDelayMs", 1500, 0, 10000);
         TIMING_TOLERANCE_MS = b.comment("Jitter tolerance applied to client-reported input times.")

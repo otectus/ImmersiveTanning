@@ -117,6 +117,7 @@ public class TanningJadePlugin implements IWailaPlugin {
         public void appendServerData(CompoundTag data, BlockAccessor accessor) {
             if (!(accessor.getBlockEntity() instanceof TannersVatBlockEntity vat)) return;
             data.putBoolean("Water", vat.hasWater());
+            data.putInt("WaterAmount", vat.water());
             data.putInt("Tannin", vat.tannin());
             data.putInt("MaxTannin", vat.maxTannin());
             data.putInt("Capacity", vat.capacity());
@@ -125,6 +126,7 @@ public class TanningJadePlugin implements IWailaPlugin {
             for (TannersVatBlockEntity.Slot slot : vat.slots()) {
                 CompoundTag entry = slot.hide().save();
                 entry.putBoolean("Started", slot.started());
+                entry.putBoolean("Paused", slot.paused());
                 entry.putInt("Progress", percent(slot.progress(time)));
                 hides.add(entry);
             }
@@ -135,7 +137,10 @@ public class TanningJadePlugin implements IWailaPlugin {
         public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
             CompoundTag data = accessor.getServerData();
             if (!data.contains("Capacity")) return;
-            tooltip.add(data.getBoolean("Water") ? line("vat.water").withStyle(ChatFormatting.AQUA)
+            boolean water = data.getBoolean("Water");
+            int amount = data.getInt("WaterAmount");
+            tooltip.add(water ? line("vat.water").withStyle(ChatFormatting.AQUA)
+                    : amount > 0 ? line("vat.water_partial", amount, TannersVatBlockEntity.WATER_CAPACITY).withStyle(ChatFormatting.DARK_AQUA)
                     : line("vat.no_water").withStyle(ChatFormatting.DARK_GRAY));
             tooltip.add(line("vat.tannin", data.getInt("Tannin"), data.getInt("MaxTannin"))
                     .withStyle(data.getInt("Tannin") > 0 ? ChatFormatting.GOLD : ChatFormatting.DARK_GRAY));
@@ -148,8 +153,12 @@ public class TanningJadePlugin implements IWailaPlugin {
                 CompoundTag entry = hides.getCompound(i);
                 HideData hide = HideData.load(entry, HideSize.MEDIUM);
                 int progress = entry.getInt("Progress");
-                MutableComponent state = !entry.getBoolean("Started") ? line("vat.waiting").withStyle(ChatFormatting.DARK_GRAY)
+                // A waiting hide says what it waits for: water first, then the bark still missing for its size.
+                int missingBark = Math.max(1, hide.size().tannin() - data.getInt("Tannin"));
+                MutableComponent state = !entry.getBoolean("Started")
+                        ? (water ? line("vat.waiting_bark", missingBark) : line("vat.waiting_water")).withStyle(ChatFormatting.GOLD)
                         : progress >= 100 ? line("vat.tanned").withStyle(ChatFormatting.GREEN)
+                        : entry.getBoolean("Paused") ? line("vat.paused", progress).withStyle(ChatFormatting.GOLD)
                         : line("vat.progress", progress).withStyle(ChatFormatting.AQUA);
                 tooltip.add(line("vat.hide", hideName(hide), state));
             }

@@ -22,9 +22,12 @@ destroy material, datapacks drive compatibility, and automation handles inputs b
    costs *control*. The result is the hide's **Integrity**. Running out of time never loses the hide; it is simply
    scraped as it is. With more raw hides in your inventory, **Next hide** mounts the next one straight away.
 3. **Tan - Tanner's Vat.** Fill it with a bucket of water, add **Bark** (strip logs with the Tanner's Knife) and put
-   in a whole stack of scraped hides. Each hide spends tannin by size (small and medium 1, large 2) and tans on its
-   own clock, following world time, so you can leave. Use an empty hand to take tanned hides out. The liquor darkens
-   as bark goes in; comparators read how many hides are ready.
+   in a whole stack of scraped hides, in any order. Each hide spends tannin by size (small and medium 1, large 2) once,
+   when it starts, and tans on its own clock, following world time, so you can leave. A large hide waiting for its
+   second bark does not hold back a smaller one behind it. Draining the vat pauses started hides; a refill resumes
+   them for their remaining time without more bark. Use an empty hand to take tanned hides out, or to see what is
+   tanning, what waits and exactly what it waits for. The liquor darkens as bark goes in; comparators read how many
+   hides are ready.
 4. **Finish and dry - Tanner's Rack.** Lace a wet tanned hide into the frame and choose its finish. The choice takes
    two seconds; the consequences last for the leather's whole life. Sneak-use repeats your last finish. The hide
    hangs loose, tensioned or taut, lightens as it dries and settles when it is done.
@@ -106,11 +109,13 @@ Everything below is data or an optional hook; none of these mods is required.
 `serverconfig/immersive_tanning-server.toml` (per world, synced): hide drop replacement and looting, Binding Leather in
 loot and in trades (in recipes it is always on), bench recipe
 replacement and automatic detection (with recipe and mod blacklists), tanning and drying time (world ticks), vat
-capacity and tannin limit, bark per log, fleshing time limit, timing tolerance, quality multiplier ranges, every
+capacity and tannin limit (at least 2, the cost of a large hide; a configured 1 acts as 2), bark per log, fleshing time limit, timing tolerance, quality multiplier ranges, every
 finish value, field-repair amount and scrap yield, and automation.
 
 `config/immersive_tanning-client.toml`: numeric scores in tooltips, grain hints, particle amount, high-contrast and
-colour-blind palettes, larger stitch markers, timing cue sounds. These never change scoring.
+colour-blind palettes, larger stitch markers, timing cue sounds, how long the stitching grade stays readable
+(`feedbackLabelMs`), and station messages kept above the hotbar (`stationNotices`, `noticeSeconds`; off uses the
+action bar). These never change scoring.
 
 The server config also sets the carcass enchantments (default `butchery:butcherstouch`), village trades
 (`enableVillagerTrades`) and bench experience (`benchExperience`).
@@ -201,6 +206,21 @@ follows the axe's mapping, so modded logs work.
 `ImmersiveTanningAPI.leatherwork(stack)` reads a piece's finish, Integrity, Workmanship and trait.
 `ImmersiveTanningAPI.playerMade(stack)` tells whether a player stitched it at the bench (the bench records the player;
 villager and loot leatherwork carry only a crafter's name). Everything else is implementation detail.
+
+Since 1.1.0, two Forge-bus events (server side, not cancellable) and two hooks exist for progression mods:
+
+- `HideFleshedEvent`: posted when fleshing finishes, before the scraped hide is made. Carries the raw hide, the rack,
+  whether time ran out, and the fleshing score (0..100) that Integrity is rounded from; `setScore` changes it.
+- `LeatherworkStitchedEvent`: posted when a stitch run finishes, before the leatherwork is written and before the piece
+  reaches the inventory. Carries the live result stack (changes stay on it), the recipe id, finish, Integrity, trait,
+  leather used, bench and whether time ran out, and the Workmanship (0..100); `setWorkmanship` changes it, and the
+  bench experience and the Master Tanner advancement follow the final value.
+- `ImmersiveTanningAPI.registerRecipeGate(ILeatherworkRecipeGate)`: refuses a bench recipe to a player with a reason.
+  The bench leaves it off the list (and shows the first reason when nothing is left) and refuses the selection again
+  before any leather or auxiliary is taken.
+- `ImmersiveTanningAPI.registerAssistSource(ITanningAssistSource)`: per-player fleshing time. Answers multiply,
+  clamped to `1.0..minigames.maxAssistTimeMultiplier`; the client receives the final allowance in the start packet, so
+  the network protocol is unchanged. Stitching is paced by its seam pattern and is not assisted.
 
 ## Building
 
