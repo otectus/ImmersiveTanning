@@ -2,6 +2,7 @@ package com.otectus.immersivetanning.loot;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.otectus.immersivetanning.compat.geneticanimals.GeneticAnimals;
 import com.otectus.immersivetanning.hide.HideSourceLoader;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.world.entity.Entity;
@@ -17,7 +18,8 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Adds the hide an entity's hide source names to its death loot and, by default, removes the leather it would
  * otherwise drop (see {@link HideDrops}). Applies only to the entity's own loot table, never to chests or fishing
- * opened by an entity.
+ * opened by an entity. Genetic Animals entities are left to their death drops ({@code GeneticAnimalsDrops}), even if a
+ * datapack gives them a loot table, so no hide is ever decided twice.
  */
 public class HideDropModifier extends LootModifier {
     public static final Codec<HideDropModifier> CODEC = RecordCodecBuilder.create(inst -> codecStart(inst).apply(inst, HideDropModifier::new));
@@ -30,7 +32,8 @@ public class HideDropModifier extends LootModifier {
     protected @NotNull ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> loot, LootContext context) {
         Entity entity = context.getParamOrNull(LootContextParams.THIS_ENTITY);
         if (!(entity instanceof LivingEntity living) || !context.hasParam(LootContextParams.DAMAGE_SOURCE)) return loot;
-        if (!living.getLootTable().equals(context.getQueriedLootTableId())) return loot;
+        // Some mobs have no table at all (Genetic Animals' llama returns null), and their deaths still query one.
+        if (!context.getQueriedLootTableId().equals(living.getLootTable()) || GeneticAnimals.owns(living.getType())) return loot;
         HideSourceLoader.HideSource source = HideSourceLoader.forEntity(living.getType());
         if (source == null) return loot;
 

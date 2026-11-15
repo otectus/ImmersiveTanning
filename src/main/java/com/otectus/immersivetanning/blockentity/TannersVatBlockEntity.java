@@ -43,10 +43,15 @@ import java.util.List;
  * remaining time without charging them again.</p>
  */
 public class TannersVatBlockEntity extends StationBlockEntity {
+    @Override
+    public boolean exclusive() {
+        return false;
+    }
+
     public static final int WATER_CAPACITY = 1000;
 
-    /** Save format: 2 added paused hides (a drained vat used to keep its clock running). */
-    private static final int SAVE_VERSION = 2;
+    /** Save format: 2 added paused hides (a drained vat used to keep its clock running), 3 the tending record. */
+    private static final int SAVE_VERSION = 3;
 
     /** One hide in the vat. It waits (not started) until water and tannin let it begin. */
     public static final class Slot {
@@ -57,12 +62,15 @@ public class TannersVatBlockEntity extends StationBlockEntity {
         boolean announced;
         /** Ticks it had steeped when the liquor was drained, or -1 while it steeps (or has not started). */
         long pausedElapsed = -1;
+        /** Whether a paddle sweep already credited this hide (each hide is credited at most once, ever). */
+        boolean tended;
 
         Slot(HideData hide) {
             this.hide = hide;
         }
 
         public HideData hide() { return hide; }
+        public boolean tended() { return tended; }
         public boolean started() { return started; }
         public boolean paused() { return started && pausedElapsed >= 0; }
         public int duration() { return duration; }
@@ -159,6 +167,56 @@ public class TannersVatBlockEntity extends StationBlockEntity {
             if (best < 0 || left < best) best = left;
         }
         return best;
+    }
+
+    /** Why one hide is where it is: what the vat shows and says when that hide is inspected. */
+    public enum Reason { READY, STEEPING, PAUSED, NEEDS_WATER, NEEDS_BARK }
+
+    public Reason reason(Slot slot) {
+        long now = gameTime();
+        if (slot.finished(now)) return Reason.READY;
+        if (slot.paused()) return Reason.PAUSED;
+        if (slot.started()) return Reason.STEEPING;
+        return hasWater() ? Reason.NEEDS_BARK : Reason.NEEDS_WATER;
+    }
+
+    /** Bark one waiting hide still needs before it can start (0 when it does not wait for bark). */
+    public int missingBark(Slot slot) {
+        if (slot.started() || !hasWater()) return 0;
+        return Math.max(0, slot.hide.size().tannin() - tannin);
+    }
+
+    /**
+     * One slow paddle sweep through the liquor. Each steeping hide not credited before gains up to
+     * {@code vatTendingCredit} of its tanning time (never more than it has left) and is marked, so no later sweep,
+     * operator, drain or reload credits it again. Waiting and paused hides keep their own chance. Returns how many
+     * hides were credited.
+     */
+    public int tend() {
+        double share = ServerConfig.get(ServerConfig.VAT_TENDING_CREDIT);
+        if (share <= 0D || !hasWater()) return 0;
+        long now = gameTime();
+        int credited = 0;
+        for (Slot s : slots) {
+            if (s.tended || !s.started() || s.paused() || s.finished(now)) continue;
+            long credit = Math.min(Math.round(s.duration * share), s.remainingTicks(now));
+            if (credit <= 0) continue;
+            s.start -= credit;
+            s.tended = true;
+            credited++;
+        }
+        if (credited > 0) sync();
+        return credited;
+    }
+
+    /** Takes back one particular unfinished hide (inspected and lifted out), as the scraped hide it was. */
+    public ItemStack takeBack(int index) {
+        if (index < 0 || index >= slots.size()) return ItemStack.EMPTY;
+        Slot s = slots.get(index);
+        if (s.finished(gameTime())) return ItemStack.EMPTY;
+        slots.remove(index);
+        sync();
+        return ModItems.SCRAPED_HIDE.get().create(s.hide);
     }
 
     // ------------------------------------------------------------------ interactions
@@ -327,6 +385,17 @@ public class TannersVatBlockEntity extends StationBlockEntity {
     @Override
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
+        writeVat(tag);
+    }
+
+    /** Clients see the whole vat: nothing in it is private, and inspecting a hide needs its state. */
+    @Override
+    protected void saveClient(CompoundTag tag) {
+        super.saveClient(tag);
+        writeVat(tag);
+    }
+
+    private void writeVat(CompoundTag tag) {
         tag.putInt("Version", SAVE_VERSION);
         tag.putInt("Water", water);
         tag.putInt("Tannin", tannin);
@@ -338,6 +407,7 @@ public class TannersVatBlockEntity extends StationBlockEntity {
             entry.putInt("Duration", s.duration);
             entry.putBoolean("Announced", s.announced);
             if (s.pausedElapsed >= 0) entry.putLong("PausedElapsed", s.pausedElapsed);
+            entry.putBoolean("Tended", s.tended);
             list.add(entry);
         }
         tag.put("Hides", list);
@@ -358,10 +428,12 @@ public class TannersVatBlockEntity extends StationBlockEntity {
             s.duration = entry.getInt("Duration");
             s.announced = entry.getBoolean("Announced");
             s.pausedElapsed = s.started && entry.contains("PausedElapsed", Tag.TAG_ANY_NUMERIC) ? entry.getLong("PausedElapsed") : -1L;
+            // Format 2 and older never tended: those hides keep their one chance.
+            s.tended = entry.getBoolean("Tended");
             slots.add(s);
         }
         restoreCheck = true;
-        migrateDryVat = tag.getInt("Version") < SAVE_VERSION;
+        migrateDryVat = tag.getInt("Version") < 2;
     }
 
     // ------------------------------------------------------------------ automation

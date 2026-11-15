@@ -12,3 +12,4 @@ logs/
 __pycache__/
 src/generated/resources/.cache/
 run-gametest/
+run-gametest-ga/

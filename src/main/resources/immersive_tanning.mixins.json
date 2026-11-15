@@ -2,11 +2,18 @@
   "required": true,
   "minVersion": "0.8",
   "package": "com.otectus.immersivetanning.mixin",
+  "plugin": "com.otectus.immersivetanning.mixin.TanningMixinPlugin",
   "compatibilityLevel": "JAVA_17",
   "refmap": "immersive_tanning.refmap.json",
   "mixins": [
     "IngredientMixin",
-    "ItemStackMixin"
+    "ItemStackMixin",
+    "LivingEntityMixin",
+    "MobMixin"
+  ],
+  "client": [
+    "client.CameraMixin",
+    "client.GameRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

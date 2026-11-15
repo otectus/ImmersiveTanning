@@ -23,34 +23,43 @@ Machine-generated map of this mod. Read this first when picking the project up.
 ```
 com.otectus.immersivetanning                         1 file
 com.otectus.immersivetanning.advancement             1 file
-com.otectus.immersivetanning.api                     2 files
+com.otectus.immersivetanning.api                     4 files
+com.otectus.immersivetanning.api.event               2 files
 com.otectus.immersivetanning.block                   4 files
 com.otectus.immersivetanning.blockentity             4 files
-com.otectus.immersivetanning.client                  4 files
-com.otectus.immersivetanning.client.compat.jei       3 files
+com.otectus.immersivetanning.client                  5 files
+com.otectus.immersivetanning.client.compat           1 file
+com.otectus.immersivetanning.client.compat.jei       4 files
+com.otectus.immersivetanning.client.render           3 files
 com.otectus.immersivetanning.client.renderer         4 files
-com.otectus.immersivetanning.client.screen           4 files
+com.otectus.immersivetanning.client.screen           2 files
+com.otectus.immersivetanning.client.station          18 files
 com.otectus.immersivetanning.command                 1 file
+com.otectus.immersivetanning.compat.geneticanimals   6 files
 com.otectus.immersivetanning.compat.jade             1 file
 com.otectus.immersivetanning.compat.villager         1 file
 com.otectus.immersivetanning.config                  2 files
-com.otectus.immersivetanning.effect                  1 file
+com.otectus.immersivetanning.effect                  2 files
 com.otectus.immersivetanning.event                   1 file
 com.otectus.immersivetanning.hide                    4 files
-com.otectus.immersivetanning.item                    8 files
-com.otectus.immersivetanning.leather                 7 files
-com.otectus.immersivetanning.loot                    5 files
-com.otectus.immersivetanning.minigame                9 files
-com.otectus.immersivetanning.mixin                   2 files
+com.otectus.immersivetanning.item                    9 files
+com.otectus.immersivetanning.leather                 8 files
+com.otectus.immersivetanning.loot                    7 files
+com.otectus.immersivetanning.minigame                4 files
+com.otectus.immersivetanning.mixin                   5 files
+com.otectus.immersivetanning.mixin.client            2 files
+com.otectus.immersivetanning.mixin.compat.eanimod    3 files
 com.otectus.immersivetanning.network                 1 file
-com.otectus.immersivetanning.network.packet          15 files
+com.otectus.immersivetanning.network.packet          9 files
 com.otectus.immersivetanning.recipe                  10 files
 com.otectus.immersivetanning.registry                10 files
+com.otectus.immersivetanning.station                 8 files
 com.otectus.immersivetanning.trait                   3 files
 com.otectus.immersivetanning.util                    3 files
+com.otectus.immersivetanning.work                    12 files
 ```
 
-## Registered content (40 entries)
+## Registered content (56 entries)
 
 ### Blocks (3)
 
@@ -60,7 +69,7 @@ com.otectus.immersivetanning.util                    3 files
 | `tanners_rack` | `TANNERS_RACK` | `TannersRackBlock` | src/main/java/com/otectus/immersivetanning/registry/ModBlocks.java |
 | `tanners_vat` | `TANNERS_VAT` | `TannersVatBlock` | src/main/java/com/otectus/immersivetanning/registry/ModBlocks.java |
 
-### Items (10)
+### Items (11)
 
 | id | field | type | declared in |
 |---|---|---|---|
@@ -73,6 +82,7 @@ com.otectus.immersivetanning.util                    3 files
 | `tanners_knife` | `TANNERS_KNIFE` | `TannersKnifeItem` | src/main/java/com/otectus/immersivetanning/registry/ModItems.java |
 | `tanners_rack` | `TANNERS_RACK` | `Item` | src/main/java/com/otectus/immersivetanning/registry/ModItems.java |
 | `tanners_vat` | `TANNERS_VAT` | `Item` | src/main/java/com/otectus/immersivetanning/registry/ModItems.java |
+| `unfinished_leatherwork` | `UNFINISHED_LEATHERWORK` | `UnfinishedLeatherworkItem` | src/main/java/com/otectus/immersivetanning/registry/ModItems.java |
 | `wet_tanned_hide` | `WET_TANNED_HIDE` | `ProcessedHideItem` | src/main/java/com/otectus/immersivetanning/registry/ModItems.java |
 
 ### Block entities (3)
@@ -89,20 +99,35 @@ com.otectus.immersivetanning.util                    3 files
 |---|---|---|---|
 | `main` | `MAIN` | `CreativeModeTab` | src/main/java/com/otectus/immersivetanning/registry/ModCreativeTabs.java |
 
-### Sounds (14)
+### Sounds (29)
 
 | id | field | type | declared in |
 |---|---|---|---|
 | `block.leatherworkers_bench.cut` | `BENCH_CUT` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
 | `block.leatherworkers_bench.finish` | `BENCH_FINISH` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
+| `block.leatherworkers_bench.loosen` | `BENCH_LOOSEN` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
+| `block.leatherworkers_bench.needle` | `BENCH_NEEDLE` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
+| `block.leatherworkers_bench.page` | `BENCH_PAGE` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
+| `block.leatherworkers_bench.panel` | `BENCH_PANEL` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
 | `block.leatherworkers_bench.stitch` | `BENCH_STITCH` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
+| `block.leatherworkers_bench.tie` | `BENCH_TIE` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
+| `block.leatherworkers_bench.tighten` | `BENCH_TIGHTEN` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
+| `block.tanners_rack.burnish` | `RACK_BURNISH` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
 | `block.tanners_rack.dried` | `RACK_DRIED` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
+| `block.tanners_rack.lace` | `RACK_LACE` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
 | `block.tanners_rack.mount` | `RACK_MOUNT` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
 | `block.tanners_rack.scrape` | `RACK_SCRAPE` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
+| `block.tanners_rack.scrape_rough` | `RACK_SCRAPE_ROUGH` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
+| `block.tanners_rack.seat` | `RACK_SEAT` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
+| `block.tanners_rack.smooth` | `RACK_SMOOTH` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
+| `block.tanners_rack.wet_leather` | `WET_LEATHER` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
 | `block.tanners_vat.bark` | `VAT_BARK` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
 | `block.tanners_vat.bubble` | `VAT_BUBBLE` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
 | `block.tanners_vat.fill` | `VAT_FILL` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
 | `block.tanners_vat.hide` | `VAT_HIDE` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
+| `block.tanners_vat.lift` | `VAT_LIFT` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
+| `block.tanners_vat.pour` | `VAT_POUR` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
+| `block.tanners_vat.sweep` | `VAT_SWEEP` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
 | `item.awl.repair` | `AWL_REPAIR` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
 | `item.tanners_knife.strip` | `KNIFE_STRIP` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
 | `ui.tanning.fail` | `ACTION_FAIL` | `SoundEvent` | src/main/java/com/otectus/immersivetanning/registry/ModSounds.java |
@@ -147,22 +172,21 @@ _No datagen providers detected — assets and data JSON are hand-written._
 |---|---|
 | blockstates | 3 |
 | block models | 3 |
-| item models | 22 |
+| item models | 23 |
 | block textures | 8 |
-| item textures | 17 |
+| item textures | 18 |
 | recipes | 10 |
 | block loot tables | 3 |
 | block tags | 1 |
-| item tags | 9 |
+| item tags | 11 |
 | biome modifiers | 0 |
-| lang files | en_us.json |
+| lang files | en_us.json, es_es.json, pt_br.json, ru_ru.json, zh_cn.json |
 
 Also: `sounds.json` present.
 
 Run `check_mod.py` for a full consistency check (missing models, lang keys, textures).
 
 <!-- MODMAP:AUTO:END — everything below is hand-maintained and preserved -->
-
 
 
 
@@ -175,7 +199,14 @@ The generator above cannot see items registered in loops in `ModItems`:
 
 ## Current focus
 
-Ultima modpack integration (see README, Compatibility): hides from modded animals (Forge entity tags, per-mod hide
+1.3.0: hands-on stations (`docs/hands-on-stations.md`). Fleshing, finishing and leatherworking happen in the world at
+the stations, through a native focus backend (`client/station/*`, `mixin/client/CameraMixin`), with persistent work on
+the block entities (`work/*`, `station/*`), bounded work commands (protocol 3) and data-driven work patterns. Also in
+1.3.0: Genetic Animals (`eanimod`, verified against 0.11.12; guide `docs/compat/genetic-animals.md`, inventory
+`src/gameTest/resources/compat/genetic-animals-0.11.12.json`): hides decided at its animals' death from what they
+really drop (NATIVE) or by species (TANNING), cargo kept apart, Butchery carcasses only when seen, collar and bridle at
+the bench, tack keeping its data when equipped, its offers in Binding Leather. Before that, 1.2.0: Ice and Fire dragon-scale armor at the bench (scale-backed leatherwork with its own effect policy, explicit
+`replaces` closing the crafting-table route), and the Tanner's Knife stripping logs again. Before that, Ultima modpack integration (see README, Compatibility): hides from modded animals (Forge entity tags, per-mod hide
 sources, a `LivingDropsEvent` fallback for loot-table-less mobs), foreign skins on the rack (`hide_mounting` recipes),
 Butchery carcass kills, trait damage tags, loot functions, village trades, bench experience, Jade, and the Ultima pack
 test (`tools/packtest/ultima_pack_test.py` with the `smokeTestJar` agent). Before that: release 1.0.0 plus Binding
@@ -186,22 +217,36 @@ of the prototype metrics in the brief (fleshing time 6-12 s after three attempts
 
 ## Roadmap
 
-- [ ] Playtest fleshing (blade radius, overworking allowance, time limit) and stitching (beat, window) with players.
-- [ ] Custom audio; every sound event currently maps to vanilla sounds in `sounds.json`.
+- [ ] Playtest the 1.3 stations with players: blade radius and overworking on the drape, cut tolerance, seat
+  tolerance, the pull band, camera comfort; two real clients (operator and watcher) on a dedicated server.
+- [x] Custom audio for the station work (`tools/generate_sounds.py`, `art/tanning_sounds.py`); older events (mount,
+  dried, fill, hide, bubble, stitch, finish, strip, repair) still map to vanilla sounds.
 - [x] Jade tooltips for rack, vat and bench (`compat/jade`).
 - [ ] Townstead leatherworkers could tend vats and racks (a job in Townstead's `LeatherworkerJobs`; Townstead's code).
 
 ## Decisions
 
-- 1.1.0 progression hooks: `HideFleshedEvent` (posted in `finishFleshing` before Integrity is rounded) and
-  `LeatherworkStitchedEvent` (posted in `finishStitching` before `LeatherworkData` is written; experience and the
-  Masterwork advancement use the final workmanship) are the only events this mod posts. `ILeatherworkRecipeGate` is
-  consulted in `openBench` (filtered preview) and authoritatively in `selectBenchRecipe` before `LeatherStock.take`;
-  `ITanningAssistSource` multiplies `allowedMs` in `openFleshing` only (stitching is pattern-timed; no protocol change).
+- Progression hooks (1.1.0, moved in 1.3.0): `HideFleshedEvent` is posted in `RackStationLogic.finishFleshing` before
+  Integrity is rounded (`timedOut` only under `work.challengeTiming`); `LeatherworkStitchedEvent` in
+  `BenchStationLogic.commitCraft`, before `LeatherworkData` is written (never timed out; experience and the Masterwork
+  advancement use the final workmanship). These are the only events this mod posts. `ILeatherworkRecipeGate` is asked
+  when the pattern book is built, authoritatively in `prepare` before the ledger takes anything, and again in `tie`.
+  `ITanningAssistSource` multiplies the challenge allowance in `RackStationLogic.allowedMs` only.
+- 1.3.0 focus backend: native Forge, not Diegesis (no stationary or reduced-motion path in its public API, node-based
+  rather than surface work, 13 client mixins, a CurseForge-only beta); reasons in `docs/hands-on-stations.md`. Work
+  state (saved, server), leases (transient) and presentation (client) are separate; clients send only
+  `StationCommandPacket` intents (at most 6 ints and 48 12-bit points, BEGIN/END/STACK/CANCEL), checked for reach,
+  sight, tool, rate (24/s, burst 36, releases exempt) and path budget, then replayed. A release may arrive without new
+  points and lets go where the tool was (`Gesture.end` also always sends one).
+- 1.3.0 materials: a bench job's `MaterialLedger` is the only holder; `drain()` the only exit (refund before the first
+  cut, workpiece after, recovery, one break route, output pad). Tool wear, XP, events and advancements fire once in
+  `commitCraft`. Client tool checks go by kind (`WorkRules.isKnife`/`isAwl`): worn tools carry tags.
+- 1.3.0 patterns: `WorkPatterns` (schema v1) resolves explicit `work_pattern`, then a pattern named like the seam, then
+  the 1.2 seam adapted (`WorkPattern.fromLegacy`), then `generic_wrap`; broken files are skipped and reported.
 - Tanning is shorter than a simulation: raw -> flesh (rack) -> tan (vat) -> finish and dry (rack) -> stitch (bench).
   No soak stage, no tannic powder, no concentration, no repair kit, no spoilage, no random quality.
-- The only strategic choice is the finish, made when a wet hide is mounted (screen, keys 1-3, or sneak-use to repeat
-  the last finish). Traits come from the creature (datapack `hide_sources` + `hide_traits`), never from the player.
+- The only strategic choice is the finish: since 1.3.0 the rack's tension lever previews a detent, the finish's short
+  treatment is worked, and seating the lever commits it (sneak-use repeats the last finish). Traits come from the creature (datapack `hide_sources` + `hide_traits`), never from the player.
 - Integrity is stored in steps of 10 on hides and leather so tanned hides and leather stack; Workmanship is exact.
 - Leather of one piece must share finish and trait; the bench cuts the best Integrity first and averages it.
 - Every effect is per piece (no set bonus). Supple: speed, detection range, boots muffle STEP/HIT_GROUND/SWIM
@@ -217,10 +262,55 @@ of the prototype metrics in the brief (fleshing time 6-12 s after three attempts
   `vatMaxTannin` below 2 acts as 2. Station messages are `StationNotices` (S2C `StationNoticePacket`), not the action bar.
 - Fleshing is deterministic on both sides: `FleshingSurface` uses `java.util.Random`, `Mth` sin/cos tables and
   `StrictMath`; knife positions travel as 12-bit fixed point. The server replays them; a speed cap only refuses
-  teleports. Stitching uses the same `StitchRun` on both sides; server corrections never move the run backwards.
+  teleports. The client predicts from exactly the points it sends. Since 1.3.0 flesh is stored in eighths and saved
+  exactly, so a hide resumes where it was left; a scraped hide keeps its worked look (`scrapedLook`) for drawing only.
 - Bench recipes are a real `RecipeType`; `TanningData.rebuild` (ServerStarted and OnDatapackSync) adds automatic
   recipes for unstackable leather armor and `#immersive_tanning:leatherwork_equipment` and removes the crafting
   recipes they replace (only those that contain a leather ingredient). Books and other stackables are untouched.
+- 1.2.0 knife: `TannersKnifeItem.canPerformAction` answers only `ToolActions.AXE_STRIP`. Forge's default
+  `IForgeBlock.getToolModifiedState` returns null for a stack that cannot perform the action, so without it no log ever
+  stripped. The client calls the hook with `simulate = true` and only predicts; the server sets the block and, only if
+  `setBlock` succeeded, pays bark, wear, `ITEM_USED_ON_BLOCK` and the Bark advancement. A cancelled
+  `BlockToolModificationEvent` yields null and pays nothing. Side effect: Farmer's Delight's cutting board accepts the
+  knife for its `axe_strip` log recipes.
+- 1.2.0 explicit replacement: a bench recipe's optional `replaces` (server only; the network format is unchanged)
+  disables a named crafting recipe only in `TanningData.rebuild` step 4b, when replacement is on, the bench recipe is
+  active and every auxiliary resolves to a real item (Forge's empty-tag barrier does not count), the named recipe is a
+  crafting recipe making the same item, and neither blacklist protects it; every refusal is a note. Rebuilds start from
+  the recipes as loaded (`pristine`, renewed when `TanningData.reloadMarker()` counts a datapack load), so a rebuild
+  without a reload recomputes the same state and a reload leaves nothing stale.
+- 1.2.0 scale-backed leatherwork: `#immersive_tanning:scale_backed` (Ice and Fire's 48 pieces, generated by
+  `tools/generate_compat_recipes.py` with the 52 compat recipes: the amethyst family ships in both spellings) selects
+  `effect/LeatherworkPolicy.scaleBacked()` from the synced `scaleBacked` config section. `LeatherworkData.apply` records
+  `Profile = "scale_backed"` on tagged items, so a made piece keeps the policy if the tag changes; only that value is
+  ever written. An unrecognised record or an inverted range gives the neutral policy (no finish or quality effect,
+  traits still act), never the leather values. Effects, `adjustDamage`, `FieldRepair` and the tooltip all read the one
+  policy. Hardened adds flat armor folded into the piece's own (first) armor modifier and the usual separate toughness
+  modifier; ordinary leather's arithmetic is unchanged. Scale-backed pieces are not scrap-repairable unless
+  `allowScrapRepair`; anvils are untouched.
+- 1.3.0 Genetic Animals: everything GA-specific is keyed by the `eanimod` namespace and config
+  (`compat/geneticanimals/GeneticAnimals`); no class of it is compiled against. Its animals have no loot tables (the
+  llama's id is null, which the 1.2 `HideDropModifier` dereferenced), so `HideDropModifier` skips them and
+  `HideDrops.onLivingDrops` hands them to `GeneticAnimalsDrops`. Provenance: `LivingEntityMixin` brackets
+  `dropCustomDeathLoot` (its Java death loot) and `dropEquipment` (its inventory) inside `dropAllDeathLoot`, and
+  `MobMixin` marks worn equipment, into a `DeathDrops` record on the dying entity (identity sets of the captured item
+  entities, cleared on return, never saved); one `claim()` per death. NATIVE decomposes natural leather into the fewest
+  hides up to the source size (sizes yield 1/2/3) and mounts other natural skins by their `hide_mounting` size; TANNING
+  is `HideDrops.hides` for non-babies when the loot calls ran. A Butchery carcass counts only when a
+  `#immersive_tanning:carcasses` item with `tickCount == 0` sits exactly at the animal's position when its loot starts.
+  `compat.geneticAnimals.enabled = false` bypasses all of it (no hides; only the global Binding Leather conversion).
+- 1.3.0 GA hooks: `mixin/compat/eanimod/*` are `@Pseudo`, `remap = false`, `require = 0`, added by
+  `TanningMixinPlugin.getMixins` only when `LoadingModList` has `eanimod`; `postApply` checks that each target method now
+  calls its handler and records `GeneticAnimalsHooks` state (report and inspect show it; GameTests require `applied`).
+  Equipment: `getReplacementItemWithColour` RETURN and the `NEW ItemStack(ItemLike,int)` in `saddleAnimal` return a
+  one-item copy of the stack used. Trades: `getEanimodTrade`/`getWanderingEanimodTrade` RETURN through
+  `BindingLeather.offer`, which now rebuilds offers from `createTag()` so the reward flag and special price survive;
+  saved GA offers convert at `PlayerContainerEvent.Open` (before the offers are sent).
+- GA test facts: its animals are immune for 100 ticks after construction (`public int invulnerable`), GA replaces
+  vanilla animals on their first tick by default, and `run-gametest-ga/` is the `-PgeneticAnimals` world.
+- The pattern book labels results that share a hover name with the words of their registry ids the others lack
+  (`client/station/VariantLabels`: "Red", "Cat"), with the mod's name when they come from different mods, and the
+  whole id when that still does not tell them apart.
 - Binding Leather replaces vanilla leather. Ingredients: `IngredientMixin` swaps vanilla leather for Binding Leather in
   `Ingredient#getItems`'s cache right after it is filled, so `test`, stacking ids, the recipe network sync, JEI and
   anvil repair all see Binding Leather (always on; the cache is rebuilt on tag reload). Results: `TanningData.rebuild`
@@ -234,7 +324,7 @@ of the prototype metrics in the brief (fleshing time 6-12 s after three attempts
 - Leather armor made at the bench is dyed its finish colour; normal dyeing still works.
 - Every route to leather ends at the Tanner's Rack. Other mods' skins become raw hides through `hide_mounting` recipes
   (a recipe type so they reach clients and honour `forge:mod_loaded`); `HideItems.resolve` is the one place the rack,
-  "Next hide", the vat hint and the fleshing screen ask. A carcass kill (`#immersive_tanning:carcass_tools` or a
+  "Next hide", the vat hint and the rack's working view ask. A carcass kill (`#immersive_tanning:carcass_tools` or a
   configured enchantment on `#immersive_tanning:carcass_animals`, adult only) drops no hide: Butchery's carcass
   supplies the skin, and Butchery `/kill`s nearby vanilla leather items, not hides.
 - Mobs without a loot table (Lycanites) fire only `LivingDropsEvent`; `HideDrops` replaces their leather with the hide
@@ -248,8 +338,16 @@ of the prototype metrics in the brief (fleshing time 6-12 s after three attempts
 
 ## Known issues
 
+- Genetic Animals 0.11.12 logs an `UnsupportedOperationException` from its own `addAnimalsToVillages` at server start in
+  the dev runs (an immutable vanilla template pool); it is Genetic Animals' and harmless to the tests.
+- Genetic Animals' wool-coated sheep never drop leather (only maximum coat length under 5 does) and the spawn path
+  rarely gives a short-coated one, so a GameTest run's sheep pairs may cover wool only; sheep leather goes through the
+  cow's code path and has been seen converted in both a GameTest run and the pack test.
+
 - Under Hyprland the dev client window tiles as a tall strip, so `runClient -PsmokeTest` screenshots are portrait
   (`setWindowed` is ignored by the compositor). The checks are unaffected.
 - `check_mod.py` reports the loop-registered item models above as orphans; they are not.
+- The Ultima pack test's `kill_maka_sword` check is flaky: Lycanites sometimes spawns the maka as a baby that
+  `setBaby(false)` does not grow, and a baby drops no hide by design (seen in the `compat-3` run and in 1.2.0's first run).
 - With ModernFix's `faster_ingredients`, a single-tag ingredient (`#forge:leather`) tests the tag directly, so vanilla
   leather still passes such recipes. Item ingredients go through `getItems` and take only Binding Leather.

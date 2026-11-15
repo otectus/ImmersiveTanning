@@ -6,10 +6,12 @@ import com.otectus.immersivetanning.block.TannersRackBlock;
 import com.otectus.immersivetanning.block.TannersVatBlock;
 import com.otectus.immersivetanning.blockentity.StationBlockEntity;
 import com.otectus.immersivetanning.command.TanningCommands;
+import com.otectus.immersivetanning.compat.geneticanimals.GeneticAnimals;
 import com.otectus.immersivetanning.hide.HideSourceLoader;
 import com.otectus.immersivetanning.leather.BindingLeather;
 import com.otectus.immersivetanning.minigame.SeamPatterns;
-import com.otectus.immersivetanning.minigame.SessionManager;
+import com.otectus.immersivetanning.work.StationLeases;
+import com.otectus.immersivetanning.work.WorkPatterns;
 import com.otectus.immersivetanning.recipe.TanningData;
 import com.otectus.immersivetanning.trait.HideTraitLoader;
 import com.otectus.immersivetanning.util.Feedback;
@@ -45,6 +47,8 @@ public final class CommonEvents {
         event.addListener(new HideTraitLoader());
         event.addListener(new HideSourceLoader());
         event.addListener(new SeamPatterns());
+        event.addListener(new WorkPatterns());
+        event.addListener(TanningData.reloadMarker());
     }
 
     /** Trades that ask for or pay vanilla leather deal in Binding Leather (decided when an offer is generated). */
@@ -63,6 +67,7 @@ public final class CommonEvents {
     @SubscribeEvent
     public static void onServerStarted(ServerStartedEvent event) {
         TanningData.rebuild(event.getServer());
+        if (GeneticAnimals.isLoaded()) ImmersiveTanning.LOGGER.info("Immersive Tanning: {}", GeneticAnimals.summary());
     }
 
     /**
@@ -76,7 +81,7 @@ public final class CommonEvents {
 
     @SubscribeEvent
     public static void onServerStopping(ServerStoppingEvent event) {
-        SessionManager.onServerStopping(event.getServer());
+        StationLeases.onServerStopping();
     }
 
     @SubscribeEvent
@@ -86,22 +91,27 @@ public final class CommonEvents {
 
     @SubscribeEvent
     public static void onServerTick(TickEvent.ServerTickEvent event) {
-        if (event.phase == TickEvent.Phase.END) SessionManager.tick(event.getServer());
+        if (event.phase == TickEvent.Phase.END) StationLeases.tick(event.getServer());
     }
 
     @SubscribeEvent
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) SessionManager.onLogout(player);
+        if (event.getEntity() instanceof ServerPlayer player) StationLeases.onLogout(player);
     }
 
     @SubscribeEvent
     public static void onDeath(LivingDeathEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) SessionManager.onDeath(player);
+        if (event.getEntity() instanceof ServerPlayer player) StationLeases.onDeath(player);
+    }
+
+    @SubscribeEvent
+    public static void onDimensionChange(PlayerEvent.PlayerChangedDimensionEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) StationLeases.onDimensionChange(player);
     }
 
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
-        TanningCommands.register(event.getDispatcher());
+        TanningCommands.register(event.getDispatcher(), event.getBuildContext());
     }
 
     /**

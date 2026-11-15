@@ -19,6 +19,8 @@ public final class ClientSetup {
         modBus.addListener(ClientSetup::onClientSetup);
         modBus.addListener(ClientSetup::onRegisterRenderers);
         modBus.addListener(StationNotices::register);
+        modBus.addListener(com.otectus.immersivetanning.client.station.FocusKeys::register);
+        modBus.addListener(ClientSetup::onReloadListeners);
     }
 
     private static void onClientSetup(FMLClientSetupEvent event) {
@@ -28,6 +30,10 @@ public final class ClientSetup {
                         (stack, level, entity, seed) -> ProcessedHideItem.data(stack).size().ordinal() / 2F);
             }
         });
+    }
+
+    private static void onReloadListeners(net.minecraftforge.client.event.RegisterClientReloadListenersEvent event) {
+        event.registerReloadListener(new com.otectus.immersivetanning.client.station.StationShots());
     }
 
     private static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {

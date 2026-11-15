@@ -18,37 +18,59 @@ Version numbers live only in `gradle.properties`; `processResources` expands the
 - `.mcmod-tools/gradlew-quiet.sh <dir> compileJava` - compile only
 - `... build` - reobfuscated jar in `build/libs/`
 - `... runGameTestServer` - headless GameTests (`src/gameTest`, template `immersive_tanning:empty`); exits non-zero on failure
+- `... runGameTestServer -PgeneticAnimals` - the same with the pinned Genetic Animals release (`genetic_animals_version`,
+  Modrinth maven, runtime only; world in `run-gametest-ga/`); its tests are generated only when it is loaded
+- `... geneticAnimalsJar` - copies that release to `build/compat/` after checking `genetic_animals_sha1`
 - `... runClient -PsmokeTest` - loads the smoke-test agent (`src/smokeTest`): fresh flat world, stages every station
-  state and screen, saves `run/screenshots/smoketest_*.png`, writes `run/smoketest/smoketest-result.json`, quits
-- `... build smokeTestJar`, then `python3 tools/packtest/ultima_pack_test.py --expect dragn,lycanites,alexsmobs,butchery,magic,bench,trades`
+  state, tours each in the focused view with real input (`FocusTour`, `FocusDriver`), plays the tannery through
+  (`TanneryPlaythrough`), saves `run/screenshots/smoketest_*.png`, writes `run/smoketest/smoketest-result.json`, quits.
+  Do not compile while it runs (it loads classes from `build/classes`)
+- `... runClient -PsmokeTest -PjoinServer=host:port` - the same agent joins a running dedicated server instead
+  (`ServerJoinCheck`: rack placed by command once opped, focus, one stroke, leave) and writes the same result file
+- `... build smokeTestJar`, then `python3 tools/packtest/ultima_pack_test.py --expect dragn,lycanites,alexsmobs,butchery,magic,bench,trades,iceandfire,knife`
   - runs the jar in an isolated copy of the Ultima CurseForge instance (the real instance is never modified; a game
   window opens): pack checks and real kills (`src/smokeTest/.../PackChecks.java`); evidence in `build/packtest/<label>/`
+  - `--genetic-animals` adds the pinned Genetic Animals jar (group `geneticanimals`, `GeneticAnimalsChecks.java`);
+    `--pack-mods jei-,butchery-` keeps only the named pack jars for a small instance; `--extra-mod <jar>` adds any jar
 - `python3 tools/generate_textures.py` - verifies textures against the editable source `art/tanning_art.py`
   (`--write` exports, `--preview <png>` renders a contact sheet)
+- `python3 tools/generate_compat_recipes.py` - verifies the Ice and Fire bench recipes and `scale_backed` tags (main and
+  GameTest copies) against the generator (`--write` regenerates)
 
 ## Structure
 ```
 api/        public Java API (ImmersiveTanningAPI, TraitEffect)
 hide/       HideSize, HideData (NBT), HideSourceLoader (datapack immersive_tanning/hide_sources), HideItems (what the rack mounts)
 trait/      TraitRef (carried on stacks), HideTraitLoader (immersive_tanning/hide_traits), TraitEffects registry
-leather/    Finish, TanningQuality, LeatherData (leather items), LeatherworkData (equipment), FieldRepair,
-            BindingLeather (vanilla leather replacement; see mixin/IngredientMixin)
-effect/     LeatherworkEffects: attributes, visibility, sculk muffling, trait damage, durability conversion
-minigame/   FleshingSurface, StitchPattern/StitchRun/SeamPatterns (shared rules), sessions, SessionManager (server only)
-recipe/     LeatherworkingRecipe + serializer, TanningData (rebuild, detection, suppression), LeatherStock, AuxInventory
-loot/       HideDropModifier (global loot modifier), HideDrops (shared + LivingDropsEvent fallback, carcass kills), loot functions
-compat/     villager trades; jade (Jade discovers it by annotation)
+leather/    Finish, TanningQuality, LeatherData (leather items), LeatherworkData (equipment), LeatherworkProfile
+            (ordinary or scale-backed), FieldRepair, BindingLeather (vanilla leather replacement; see mixin/IngredientMixin)
+effect/     LeatherworkEffects: attributes, visibility, sculk muffling, trait damage, durability conversion;
+            LeatherworkPolicy: what finish and quality are worth per profile (every effect and tooltip reads it)
+minigame/   FleshingSurface (the hide's cells), StitchPattern (path maths), SeamPatterns (1.2 seam data), PressGate
+station/    StationFrame + Rack/Vat/BenchGeometry (local pixels <-> world, canonical surfaces), Rack/Vat/BenchStationLogic
+            (the rules of each station's commands), StationInteraction (use / sneak-use routing)
+work/       persistent work and who works it: FleshingWork, LeatherworkJob + MaterialLedger, WorkPattern(s) (datapack
+            immersive_tanning/work_patterns), StationLease(s), WorkCommandHandler (checks and dispatch), WorkRules, WorkAction
+recipe/     LeatherworkingRecipe + serializer (optional replaces), TanningData (rebuild, detection, suppression,
+            explicit replacement), LeatherStock, AuxInventory
+loot/       HideDropModifier (global loot modifier), HideDrops (shared + LivingDropsEvent fallback, carcass kills), loot functions,
+            DeathDrops (where each drop of one death came from; recorded by mixin/LivingEntityMixin and MobMixin)
+compat/     villager trades; jade (Jade discovers it by annotation); geneticanimals (Genetic Animals: death drops, tack,
+            trades, switches; its class hooks are mixin/compat/eanimod, added by mixin/TanningMixinPlugin only when installed)
 block/ blockentity/ item/ registry/ network/ config/ command/ event/ util/ advancement/ mixin/
-client/     everything client-only: screens, renderers, tooltips, packet handlers, JEI plugin (client/compat/jei)
+client/     everything client-only: station/ (focus: camera, input, behaviours, HUD, pattern book), render/ (hands,
+            props, hide texture), renderers, tooltips, packet handlers, JEI plugin (client/compat/jei)
 ```
 
 ## Conventions
 - `DeferredRegister` per registry in `registry/`; registration on the mod bus, gameplay on the Forge bus via `@Mod.EventBusSubscriber`.
 - Client code is reached only through `DistExecutor` (S2C packets, `ClientSetup` from the mod constructor).
 - Config: `ServerConfig` (SERVER, synced) and `ClientConfig` (CLIENT, presentation only). Read through their `get(...)` helpers.
-- Server is authoritative: clients send input events only (knife points, awl presses, choices); `SessionManager`
-  validates and scores. Never add a packet that carries a score or an item.
-- Bench materials move only between the player inventory and the bench's persisted escrow; refunded exactly once.
+- Server is authoritative: clients send bounded intents only (`StationCommandPacket`: points, presses, releases,
+  choices); `WorkCommandHandler` checks them and the station logic replays and scores them. Never add a packet that
+  carries a score or an item.
+- Bench materials move only between the player inventory, the job's `MaterialLedger` and the output pad; each stage has
+  one route out (refund, workpiece, recovery, break drop, output pad).
 - Player-facing text is always a translation key in `assets/immersive_tanning/lang/en_us.json`.
 - All item NBT lives under the `immersive_tanning` compound.
 - Block models are hand-written JSON; faces of elements outside 0..16 carry explicit UVs.

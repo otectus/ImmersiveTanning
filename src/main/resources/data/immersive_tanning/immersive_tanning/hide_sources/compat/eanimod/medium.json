@@ -1,0 +1,9 @@
+{
+  "entities": [
+    "eanimod:enhanced_sheep",
+    "eanimod:enhanced_pig"
+  ],
+  "size": "medium",
+  "count": 1,
+  "priority": 5
+}

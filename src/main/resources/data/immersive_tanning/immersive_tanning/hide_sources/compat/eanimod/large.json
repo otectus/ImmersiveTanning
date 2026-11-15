@@ -1,0 +1,11 @@
+{
+  "entities": [
+    "eanimod:enhanced_cow",
+    "eanimod:enhanced_mooshroom",
+    "eanimod:enhanced_moobloom",
+    "eanimod:enhanced_llama"
+  ],
+  "size": "large",
+  "count": 1,
+  "priority": 5
+}

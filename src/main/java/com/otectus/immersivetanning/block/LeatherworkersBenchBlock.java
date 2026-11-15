@@ -1,18 +1,13 @@
 package com.otectus.immersivetanning.block;
 
 import com.otectus.immersivetanning.blockentity.LeatherworkersBenchBlockEntity;
-import com.otectus.immersivetanning.item.AwlItem;
-import com.otectus.immersivetanning.minigame.SessionManager;
+import com.otectus.immersivetanning.station.StationInteraction;
 import com.otectus.immersivetanning.registry.ModBlockEntities;
-import com.otectus.immersivetanning.util.Feedback;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -34,7 +29,7 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
-/** The Leatherworker's Bench: use it with an Awl to choose a piece, cut it from your leather and stitch it. */
+/** The Leatherworker's Bench: lean in, open the pattern book, cut the leather with the knife, seat the panels and stitch them with the Awl. */
 public class LeatherworkersBenchBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
 
@@ -99,8 +94,8 @@ public class LeatherworkersBenchBlock extends BaseEntityBlock {
     @SuppressWarnings("deprecation")
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moved) {
         if (!state.is(newState.getBlock()) && !level.isClientSide && level.getBlockEntity(pos) instanceof LeatherworkersBenchBlockEntity bench) {
-            SessionManager.onStationRemoved(level, pos);
-            bench.dropEscrow();
+            bench.releaseAll();
+            bench.dropAll();
         }
         super.onRemove(state, level, pos, newState, moved);
     }
@@ -108,15 +103,6 @@ public class LeatherworkersBenchBlock extends BaseEntityBlock {
     @Override
     @SuppressWarnings("deprecation")
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        if (hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
-        ItemStack held = player.getItemInHand(hand);
-        if (player.isSecondaryUseActive() && held.getItem() instanceof BlockItem) return InteractionResult.PASS;
-        if (level.isClientSide) return InteractionResult.SUCCESS;
-        if (!(level.getBlockEntity(pos) instanceof LeatherworkersBenchBlockEntity bench) || !(player instanceof ServerPlayer sp)) {
-            return InteractionResult.PASS;
-        }
-        if (held.getItem() instanceof AwlItem) SessionManager.openBench(sp, bench, hand);
-        else Feedback.info(sp, "use_awl");
-        return InteractionResult.CONSUME;
+        return StationInteraction.use(level, pos, player, hand);
     }
 }

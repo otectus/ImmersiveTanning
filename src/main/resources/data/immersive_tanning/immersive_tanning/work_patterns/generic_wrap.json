@@ -1,0 +1,202 @@
+{
+  "schema_version": 1,
+  "panels": [
+    {
+      "id": "front",
+      "outline": [
+        [
+          0.1,
+          0.1
+        ],
+        [
+          0.9,
+          0.1
+        ],
+        [
+          0.9,
+          0.9
+        ],
+        [
+          0.1,
+          0.9
+        ]
+      ],
+      "size": [
+        0.36,
+        0.42
+      ],
+      "layout": [
+        0.3,
+        0.55
+      ]
+    },
+    {
+      "id": "back",
+      "outline": [
+        [
+          0.1,
+          0.1
+        ],
+        [
+          0.9,
+          0.1
+        ],
+        [
+          0.9,
+          0.9
+        ],
+        [
+          0.1,
+          0.9
+        ]
+      ],
+      "size": [
+        0.36,
+        0.42
+      ],
+      "layout": [
+        0.7,
+        0.55
+      ],
+      "layout_rotation_deg": 15
+    }
+  ],
+  "cuts": [
+    {
+      "id": "front_trim",
+      "panel": "front",
+      "path": [
+        [
+          0.1,
+          0.1
+        ],
+        [
+          0.9,
+          0.1
+        ]
+      ],
+      "tolerance": 0.045
+    },
+    {
+      "id": "back_trim",
+      "panel": "back",
+      "path": [
+        [
+          0.1,
+          0.1
+        ],
+        [
+          0.9,
+          0.1
+        ],
+        [
+          0.9,
+          0.9
+        ]
+      ],
+      "tolerance": 0.045
+    }
+  ],
+  "assembly": [
+    {
+      "panel": "front",
+      "anchor": "jig_front",
+      "target": [
+        0.36,
+        0.56
+      ],
+      "rotation_deg": 0,
+      "position_tolerance": 0.045,
+      "rotation_tolerance_deg": 9
+    },
+    {
+      "panel": "back",
+      "anchor": "jig_back",
+      "target": [
+        0.64,
+        0.56
+      ],
+      "rotation_deg": 0,
+      "position_tolerance": 0.045,
+      "rotation_tolerance_deg": 9
+    }
+  ],
+  "joins": [
+    {
+      "id": "side",
+      "a": {
+        "panel": "front",
+        "path": [
+          [
+            0.85,
+            0.2
+          ],
+          [
+            0.85,
+            0.8
+          ]
+        ]
+      },
+      "b": {
+        "panel": "back",
+        "path": [
+          [
+            0.15,
+            0.2
+          ],
+          [
+            0.15,
+            0.8
+          ]
+        ]
+      },
+      "actions": 5,
+      "pull": {
+        "min": 0.185,
+        "ideal": 0.23,
+        "max": 0.285
+      }
+    },
+    {
+      "id": "bound_edge",
+      "a": {
+        "panel": "front",
+        "path": [
+          [
+            0.2,
+            0.8
+          ],
+          [
+            0.7,
+            0.8
+          ]
+        ]
+      },
+      "b": {
+        "panel": "front",
+        "path": [
+          [
+            0.2,
+            0.7
+          ],
+          [
+            0.7,
+            0.7
+          ]
+        ]
+      },
+      "actions": 3,
+      "pull": {
+        "min": 0.155,
+        "ideal": 0.2,
+        "max": 0.255
+      }
+    }
+  ],
+  "quality_weights": {
+    "cutting": 0.3,
+    "assembly": 0.2,
+    "stitching": 0.5
+  },
+  "presentation": "immersive_tanning:generic_wrap"
+}

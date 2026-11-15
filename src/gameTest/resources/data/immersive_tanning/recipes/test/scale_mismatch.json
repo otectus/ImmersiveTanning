@@ -1,0 +1,17 @@
+{
+  "type": "immersive_tanning:leatherworking",
+  "leather": 1,
+  "auxiliary": [
+    {
+      "ingredient": {
+        "item": "minecraft:prismarine_shard"
+      },
+      "count": 5
+    }
+  ],
+  "result": {
+    "item": "minecraft:diamond_helmet"
+  },
+  "seam": "immersive_tanning:helmet",
+  "replaces": "minecraft:diamond_boots"
+}

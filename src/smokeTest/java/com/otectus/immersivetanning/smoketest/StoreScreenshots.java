@@ -4,23 +4,27 @@ import com.google.gson.GsonBuilder;
 import com.otectus.immersivetanning.ImmersiveTanning;
 import com.otectus.immersivetanning.block.LeatherworkersBenchBlock;
 import com.otectus.immersivetanning.block.TannersRackBlock;
+import com.otectus.immersivetanning.block.TannersVatBlock;
 import com.otectus.immersivetanning.blockentity.LeatherworkersBenchBlockEntity;
 import com.otectus.immersivetanning.blockentity.TannersRackBlockEntity;
 import com.otectus.immersivetanning.blockentity.TannersVatBlockEntity;
-import com.otectus.immersivetanning.client.screen.FinishSelectScreen;
-import com.otectus.immersivetanning.client.screen.FleshingScreen;
-import com.otectus.immersivetanning.client.screen.LeatherworkScreen;
+import com.otectus.immersivetanning.client.station.BenchBehavior;
+import com.otectus.immersivetanning.client.station.StationFocus;
 import com.otectus.immersivetanning.config.ServerConfig;
 import com.otectus.immersivetanning.hide.HideData;
 import com.otectus.immersivetanning.hide.HideSize;
 import com.otectus.immersivetanning.leather.Finish;
 import com.otectus.immersivetanning.minigame.FleshingSurface;
-import com.otectus.immersivetanning.minigame.StitchRun;
-import com.otectus.immersivetanning.network.packet.OpenBenchPacket;
+import com.otectus.immersivetanning.minigame.StitchPattern;
 import com.otectus.immersivetanning.registry.ModBlocks;
 import com.otectus.immersivetanning.registry.ModItems;
+import com.otectus.immersivetanning.station.BenchGeometry;
+import com.otectus.immersivetanning.station.RackGeometry;
+import com.otectus.immersivetanning.station.VatGeometry;
 import com.otectus.immersivetanning.trait.HideTraitLoader;
 import com.otectus.immersivetanning.trait.TraitRef;
+import com.otectus.immersivetanning.work.LeatherworkJob;
+import com.otectus.immersivetanning.work.WorkPattern;
 import net.minecraft.Util;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
@@ -31,6 +35,7 @@ import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.tutorial.TutorialSteps;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -68,8 +73,10 @@ import java.util.function.BiConsumer;
 
 /**
  * Opt-in CurseForge screenshot capture, confined to the test agent and enabled only by
- * {@code -Dimmersive_tanning.screenshots.output=<dir>}. It builds a tannery yard and drives real, server-scored
- * fleshing, finishing and stitching sessions, saving framebuffer captures without HUD, chat or toasts.
+ * {@code -Dimmersive_tanning.screenshots.output=<dir>}. It builds a tannery yard and works its stations in the focused
+ * view with real, server-scored input (see {@link FocusDriver}): fleshing, the tension lever and cords, the pattern
+ * book, cutting, assembly and stitching, saving framebuffer captures without the vanilla HUD, chat or toasts (the
+ * station's own guide stays, as it is part of the work).
  */
 @Mod.EventBusSubscriber(modid = SmokeTestAgent.MOD_ID, value = Dist.CLIENT)
 public final class StoreScreenshots {
@@ -80,14 +87,11 @@ public final class StoreScreenshots {
     private static CompletableFuture<Void> pending;
     private static int step, action, baseY, pieceSlot = -1;
     private static long entered, started;
-    private static boolean finished, renamed, fleshShot, stitchShot;
+    private static boolean finished, renamed, fleshShot;
     private static volatile float lockYaw = Float.NaN, lockPitch;
     private static double cursorX = 0.3, cursorY = 0.3;
     private static BlockPos rawRack, emptyRack, bench, vat;
-    // Fleshing driver: the current knife stroke in surface cells.
-    private static float[] stroke;
-    private static float strokeT;
-    private static float lastCellX = 32, lastCellY = 24;
+    private static int passes;
 
     static boolean enabled() { return OUTPUT != null; }
 
@@ -110,39 +114,21 @@ public final class StoreScreenshots {
         }
     }
 
-    /** Stitches are timed per frame; client ticks are too coarse for the ring windows. */
+    /** Pins the scripted view every frame (pointer motion reaching the window cannot turn it). */
     @SubscribeEvent
     public static void onRenderTick(TickEvent.RenderTickEvent event) {
         if (!enabled() || event.phase != TickEvent.Phase.START) return;
-        Minecraft mc = Minecraft.getInstance();
-        lockView(mc);
-        if (step != 7 || !(mc.screen instanceof LeatherworkScreen screen)) return;
-        try {
-            if (!field(screen, "stage").toString().equals("PLAYING")) return;
-            StitchRun run = (StitchRun) field(screen, "run");
-            if (run == null || run.isComplete()) return;
-            int elapsed = (int) (Util.getMillis() - (long) field(screen, "clientStartMs"));
-            if (!stitchShot && run.next() == 6 && elapsed >= run.time(6) - 260) {
-                shot(mc, "stitching");
-                stitchShot = true;
-            }
-            if (elapsed >= run.time(run.next()) - 4) {
-                // One physical press per stitch: the gate ignores a key that is still held.
-                screen.keyPressed(GLFW.GLFW_KEY_SPACE, 0, 0);
-                screen.keyReleased(GLFW.GLFW_KEY_SPACE, 0, 0);
-            }
-        } catch (Exception e) {
-            throw new IllegalStateException("Stitch input failed", e);
-        }
+        lockView(Minecraft.getInstance());
     }
 
     static void tick(Minecraft mc) throws Exception {
         if (finished) return;
         if (started == 0) started = Util.getMillis();
-        if (Util.getMillis() - started > 240_000) throw new IllegalStateException("Store screenshots stalled at step " + step);
+        if (Util.getMillis() - started > 300_000) throw new IllegalStateException("Store screenshots stalled at step " + step + ", action " + action);
         mc.getToasts().clear();
         lockView(mc);
-        if (mc.screen != null && !(mc.screen instanceof InventoryScreen)) placeCursor(mc);
+        FocusDriver.tick();
+        if (mc.screen != null && !(mc.screen instanceof InventoryScreen) && !StationFocus.active()) placeCursor(mc);
         if (pending != null && !pending.isDone()) return;
         if (pending != null) { pending.join(); pending = null; }
         long age = Util.getMillis() - entered;
@@ -171,10 +157,26 @@ public final class StoreScreenshots {
                 advance(1);
             }
             case 1 -> {
-                if (mc.getWindow().getWidth() != WIDTH && age > 1500 && action == 0) { mc.getWindow().toggleFullScreen(); action++; }
-                if (age > 6500) {
+                if (age > 1500 && action == 0) {
+                    // A tiling window manager can ignore native resizing. Capture at the requested resolution anyway.
+                    mc.getWindow().setWidth(WIDTH);
+                    mc.getWindow().setHeight(HEIGHT);
+                    mc.resizeDisplay();
+                    action++;
+                }
+                if (age > 6500 && action == 1) {
                     EVIDENCE.put("framebuffer", mc.getMainRenderTarget().width + "x" + mc.getMainRenderTarget().height);
                     shot(mc, "yard_wide");
+                    server(mc, (level, player) -> look(player, -9.0, 2.7, 3.5, -2.0, 0.95, -3.2));
+                    action++;
+                }
+                if (age > 8800 && action == 2) {
+                    shot(mc, "yard_angle");
+                    server(mc, (level, player) -> look(player, -7.0, 1.8, 1.0, -1.5, 0.85, -3.0));
+                    action++;
+                }
+                if (age > 11000 && action == 3) {
+                    shot(mc, "yard_detail");
                     server(mc, (level, player) -> look(player, -7.0, 1.55, -0.9, -7.6, 0.85, -2.6));
                     advance(2);
                 }
@@ -184,32 +186,28 @@ public final class StoreScreenshots {
                 if (action == 1 && age > 2800) { use(mc, rawRack); advance(3); }
             }
             case 3 -> {
-                if (!(mc.screen instanceof FleshingScreen screen)) break;
-                String stage = field(screen, "stage").toString();
-                FleshingSurface surface = (FleshingSurface) field(screen, "surface");
-                if (stage.equals("PLAYING")) {
-                    flesh(screen, surface);
-                    if (!fleshShot && surface.coverage() > .5F && stroke != null && strokeT > .4F) {
-                        shot(mc, "fleshing");
-                        fleshShot = true;
-                    }
-                    if (surface.coverage() >= .97F || age > 22_000) {
-                        if (stroke != null) release(screen);
-                        screen.keyPressed(GLFW.GLFW_KEY_ENTER, 0, 0);
-                    }
-                } else if (stage.equals("RESULT")) {
-                    if (action == 0) {
+                // Fleshing in the focused view: careful passes along the grain, a shot mid-stroke, then the result.
+                TannersRackBlockEntity rack = (TannersRackBlockEntity) mc.level.getBlockEntity(rawRack);
+                if (action == 0 && FocusDriver.focusedAt(rawRack) && age > 1500) {
+                    queueFlesh(mc, rack);
+                    action++;
+                } else if (action == 1 && rack.mode() == TannersRackBlockEntity.Mode.SCRAPED) {
+                    action = 2;
+                    entered = Util.getMillis();
+                } else if (action == 1 && FocusDriver.idle()) {
+                    FleshingSurface surface = rack.work() == null ? null : rack.work().surface();
+                    if (surface != null) {
                         EVIDENCE.put("fleshing_coverage", surface.coverage());
                         EVIDENCE.put("fleshing_score", surface.score());
-                        action++;
-                        entered = Util.getMillis();
-                    } else if (age > 1600) {
-                        shot(mc, "fleshing_result");
-                        mc.screen.onClose();
-                        // Hang a fresh hide so the yard shots keep the whole progression on its racks.
-                        server(mc, (level, player) -> ((TannersRackBlockEntity) level.getBlockEntity(rawRack)).mountRaw(HideData.raw(HideSize.LARGE, null)));
-                        advance(4);
                     }
+                    if (surface != null && (surface.coverage() < .9F && age < 40_000)) queueFlesh(mc, rack);
+                    else FocusDriver.key(GLFW.GLFW_KEY_F);
+                } else if (action == 2 && age > 1600) {
+                    shot(mc, "fleshing_result");
+                    StationFocus.leave(true);
+                    // Hang a fresh hide so the yard shots keep the whole progression on its racks.
+                    server(mc, (level, player) -> ((TannersRackBlockEntity) level.getBlockEntity(rawRack)).mountRaw(HideData.raw(HideSize.LARGE, null)));
+                    advance(4);
                 }
             }
             case 4 -> {
@@ -219,22 +217,55 @@ public final class StoreScreenshots {
                 }
                 if (action == 1 && age > 3000) { shot(mc, "vats"); action++; }
                 if (action == 2 && age > 3300) {
+                    use(mc, vat);
+                    action++;
+                }
+                if (action == 3 && FocusDriver.focusedAt(vat) && age > 4600) {
+                    FocusDriver.click(vat, VatGeometry.paddleBox().getCenter());
+                    FocusDriver.wait(4);
+                    List<Vec3> sweep = new ArrayList<>();
+                    for (int i = 0; i <= 30; i++) {
+                        float angle = (float) (i / 30.0 * Math.PI * 2);
+                        sweep.add(VatGeometry.surfacePoint(.5F + .32F * (float) Math.cos(angle), .5F + .32F * (float) Math.sin(angle), true));
+                    }
+                    FocusDriver.drag(vat, sweep, 20, () -> shot(mc, "vat_stirring"));
+                    action++;
+                }
+                if (action == 4 && FocusDriver.idle() && age > 6000) {
+                    EVIDENCE.put("vat_tended", ((TannersVatBlockEntity) mc.level.getBlockEntity(vat)).slots().stream().anyMatch(TannersVatBlockEntity.Slot::tended));
+                    StationFocus.leave(true);
                     int wet = slotOf(mc, ModItems.WET_TANNED_HIDE.get());
                     select(mc, wet);
                     server(mc, (level, player) -> look(player, 0.4, 1.7, -0.8, 0.5, 0.8, -2.5));
                     action++;
                 }
-                if (action == 3 && age > 4300) { use(mc, emptyRack); advance(5); }
+                if (action == 5 && age > 8000) { use(mc, emptyRack); advance(5); }
             }
             case 5 -> {
-                if (mc.screen instanceof FinishSelectScreen screen) {
-                    if (action == 0 && age > 1500) { shot(mc, "finish_select"); action++; }
-                    if (action == 1 && age > 1800) {
-                        screen.keyPressed(GLFW.GLFW_KEY_2, 0, 0);
-                        screen.keyReleased(GLFW.GLFW_KEY_2, 0, 0);
+                // Harness: the lever swung through Supple and back to its middle detent, the cords drawn, the lever seated.
+                TannersRackBlockEntity rack = (TannersRackBlockEntity) mc.level.getBlockEntity(emptyRack);
+                if (action == 0 && FocusDriver.focusedAt(emptyRack) && rack.mode() == TannersRackBlockEntity.Mode.FRAMING && age > 1500) {
+                    float from = RackGeometry.detentDegrees(rack.finish());
+                    List<Vec3> path = new ArrayList<>();
+                    for (float a : new float[]{from, 12F, 24F, 38F, 24F, 12F, 0F}) path.add(RackGeometry.leverEnd(a));
+                    FocusDriver.drag(emptyRack, path, 10, () -> shot(mc, "finish_lever"));
+                    action++;
+                    passes = 0;
+                } else if (action == 1 && FocusDriver.idle() && rack.mode() == TannersRackBlockEntity.Mode.FRAMING) {
+                    if (rack.treated()) {
+                        FocusDriver.click(emptyRack, RackGeometry.LEVER_PIVOT);
                         action++;
+                    } else if (passes < 6) {
+                        FocusDriver.click(emptyRack, RackGeometry.cordBox().getCenter());
+                        FocusDriver.drag(emptyRack, FocusDriver.line(FocusDriver.frame(.5F, .18F), FocusDriver.frame(.5F, .9F), 20), 12,
+                                passes == 0 ? () -> shot(mc, "finishing") : null);
+                        passes++;
+                    } else {
+                        throw new IllegalStateException("Harness cords did not finish: " + rack.treatment());
                     }
-                } else if (action >= 2) {
+                } else if (action == 2 && rack.mode() == TannersRackBlockEntity.Mode.DRYING) {
+                    EVIDENCE.put("finish", rack.finish().getSerializedName());
+                    StationFocus.leave(true);
                     server(mc, (level, player) -> look(player, -3.4, 1.45, 0.75, -3.6, 0.75, -3.2));
                     advance(6);
                 }
@@ -247,23 +278,45 @@ public final class StoreScreenshots {
                     action++;
                 }
                 if (action == 2 && age > 4600) { use(mc, bench); action++; }
-                if (action == 3 && mc.screen instanceof LeatherworkScreen screen && age > 6200) {
-                    shot(mc, "bench_select");
-                    choose(screen, Items.LEATHER_CHESTPLATE, Finish.HARNESS);
+                if (action == 3 && FocusDriver.focusedAt(bench) && age > 6000 && FocusDriver.idle()) {
+                    FocusDriver.click(bench, BenchGeometry.BOOK.getCenter());
+                    action++;
+                }
+                ResourceLocation tunic = ImmersiveTanning.id("leatherworking/leather_chestplate");
+                if (action == 4 && StationFocus.session() != null && StationFocus.session().behavior() instanceof BenchBehavior book && book.bookOffers(tunic)) {
+                    action++;
+                    entered = Util.getMillis();
+                    return; // let the catalogue render before photographing it
+                }
+                if (action == 5 && age > 1200 && StationFocus.session() != null && StationFocus.session().behavior() instanceof BenchBehavior book) {
+                    shot(mc, "pattern_book");
+                    book.selectInBook(tunic);
+                    book.prepareFromBook(tunic, Finish.HARNESS);
                     advance(7);
                 }
             }
             case 7 -> {
-                if (!(mc.screen instanceof LeatherworkScreen screen)) break;
-                String stage = field(screen, "stage").toString();
-                if (action == 0 && stage.equals("READY") && age > 600) { shot(mc, "cutting"); action++; }
-                if (stage.equals("RESULT")) {
-                    if (action < 2) { action = 2; entered = Util.getMillis(); }
-                    else if (age > 1700) {
-                        shot(mc, "stitch_result");
-                        mc.screen.onClose();
-                        advance(8);
-                    }
+                LeatherworkersBenchBlockEntity be = (LeatherworkersBenchBlockEntity) mc.level.getBlockEntity(bench);
+                LeatherworkJob job = be.job();
+                if (action == 0 && job != null && FocusDriver.idle()) {
+                    queueCuts(mc, job);
+                    action++;
+                } else if (action == 1 && job != null && job.stage() == LeatherworkJob.Stage.ASSEMBLY && FocusDriver.idle()) {
+                    queueSeats(mc, job);
+                    action++;
+                } else if (action == 2 && job != null && job.stage() == LeatherworkJob.Stage.STITCHING && FocusDriver.idle()) {
+                    queueStitches(mc, job);
+                    action++;
+                } else if (action == 3 && job == null && be.hasOutput()) {
+                    action++;
+                    entered = Util.getMillis();
+                } else if (action == 4 && age > 1700) {
+                    shot(mc, "stitch_result");
+                    FocusDriver.click(bench, BenchGeometry.OUTPUT_PAD.getCenter());
+                    action++;
+                } else if (action == 5 && FocusDriver.idle() && slotOf(mc, Items.LEATHER_CHESTPLATE) >= 0) {
+                    StationFocus.leave(true);
+                    advance(8);
                 }
             }
             case 8 -> {
@@ -272,7 +325,7 @@ public final class StoreScreenshots {
                     if (pieceSlot < 0) throw new IllegalStateException("Stitching did not produce the tunic");
                     EVIDENCE.put("tunic", mc.player.getInventory().getItem(pieceSlot).getTag() == null ? "" : mc.player.getInventory().getItem(pieceSlot).getTag().toString());
                     hideJeiOverlay();
-                    mc.options.guiScale().set(4);
+                    mc.options.guiScale().set(3);
                     mc.resizeDisplay();
                     final int slot = pieceSlot;
                     mc.setScreen(new InventoryScreen(mc.player) {
@@ -295,8 +348,24 @@ public final class StoreScreenshots {
                 }
             }
             case 9 -> {
-                if (age > 3000) {
+                if (action == 0 && age > 3000) {
                     shot(mc, "yard_outro");
+                    server(mc, (level, player) -> look(player, 4.4, 1.9, 1.1, 6.5, .95, -2.0));
+                    action++;
+                }
+                if (action == 1 && age > 6000) {
+                    shot(mc, "finished_gear");
+                    mc.options.fov().set(60);
+                    server(mc, StoreScreenshots::stageCollection);
+                    action++;
+                }
+                if (action == 2 && age > 9500) {
+                    shot(mc, "workstation_collection");
+                    server(mc, (level, player) -> look(player, -4.5, 2.2, 3.7, -.2, .65, .3));
+                    action++;
+                }
+                if (action == 3 && age > 12500) {
+                    shot(mc, "workstation_collection_angle");
                     EVIDENCE.put("shots", SHOTS);
                     EVIDENCE.put("pass", true);
                     Files.writeString(Path.of(OUTPUT, "result.json"), new GsonBuilder().setPrettyPrinting().create().toJson(EVIDENCE));
@@ -307,81 +376,70 @@ public final class StoreScreenshots {
         }
     }
 
-    // ------------------------------------------------------------------ fleshing driver
+    // ------------------------------------------------------------------ focus input
 
-    /** Greedy knife: stroke along each patch's grain through the nearest flesh still on the hide, at a hand's pace. */
-    private static void flesh(FleshingScreen screen, FleshingSurface surface) {
-        int[] area = screen.workArea();
-        if (stroke == null) {
-            int best = -1;
-            float bestScore = Float.MAX_VALUE;
-            for (int y = 0; y < FleshingSurface.H; y++) for (int x = 0; x < FleshingSurface.W; x++) {
-                if (!surface.isHide(x, y) || surface.thickness(x, y) <= 0F) continue;
-                float d = (x - lastCellX) * (x - lastCellX) + (y - lastCellY) * (y - lastCellY);
-                float score = d - surface.thickness(x, y) * 40F;
-                if (score < bestScore) { bestScore = score; best = x + y * FleshingSurface.W; }
+    /** Careful passes along each flesh patch's grain on the client's copy of the hide, a shot mid-stroke past half clean. */
+    private static void queueFlesh(Minecraft mc, TannersRackBlockEntity rack) {
+        if (rack.work() == null) return;
+        FleshingSurface surface = rack.work().surface();
+        for (int p = 0; p < surface.patches(); p++) {
+            float cos = (float) Math.cos(surface.grain(p)), sin = (float) Math.sin(surface.grain(p));
+            for (float off = -9F; off <= 9F; off += 2.6F) {
+                float cx = surface.patchX(p) - sin * off, cy = surface.patchY(p) + cos * off;
+                List<Vec3> stroke = new ArrayList<>();
+                for (int i = 0; i <= 24; i++) {
+                    float t = i / 24F;
+                    float u = Math.max(.01F, Math.min(.99F, (cx - cos * 11F + cos * 22F * t) / FleshingSurface.W));
+                    float v = Math.max(.01F, Math.min(.99F, (cy - sin * 11F + sin * 22F * t) / FleshingSurface.H));
+                    stroke.add(FocusDriver.hide(u, v));
+                }
+                FocusDriver.drag(rawRack, stroke, 6, () -> {
+                    if (!fleshShot && rack.work() != null && rack.work().surface().coverage() > .5F) {
+                        shot(mc, "fleshing");
+                        fleshShot = true;
+                    }
+                }, () -> rack.mode() == TannersRackBlockEntity.Mode.RAW);
             }
-            if (best < 0) return;
-            float cx = best % FleshingSurface.W + .5F, cy = best / FleshingSurface.W + .5F;
-            float g = surface.grain(surface.region((int) cx, (int) cy));
-            float ux = (float) Math.cos(g), uy = (float) Math.sin(g);
-            float back = reach(surface, cx, cy, -ux, -uy), ahead = reach(surface, cx, cy, ux, uy);
-            stroke = new float[]{cx - ux * back, cy - uy * back, cx + ux * ahead, cy + uy * ahead};
-            strokeT = 0F;
-            screen.mouseClicked(sx(area, stroke[0]), sy(area, stroke[1]), 0);
         }
-        float length = (float) Math.hypot(stroke[2] - stroke[0], stroke[3] - stroke[1]);
-        float stepT = length <= 0F ? 1F : 1F / length;
-        for (int i = 0; i < 4 && strokeT < 1F; i++) {
-            strokeT = Math.min(1F, strokeT + stepT);
-            float x = stroke[0] + (stroke[2] - stroke[0]) * strokeT, y = stroke[1] + (stroke[3] - stroke[1]) * strokeT;
-            screen.mouseDragged(sx(area, x), sy(area, y), 0, 0, 0);
-            cursorX = sx(area, x);
-            cursorY = sy(area, y);
-        }
-        if (strokeT >= 1F) release(screen);
     }
 
-    private static void release(FleshingScreen screen) {
-        int[] area = screen.workArea();
-        lastCellX = stroke[2];
-        lastCellY = stroke[3];
-        screen.mouseReleased(sx(area, stroke[2]), sy(area, stroke[3]), 0);
-        stroke = null;
+    private static void queueCuts(Minecraft mc, LeatherworkJob job) {
+        for (int c = 0; c < job.pattern().cuts().size(); c++) {
+            float[] path = job.pattern().cutPath(c);
+            List<Vec3> points = new ArrayList<>();
+            for (int i = 0; i <= 20; i++) {
+                float[] p = StitchPattern.pointAt(path, i / 20F);
+                points.add(FocusDriver.plane(p[0], p[1]));
+            }
+            FocusDriver.drag(bench, points, 8, c == 1 ? () -> shot(mc, "cutting") : null);
+        }
     }
 
-    /** How far the knife can travel from a point in one direction without leaving the hide (at most 7 cells). */
-    private static float reach(FleshingSurface surface, float x, float y, float ux, float uy) {
-        float d = 0F;
-        while (d < 7F) {
-            float nx = x + ux * (d + .5F), ny = y + uy * (d + .5F);
-            int cx = (int) Math.floor(nx), cy = (int) Math.floor(ny);
-            if (cx < 0 || cy < 0 || cx >= FleshingSurface.W || cy >= FleshingSurface.H || !surface.isHide(cx, cy)) break;
-            d += .5F;
+    private static void queueSeats(Minecraft mc, LeatherworkJob job) {
+        WorkPattern pattern = job.pattern();
+        for (int p = 0; p < pattern.panels().size(); p++) {
+            float[] from = pattern.staging(p);
+            WorkPattern.Placement to = pattern.placement(p);
+            int panel = p;
+            FocusDriver.drag(bench, FocusDriver.line(FocusDriver.plane(from[0], from[1]), FocusDriver.plane(to.x(), to.y()), 8), 8,
+                    () -> {
+                        FocusDriver.rotatePanel(to.rot() - from[2]);
+                        if (panel == pattern.panels().size() - 1) shot(mc, "assembly");
+                    });
         }
-        return d;
     }
 
-    private static double sx(int[] area, float cellX) { return area[0] + cellX / FleshingSurface.W * area[2]; }
-    private static double sy(int[] area, float cellY) { return area[1] + cellY / FleshingSurface.H * area[3]; }
-
-    // ------------------------------------------------------------------ bench
-
-    /** Clicks the offered piece's row, as a player would. */
-    private static void choose(LeatherworkScreen screen, net.minecraft.world.item.Item item, Finish finish) throws Exception {
-        var offer = (OpenBenchPacket) field(screen, "offer");
-        int index = -1;
-        for (int i = 0; i < offer.entries().size(); i++) {
-            var entry = offer.entries().get(i);
-            if (entry.result().is(item) && entry.finish() == finish) { index = i; break; }
+    private static void queueStitches(Minecraft mc, LeatherworkJob job) {
+        for (int a = 0; a < job.stitchCount(); a++) {
+            float[] f = job.stitchFrame(a);
+            float pull = job.pattern().joinOf(a).pullIdeal();
+            List<Vec3> path = new ArrayList<>();
+            for (int i = 0; i <= 6; i++) path.add(FocusDriver.plane(f[4] + f[6] * pull * i / 6F, f[5] + f[7] * pull * i / 6F));
+            FocusDriver.drag(bench, path, 6, a == job.stitchCount() / 2 ? () -> shot(mc, "stitching") : null);
         }
-        if (index < 0) throw new IllegalStateException("Bench did not offer " + item + " in " + finish);
-        int scroll = Math.max(0, index - 2);
-        setField(screen, "scroll", scroll);
-        int left = (int) field(screen, "left"), top = (int) field(screen, "top");
-        // Rows start under the title (top + 20) and are 26 px apart; aim for the middle of the 24 px button face.
-        screen.mouseClicked(left + 40, top + 20 + (index - scroll) * 26 + 12, 0);
-        EVIDENCE.put("bench_choice", index);
+        float[] last = job.stitchFrame(job.stitchCount() - 1);
+        FocusDriver.wait(4);
+        FocusDriver.click(bench, FocusDriver.plane(last[4] + .04F, last[5] + .04F).add(0, .25, 0));
     }
 
     // ------------------------------------------------------------------ helpers
@@ -393,6 +451,9 @@ public final class StoreScreenshots {
 
     private static void shot(Minecraft mc, String name) {
         try (var image = Screenshot.takeScreenshot(mc.getMainRenderTarget())) {
+            if (image.getWidth() != WIDTH || image.getHeight() != HEIGHT) {
+                throw new IllegalStateException("Expected " + WIDTH + "x" + HEIGHT + ", got " + image.getWidth() + "x" + image.getHeight());
+            }
             String file = String.format("%02d_%s.png", SHOTS.size() + 1, name);
             image.writeToFile(Path.of(OUTPUT, file));
             SHOTS.add(file);
@@ -436,7 +497,8 @@ public final class StoreScreenshots {
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException("Could not place the cursor", e);
         }
-        if (!(mc.screen instanceof FleshingScreen)) { cursorX = .3; cursorY = .3; }
+        cursorX = .3;
+        cursorY = .3;
     }
 
     private static void select(Minecraft mc, int slot) {
@@ -562,7 +624,7 @@ public final class StoreScreenshots {
         rack(level, emptyRack);
         // Vats: one steeping a batch, one fresh with liquor.
         for (BlockPos pos : new BlockPos[]{vat, vat.east(2)}) {
-            level.setBlockAndUpdate(pos, ModBlocks.TANNERS_VAT.get().defaultBlockState());
+            level.setBlockAndUpdate(pos, ModBlocks.TANNERS_VAT.get().defaultBlockState().setValue(TannersVatBlock.FACING, Direction.SOUTH));
             TannersVatBlockEntity be = (TannersVatBlockEntity) level.getBlockEntity(pos);
             be.fillWater();
             be.addTannin(6);
@@ -596,13 +658,33 @@ public final class StoreScreenshots {
         player.getInventory().setItem(11, ModItems.leather(Finish.HARDENED).create(80, tough, 6));
         player.getInventory().setItem(12, new ItemStack(Items.STRING, 8));
         player.inventoryMenu.broadcastChanges();
-        look(player, -1.5, 2.4, 4.0, -2.0, 0.6, -3.0);
+        look(player, -1.0, 3.3, 7.8, -0.5, 1.1, -3.5);
     }
 
     private static ItemStack dyed(net.minecraft.world.item.Item item, Finish finish) {
         ItemStack stack = new ItemStack(item);
         ((DyeableLeatherItem) item).setColor(stack, finish.leatherColor());
         return stack;
+    }
+
+    /** A compact set for the cover: all three stations large enough to read, with the working yard behind them. */
+    private static void stageCollection(ServerLevel level, ServerPlayer player) {
+        BlockPos displayRack = new BlockPos(-3, baseY, 0);
+        BlockPos displayVat = new BlockPos(-1, baseY, 0);
+        BlockPos displayBench = new BlockPos(1, baseY, 0);
+        rack(level, displayRack);
+        TannersRackBlockEntity rack = (TannersRackBlockEntity) level.getBlockEntity(displayRack);
+        rack.mountWet(new HideData(HideSize.LARGE, 90, null), Finish.SUPPLE);
+        rack.advance(ServerConfig.get(ServerConfig.DRYING_TICKS));
+        level.setBlockAndUpdate(displayVat, ModBlocks.TANNERS_VAT.get().defaultBlockState().setValue(TannersVatBlock.FACING, Direction.SOUTH));
+        TannersVatBlockEntity vat = (TannersVatBlockEntity) level.getBlockEntity(displayVat);
+        vat.fillWater();
+        vat.addTannin(5);
+        vat.insertHide(new HideData(HideSize.LARGE, 90, null));
+        vat.insertHide(new HideData(HideSize.MEDIUM, 85, null));
+        level.setBlockAndUpdate(displayBench, ModBlocks.LEATHERWORKERS_BENCH.get().defaultBlockState().setValue(LeatherworkersBenchBlock.FACING, Direction.SOUTH));
+        ((LeatherworkersBenchBlockEntity) level.getBlockEntity(displayBench)).setJob(ClientSmokeTest.stagedJob(player, "saddle", true));
+        look(player, .1, 2.45, 5.0, -.2, .70, .3);
     }
 
     private static Object field(Object target, String name) throws ReflectiveOperationException {
@@ -627,6 +709,7 @@ public final class StoreScreenshots {
     }
 
     private static void advance(int next) {
+        ImmersiveTanning.LOGGER.info("SHOWCASE step {} -> {} ({} captures)", step, next, SHOTS.size());
         step = next;
         action = 0;
         entered = Util.getMillis();

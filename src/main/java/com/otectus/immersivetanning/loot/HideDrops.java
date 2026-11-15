@@ -1,6 +1,8 @@
 package com.otectus.immersivetanning.loot;
 
 import com.otectus.immersivetanning.ImmersiveTanning;
+import com.otectus.immersivetanning.compat.geneticanimals.GeneticAnimals;
+import com.otectus.immersivetanning.compat.geneticanimals.GeneticAnimalsDrops;
 import com.otectus.immersivetanning.config.ServerConfig;
 import com.otectus.immersivetanning.hide.HideSourceLoader;
 import com.otectus.immersivetanning.leather.BindingLeather;
@@ -22,8 +24,10 @@ import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * The hide an entity drops, shared by the loot modifier (loot tables) and the drops fallback below (mods such as
@@ -32,6 +36,8 @@ import java.util.List;
  * <p>A carcass kill - a {@code #immersive_tanning:carcass_tools} weapon, or one enchanted with a configured carcass
  * enchantment, on a {@code #immersive_tanning:carcass_animals} adult - drops no hide: the mod that butchers the carcass
  * supplies the skin, and the rack accepts that skin through a hide mounting recipe.</p>
+ *
+ * <p>Genetic Animals entities are decided by {@link GeneticAnimalsDrops} alone, from what their death really dropped.</p>
  */
 @Mod.EventBusSubscriber(modid = ImmersiveTanning.MOD_ID)
 public final class HideDrops {
@@ -80,6 +86,10 @@ public final class HideDrops {
     public static void onLivingDrops(LivingDropsEvent event) {
         LivingEntity victim = event.getEntity();
         if (victim instanceof Player || victim.level().isClientSide) return;
+        if (GeneticAnimals.owns(victim.getType())) {
+            GeneticAnimalsDrops.handle(event);
+            return;
+        }
         HideSourceLoader.HideSource source = HideSourceLoader.forEntity(victim.getType());
         if (source != null && contains(event, true)) {
             List<ItemStack> stacks = new ArrayList<>();
@@ -101,11 +111,16 @@ public final class HideDrops {
                 event.getDrops().add(drop);
             }
         }
-        if (ServerConfig.get(ServerConfig.REPLACE_LEATHER_LOOT)) {
-            for (ItemEntity drop : event.getDrops()) {
-                ItemStack replaced = BindingLeather.replace(drop.getItem());
-                if (replaced != drop.getItem()) drop.setItem(replaced);
-            }
+        toBindingLeather(event.getDrops(), drop -> true);
+    }
+
+    /** Vanilla leather among the eligible drops becomes Binding Leather, when {@code replaceLeatherLoot} is on. */
+    public static void toBindingLeather(Collection<ItemEntity> drops, Predicate<ItemEntity> eligible) {
+        if (!ServerConfig.get(ServerConfig.REPLACE_LEATHER_LOOT)) return;
+        for (ItemEntity drop : drops) {
+            if (!eligible.test(drop)) continue;
+            ItemStack replaced = BindingLeather.replace(drop.getItem());
+            if (replaced != drop.getItem()) drop.setItem(replaced);
         }
     }
 

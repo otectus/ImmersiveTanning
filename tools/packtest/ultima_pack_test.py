@@ -13,8 +13,14 @@ kills, takes framebuffer screenshots and quits.
 
 Usage:
   python3 tools/packtest/ultima_pack_test.py [--label NAME] [--without-mod] [--mod-jar PATH]
-         [--early-window-control true|false] [--expect dragn,lycanites,alexsmobs,butchery,magic,bench,trades] [--timeout 900]
+         [--early-window-control true|false] [--expect dragn,lycanites,alexsmobs,butchery,magic,bench,trades,iceandfire,knife]
+         [--extra-mod JAR ...] [--genetic-animals] [--pack-mods PREFIX,PREFIX|none] [--timeout 900]
 Exit code 0 = PASS.
+
+--extra-mod adds a jar the pack does not have to the copy; --genetic-animals adds the pinned Genetic Animals release
+(build/compat/, from `gradlew geneticAnimalsJar`, hash-checked there) for the `geneticanimals` group. --pack-mods keeps
+only the pack's jars whose file names start with one of the prefixes (`none`: no pack jars), for a small isolated
+instance on the same Forge install, e.g. `--genetic-animals --pack-mods jei,butchery --expect geneticanimals`.
 """
 import argparse
 import hashlib
@@ -37,6 +43,8 @@ COPY_SKIP = {'mods', 'saves', 'logs', 'crash-reports', 'screenshots', 'downloads
 MOJANG_RED = (239, 50, 61)
 # Installed builds of this mod are left out of the copy.
 OWN_JAR_PREFIXES = ('immersive-tanning', 'immersive_tanning')
+# The title screen: ModernFix's start-up line in the pack, the agent's own line in a --pack-mods instance without it.
+TITLE_MARKERS = ('seconds to start', 'SMOKETEST title screen reached')
 
 
 def allowed(rules):
@@ -50,11 +58,13 @@ def allowed(rules):
     return answer
 
 
-def build_instance(work, mod_jar, agent_jar, early_window_control):
+def build_instance(work, mod_jar, agent_jar, early_window_control, extra_mods=(), pack_mods=None):
     (work / 'mods').mkdir(parents=True)
     linked = 0
     for jar in sorted((PACK / 'mods').iterdir()):
         if not jar.name.endswith('.jar') or jar.name.startswith(OWN_JAR_PREFIXES):
+            continue
+        if pack_mods is not None and not jar.name.lower().startswith(tuple(pack_mods)):
             continue
         target = work / 'mods' / jar.name
         try:
@@ -62,7 +72,7 @@ def build_instance(work, mod_jar, agent_jar, early_window_control):
         except OSError:
             shutil.copy2(jar, target)
         linked += 1
-    for extra in [mod_jar, agent_jar]:
+    for extra in [mod_jar, agent_jar, *extra_mods]:
         if extra:
             shutil.copy2(extra, work / 'mods' / extra.name)
     for entry in PACK.iterdir():
@@ -182,6 +192,11 @@ def main():
     parser.add_argument('--early-window-control', choices=['true', 'false'])
     parser.add_argument('--expect', default='')
     parser.add_argument('--timeout', type=int, default=900)
+    parser.add_argument('--extra-mod', type=pathlib.Path, action='append', default=[],
+                        help='another mod jar to add to the copy (repeatable)')
+    parser.add_argument('--genetic-animals', action='store_true',
+                        help='add the pinned Genetic Animals release from build/compat/')
+    parser.add_argument('--pack-mods', help='only the pack jars starting with these comma-separated prefixes, or none')
     parser.add_argument('--observe-after-title', type=int, default=30,
                         help='seconds to keep watching after the title screen when no agent runs')
     args = parser.parse_args()
@@ -192,20 +207,37 @@ def main():
         mod_jar = args.mod_jar or max((p for p in libs.glob('immersive-tanning-*.jar') if not p.stem.endswith('-smoketest')),
                                       key=lambda p: p.stat().st_mtime)
         agent_jar = max(libs.glob('immersive-tanning-*-smoketest.jar'), key=lambda p: p.stat().st_mtime)
+    extra_mods = list(args.extra_mod)
+    if args.genetic_animals:
+        props_file = dict(line.split('=', 1) for line in (ROOT / 'gradle.properties').read_text().splitlines()
+                          if '=' in line and not line.startswith('#'))
+        ga = ROOT / 'build' / 'compat' / f"genetic-animals-{props_file['genetic_animals_version']}.jar"
+        if not ga.exists():
+            raise SystemExit(f'Missing {ga}: run the geneticAnimalsJar Gradle task first')
+        if hashlib.sha1(ga.read_bytes()).hexdigest() != props_file['genetic_animals_sha1']:
+            raise SystemExit(f'{ga} is not the verified Genetic Animals release (SHA-1 differs from gradle.properties)')
+        extra_mods.append(ga)
+    for extra in extra_mods:
+        if not extra.is_file():
+            raise SystemExit(f'Missing extra mod {extra}')
+    pack_mods = None
+    if args.pack_mods is not None:
+        pack_mods = [] if args.pack_mods == 'none' else [p.strip().lower() for p in args.pack_mods.split(',') if p.strip()]
     work = ROOT / 'build' / 'packtest' / args.label
     if work.exists():
         raise SystemExit(f'Refusing to reuse {work}')
     work.mkdir(parents=True)
-    linked = build_instance(work, mod_jar, agent_jar, args.early_window_control)
+    linked = build_instance(work, mod_jar, agent_jar, args.early_window_control, extra_mods, pack_mods)
     props = {}
     if agent_jar:
         props = {'immersive_tanning.smoketest.output': str(work), 'immersive_tanning.smoketest.expect': args.expect}
     cmd = launch_command(work, props)
-    artifacts = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in [mod_jar, agent_jar] if p}
+    artifacts = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in [mod_jar, agent_jar, *extra_mods] if p}
     (work / 'launch.json').write_text(json.dumps({'command': cmd, 'artifacts': artifacts, 'pack_jars': linked,
+                                                  'pack_mods_filter': pack_mods, 'extra_mods': [p.name for p in extra_mods],
                                                   'early_window_control': args.early_window_control}, indent=2))
     print(f'[packtest] {work.name}: {linked} pack jars, mod={mod_jar.name if mod_jar else "none"}, '
-          f'earlyWindowControl={args.early_window_control or "pack default"}', flush=True)
+          f'extra={[p.name for p in extra_mods]}, earlyWindowControl={args.early_window_control or "pack default"}', flush=True)
 
     captures = work / 'captures'
     captures.mkdir()
@@ -225,7 +257,7 @@ def main():
                 except subprocess.TimeoutExpired:
                     proc.kill()
                 break
-            if title_at is None and 'seconds to start' in log_path.read_text(errors='replace'):
+            if title_at is None and any(marker in log_path.read_text(errors='replace') for marker in TITLE_MARKERS):
                 title_at = now
                 print(f'[packtest] title screen logged at {now:.0f}s', flush=True)
             if now >= next_capture:
@@ -288,7 +320,10 @@ PLATFORM_PACKAGES = ('java.', 'javax.', 'jdk.', 'sun.', 'net.minecraft.', 'com.m
 # thrown deeper, in the listing they wrap (JustEnoughResources asks every listing for an offer with no trader), they
 # are skipped like platform frames; as the innermost frame they still count.
 PASS_THROUGH_FRAMES = ('com.otectus.immersivetanning.leather.BindingLeather.lambda$trade$',
-                       'com.otectus.immersivetanning.compat.villager.TanningVillagerTrades.lambda$villageMade$')
+                       'com.otectus.immersivetanning.compat.villager.TanningVillagerTrades.lambda$villageMade$',
+                       # The agent, as a caller only (creating its world, other mods' data errors are logged from
+                       # inside it: Butchery's Farmer's Delight recipes in a --pack-mods instance). Its own throws count.
+                       'com.otectus.immersivetanning.smoketest.')
 
 
 def own_traces(text):

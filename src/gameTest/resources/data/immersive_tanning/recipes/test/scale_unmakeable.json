@@ -1,0 +1,19 @@
+{
+  "type": "immersive_tanning:leatherworking",
+  "leather": 2,
+  "auxiliary": [
+    {
+      "ingredient": {
+        "tag": "immersive_tanning:test/no_such_items"
+      },
+      "count": 7
+    }
+  ],
+  "result": {
+    "item": "minecraft:diamond_leggings"
+  },
+  "seam": "immersive_tanning:leggings",
+  "replaces": [
+    "minecraft:diamond_leggings"
+  ]
+}

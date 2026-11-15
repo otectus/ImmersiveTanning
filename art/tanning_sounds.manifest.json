@@ -1,0 +1,23 @@
+{
+  "pcm_sha1": {
+    "bench/cut": "68c82bc74fc897a8a214d9a4a95d758348b938ab",
+    "bench/loosen": "7d3ca1e2d3514c5da25935c05e3e40acb1dfe7d2",
+    "bench/needle": "407203a5aae473f64e308862309264eeb238d5a5",
+    "bench/page": "d9a79baaee9d7bd6e56b0826e1f6cd681c0fab0f",
+    "bench/panel": "234cb921d3c752e53bb1a5125712ee5fba32ae48",
+    "bench/tie": "8cbdb18be16ac374a694e127f1594eb4ff7f7bb2",
+    "bench/tighten": "3dc4232bcb75cafb0683c7e0110d0daf7b40f1be",
+    "rack/burnish": "97a8ca4a38be8426404915304076b9200a496139",
+    "rack/lace": "65cff2941d6ba41cc1c579812f8d6052f1dacd8f",
+    "rack/scrape": "a442197bcf4ca3727eaa59b965cf6a6688225c32",
+    "rack/scrape_rough": "b451bed4adaca7deac6eafc8e92e2e29abe8d42e",
+    "rack/seat": "209b5a898f6dbe7ac15b40a81d1aeef75de0fe21",
+    "rack/smooth": "da60eeda744d7504c5a3e21fd97e344ab917adc1",
+    "rack/wet_leather": "4b09f13e927b40e207555000b5206780f98a32fd",
+    "vat/bark": "23eb40d29599b43c97ad10de2693f5d8152a8437",
+    "vat/lift": "91eb6a8d8f7e8d5cc7db01b83ae4e0ed8ec77595",
+    "vat/pour": "ad3a6302ac61e40e60246f9c11ad8413ff5f79ce",
+    "vat/sweep": "0b9ef7aab7d2f8afb4871960a59d1b4bfbe9aee0"
+  },
+  "rate": 44100
+}

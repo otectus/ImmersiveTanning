@@ -15,6 +15,12 @@ public final class StationEffects {
     public static final int STITCH = 1;
     public static final int SPLASH = 2;
     public static final int FINISHED = 3;
+    public static final int POUR = 4;
+    public static final int BARK = 5;
+    public static final int LIFT = 6;
+    public static final int SWEEP = 7;
+    public static final int CUT = 8;
+    public static final int PANEL = 9;
 
     public static void send(ServerLevel level, BlockPos pos, int type, float strength) {
         ModNetwork.CHANNEL.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(pos)),

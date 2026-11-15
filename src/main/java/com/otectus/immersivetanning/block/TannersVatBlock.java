@@ -1,32 +1,28 @@
 package com.otectus.immersivetanning.block;
 
-import com.otectus.immersivetanning.advancement.ModAdvancements;
 import com.otectus.immersivetanning.blockentity.TannersVatBlockEntity;
 import com.otectus.immersivetanning.config.ClientConfig;
-import com.otectus.immersivetanning.item.ProcessedHideItem;
-import com.otectus.immersivetanning.hide.HideItems;
 import com.otectus.immersivetanning.registry.ModBlockEntities;
-import com.otectus.immersivetanning.registry.ModItems;
 import com.otectus.immersivetanning.registry.ModSounds;
-import com.otectus.immersivetanning.registry.ModTags;
 import com.otectus.immersivetanning.util.Feedback;
-import com.otectus.immersivetanning.util.StationEffects;
 import net.minecraft.core.BlockPos;
+import com.otectus.immersivetanning.station.StationInteraction;
+import net.minecraft.core.Direction;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemUtils;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
@@ -41,24 +37,47 @@ import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraftforge.items.ItemHandlerHelper;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The Tanner's Vat: a hooped wooden tub. Fill it with a water bucket, charge it with bark, sink a stack of scraped
- * hides into it, and come back for them once they are tanned. It has no screen; its state is visible in the liquor,
- * and every interaction (or an empty hand) reports what is tanning, what waits and exactly what it waits for.
+ * The Tanner's Vat: a hooped wooden tub. Pour in water, scatter bark into it, lower scraped hides and come back for
+ * them once they are tanned. It has no screen: its state is in the liquor, each hide shows at the rim and says exactly
+ * what it waits for, and a paddle on the rim may stir it once ({@link StationInteraction}).
  */
 public class TannersVatBlock extends BaseEntityBlock {
+    /** Since 1.3: which side is the vat's front (its hook, and the side the view leans in from). Older vats face north. */
+    public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
     private static final VoxelShape SHAPE = Shapes.join(
             Block.box(1, 0, 1, 15, 13, 15),
             Block.box(2.5, 2, 2.5, 13.5, 13, 13.5), BooleanOp.ONLY_FIRST);
 
     public TannersVatBlock(Properties properties) {
         super(properties);
+        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(FACING);
+    }
+
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        return defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+    }
+
+    @Override
+    public BlockState rotate(BlockState state, Rotation rotation) {
+        return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public BlockState mirror(BlockState state, Mirror mirror) {
+        return state.rotate(mirror.getRotation(state.getValue(FACING)));
     }
 
     @Override
@@ -109,95 +128,7 @@ public class TannersVatBlock extends BaseEntityBlock {
     @Override
     @SuppressWarnings("deprecation")
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        if (hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
-        ItemStack held = player.getItemInHand(hand);
-        if (player.isSecondaryUseActive() && held.getItem() instanceof BlockItem) return InteractionResult.PASS;
-        if (level.isClientSide) return InteractionResult.SUCCESS;
-        if (!(level.getBlockEntity(pos) instanceof TannersVatBlockEntity vat) || !(player instanceof ServerPlayer sp)) {
-            return InteractionResult.PASS;
-        }
-        interact(sp, vat, held, hand);
-        return InteractionResult.CONSUME;
-    }
-
-    private void interact(ServerPlayer player, TannersVatBlockEntity vat, ItemStack held, InteractionHand hand) {
-        Level level = player.level();
-        BlockPos pos = vat.getBlockPos();
-        if (held.is(Items.WATER_BUCKET)) {
-            if (vat.fillWater()) {
-                if (!player.getAbilities().instabuild) player.setItemInHand(hand, ItemUtils.createFilledResult(held, player, new ItemStack(Items.BUCKET)));
-                level.playSound(null, pos, ModSounds.VAT_FILL.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
-                status(player, vat);
-            } else {
-                Feedback.info(player, "vat_already_full");
-            }
-            return;
-        }
-        if (held.is(Items.BUCKET) && vat.hasWater()) {
-            vat.drainWater();
-            if (!player.getAbilities().instabuild) player.setItemInHand(hand, ItemUtils.createFilledResult(held, player, new ItemStack(Items.WATER_BUCKET)));
-            level.playSound(null, pos, ModSounds.VAT_FILL.get(), SoundSource.BLOCKS, 1.0F, 0.8F);
-            int paused = vat.pausedCount();
-            if (paused > 0) Feedback.warn(player, Feedback.message("vat_drained_paused", paused));
-            else Feedback.info(player, "vat_drained");
-            return;
-        }
-        if (held.is(ModTags.TANNIN_SOURCES)) {
-            int taken = vat.addTannin(held.getCount());
-            if (taken == 0) {
-                Feedback.info(player, "vat_tannin_full", vat.maxTannin());
-                return;
-            }
-            if (!player.getAbilities().instabuild) held.shrink(taken);
-            level.playSound(null, pos, ModSounds.VAT_BARK.get(), SoundSource.BLOCKS, 0.8F, 0.9F);
-            status(player, vat);
-            return;
-        }
-        if (held.is(ModItems.SCRAPED_HIDE.get())) {
-            int offered = held.getCount();
-            int added = 0;
-            while (added < offered && vat.insertHide(ProcessedHideItem.data(held))) added++;
-            if (added == 0) {
-                Feedback.fail(player, "vat_full");
-                return;
-            }
-            if (!player.getAbilities().instabuild) held.shrink(added);
-            level.playSound(null, pos, ModSounds.VAT_HIDE.get(), SoundSource.BLOCKS, 0.9F, 1.0F);
-            StationEffects.send((ServerLevel) level, pos, StationEffects.SPLASH, added / 4F);
-            status(player, vat);
-            if (added < offered) Feedback.info(player, "vat_full");
-            return;
-        }
-        if (HideItems.isMountable(level, held)) {
-            Feedback.info(player, "flesh_first");
-            return;
-        }
-        if (held.isEmpty()) {
-            List<ItemStack> finished = vat.takeFinished();
-            if (!finished.isEmpty()) {
-                finished.forEach(s -> ItemHandlerHelper.giveItemToPlayer(player, s));
-                level.playSound(null, pos, ModSounds.VAT_HIDE.get(), SoundSource.BLOCKS, 0.9F, 0.8F);
-                StationEffects.send((ServerLevel) level, pos, StationEffects.SPLASH, 0.5F);
-                ModAdvancements.award(player, ModAdvancements.TANNED);
-                return;
-            }
-            if (player.isSecondaryUseActive()) {
-                ItemStack back = vat.takeBackUnfinished();
-                if (!back.isEmpty()) {
-                    ItemHandlerHelper.giveItemToPlayer(player, back);
-                    return;
-                }
-            }
-        }
-        status(player, vat);
-    }
-
-
-    /** The full state (water, tannin, hides by stage), and the reason anything waits, as its own highlighted notice. */
-    private static void status(ServerPlayer player, TannersVatBlockEntity vat) {
-        Feedback.info(player, statusLine(vat));
-        Component reason = waitReason(vat);
-        if (reason != null) Feedback.warn(player, reason);
+        return StationInteraction.use(level, pos, player, hand);
     }
 
     public static Component statusLine(TannersVatBlockEntity vat) {

@@ -25,16 +25,7 @@
   "block.tanners_rack.scrape": {
     "sounds": [
       {
-        "name": "minecraft:item/brush/brushing_generic1"
-      },
-      {
-        "name": "minecraft:item/brush/brushing_generic2"
-      },
-      {
-        "name": "minecraft:item/brush/brushing_generic3"
-      },
-      {
-        "name": "minecraft:item/brush/brushing_generic4"
+        "name": "immersive_tanning:rack/scrape"
       }
     ],
     "subtitle": "subtitles.immersive_tanning.rack.scrape"
@@ -77,13 +68,15 @@
   "block.tanners_vat.bark": {
     "sounds": [
       {
-        "name": "minecraft:item/bundle/insert1"
+        "name": "immersive_tanning:vat/bark"
       },
       {
-        "name": "minecraft:item/bundle/insert2"
+        "name": "immersive_tanning:vat/bark",
+        "pitch": 0.92
       },
       {
-        "name": "minecraft:item/bundle/insert3"
+        "name": "immersive_tanning:vat/bark",
+        "pitch": 1.08
       }
     ],
     "subtitle": "subtitles.immersive_tanning.vat.bark"
@@ -125,13 +118,15 @@
   "block.leatherworkers_bench.cut": {
     "sounds": [
       {
-        "name": "minecraft:item/axe/scrape1"
+        "name": "immersive_tanning:bench/cut"
       },
       {
-        "name": "minecraft:item/axe/scrape2"
+        "name": "immersive_tanning:bench/cut",
+        "pitch": 0.92
       },
       {
-        "name": "minecraft:item/axe/scrape3"
+        "name": "immersive_tanning:bench/cut",
+        "pitch": 1.08
       }
     ],
     "subtitle": "subtitles.immersive_tanning.bench.cut"
@@ -219,5 +214,237 @@
       }
     ],
     "subtitle": "subtitles.immersive_tanning.cue"
+  },
+  "block.tanners_rack.scrape_rough": {
+    "sounds": [
+      {
+        "name": "immersive_tanning:rack/scrape_rough"
+      },
+      {
+        "name": "immersive_tanning:rack/scrape_rough",
+        "pitch": 0.92
+      },
+      {
+        "name": "immersive_tanning:rack/scrape_rough",
+        "pitch": 1.08
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.rack.scrape_rough"
+  },
+  "block.tanners_rack.lace": {
+    "sounds": [
+      {
+        "name": "immersive_tanning:rack/lace"
+      },
+      {
+        "name": "immersive_tanning:rack/lace",
+        "pitch": 0.92
+      },
+      {
+        "name": "immersive_tanning:rack/lace",
+        "pitch": 1.08
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.rack.lace"
+  },
+  "block.tanners_rack.seat": {
+    "sounds": [
+      {
+        "name": "immersive_tanning:rack/seat"
+      },
+      {
+        "name": "immersive_tanning:rack/seat",
+        "pitch": 0.92
+      },
+      {
+        "name": "immersive_tanning:rack/seat",
+        "pitch": 1.08
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.rack.seat"
+  },
+  "block.tanners_rack.burnish": {
+    "sounds": [
+      {
+        "name": "immersive_tanning:rack/burnish"
+      },
+      {
+        "name": "immersive_tanning:rack/burnish",
+        "pitch": 0.92
+      },
+      {
+        "name": "immersive_tanning:rack/burnish",
+        "pitch": 1.08
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.rack.burnish"
+  },
+  "block.tanners_rack.smooth": {
+    "sounds": [
+      {
+        "name": "immersive_tanning:rack/smooth"
+      },
+      {
+        "name": "immersive_tanning:rack/smooth",
+        "pitch": 0.92
+      },
+      {
+        "name": "immersive_tanning:rack/smooth",
+        "pitch": 1.08
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.rack.smooth"
+  },
+  "block.tanners_rack.wet_leather": {
+    "sounds": [
+      {
+        "name": "immersive_tanning:rack/wet_leather"
+      },
+      {
+        "name": "immersive_tanning:rack/wet_leather",
+        "pitch": 0.92
+      },
+      {
+        "name": "immersive_tanning:rack/wet_leather",
+        "pitch": 1.08
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.rack.wet_leather"
+  },
+  "block.tanners_vat.pour": {
+    "sounds": [
+      {
+        "name": "immersive_tanning:vat/pour"
+      },
+      {
+        "name": "immersive_tanning:vat/pour",
+        "pitch": 0.92
+      },
+      {
+        "name": "immersive_tanning:vat/pour",
+        "pitch": 1.08
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.vat.pour"
+  },
+  "block.tanners_vat.sweep": {
+    "sounds": [
+      {
+        "name": "immersive_tanning:vat/sweep"
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.vat.sweep"
+  },
+  "block.tanners_vat.lift": {
+    "sounds": [
+      {
+        "name": "immersive_tanning:vat/lift"
+      },
+      {
+        "name": "immersive_tanning:vat/lift",
+        "pitch": 0.92
+      },
+      {
+        "name": "immersive_tanning:vat/lift",
+        "pitch": 1.08
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.vat.lift"
+  },
+  "block.leatherworkers_bench.panel": {
+    "sounds": [
+      {
+        "name": "immersive_tanning:bench/panel"
+      },
+      {
+        "name": "immersive_tanning:bench/panel",
+        "pitch": 0.92
+      },
+      {
+        "name": "immersive_tanning:bench/panel",
+        "pitch": 1.08
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.bench.panel"
+  },
+  "block.leatherworkers_bench.needle": {
+    "sounds": [
+      {
+        "name": "immersive_tanning:bench/needle"
+      },
+      {
+        "name": "immersive_tanning:bench/needle",
+        "pitch": 0.92
+      },
+      {
+        "name": "immersive_tanning:bench/needle",
+        "pitch": 1.08
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.bench.needle"
+  },
+  "block.leatherworkers_bench.tighten": {
+    "sounds": [
+      {
+        "name": "immersive_tanning:bench/tighten"
+      },
+      {
+        "name": "immersive_tanning:bench/tighten",
+        "pitch": 0.92
+      },
+      {
+        "name": "immersive_tanning:bench/tighten",
+        "pitch": 1.08
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.bench.tighten"
+  },
+  "block.leatherworkers_bench.tie": {
+    "sounds": [
+      {
+        "name": "immersive_tanning:bench/tie"
+      },
+      {
+        "name": "immersive_tanning:bench/tie",
+        "pitch": 0.92
+      },
+      {
+        "name": "immersive_tanning:bench/tie",
+        "pitch": 1.08
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.bench.tie"
+  },
+  "block.leatherworkers_bench.page": {
+    "sounds": [
+      {
+        "name": "immersive_tanning:bench/page"
+      },
+      {
+        "name": "immersive_tanning:bench/page",
+        "pitch": 0.92
+      },
+      {
+        "name": "immersive_tanning:bench/page",
+        "pitch": 1.08
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.bench.page"
+  },
+  "block.leatherworkers_bench.loosen": {
+    "sounds": [
+      {
+        "name": "immersive_tanning:bench/loosen"
+      },
+      {
+        "name": "immersive_tanning:bench/loosen",
+        "pitch": 0.92
+      },
+      {
+        "name": "immersive_tanning:bench/loosen",
+        "pitch": 1.08
+      }
+    ],
+    "subtitle": "subtitles.immersive_tanning.bench.loosen"
   }
 }

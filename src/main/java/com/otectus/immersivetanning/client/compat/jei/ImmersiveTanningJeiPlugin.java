@@ -1,6 +1,7 @@
 package com.otectus.immersivetanning.client.compat.jei;
 
 import com.otectus.immersivetanning.ImmersiveTanning;
+import com.otectus.immersivetanning.compat.geneticanimals.GeneticAnimals;
 import com.otectus.immersivetanning.hide.HideSize;
 import com.otectus.immersivetanning.leather.Finish;
 import com.otectus.immersivetanning.recipe.LeatherworkingRecipe;
@@ -15,7 +16,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraftforge.fml.ModList;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -41,6 +45,19 @@ public class ImmersiveTanningJeiPlugin implements IModPlugin {
         registration.addRecipeCategories(new LeatherworkingCategory(registration.getJeiHelpers().getGuiHelper()));
     }
 
+    /** The pattern book's "show in JEI": opens JEI's recipes for a bench piece (focus is suspended meanwhile). */
+    @Override
+    public void onRuntimeAvailable(mezz.jei.api.runtime.IJeiRuntime runtime) {
+        com.otectus.immersivetanning.client.compat.RecipeViewer.install(stack -> runtime.getRecipesGui().show(
+                runtime.getJeiHelpers().getFocusFactory().createFocus(mezz.jei.api.recipe.RecipeIngredientRole.OUTPUT,
+                        mezz.jei.api.constants.VanillaTypes.ITEM_STACK, stack)));
+    }
+
+    @Override
+    public void onRuntimeUnavailable() {
+        com.otectus.immersivetanning.client.compat.RecipeViewer.install(null);
+    }
+
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
         registration.addRecipes(TanneryCategory.TYPE, List.of(HideSize.values()));
@@ -60,6 +77,17 @@ public class ImmersiveTanningJeiPlugin implements IModPlugin {
         info(registration, new ItemStack(ModItems.BINDING_LEATHER.get()), "binding");
         for (HideSize size : HideSize.values()) info(registration, new ItemStack(ModItems.rawHide(size)), "hide");
         for (Finish finish : Finish.values()) info(registration, new ItemStack(ModItems.leather(finish)), "leather_" + finish.getSerializedName());
+        if (ModList.get().isLoaded(GeneticAnimals.MOD_ID)) geneticAnimals(registration);
+    }
+
+    /** Pages that explain Genetic Animals' hides and tack, shown only when it is installed. */
+    private static void geneticAnimals(IRecipeRegistration registration) {
+        for (HideSize size : HideSize.values()) info(registration, new ItemStack(ModItems.rawHide(size)), "genetic_animals_hides");
+        info(registration, new ItemStack(ModItems.BINDING_LEATHER.get()), "genetic_animals_binding");
+        for (String id : new String[]{"collar_basic_leather", "bridle_basic_leather"}) {
+            Item item = BuiltInRegistries.ITEM.get(new ResourceLocation(GeneticAnimals.MOD_ID, id));
+            if (item != Items.AIR) info(registration, new ItemStack(item), "genetic_animals_tack");
+        }
     }
 
     private static void info(IRecipeRegistration registration, ItemStack stack, String key) {

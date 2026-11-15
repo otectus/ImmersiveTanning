@@ -1,0 +1,20 @@
+{
+  "type": "immersive_tanning:leatherworking",
+  "leather": 2,
+  "auxiliary": [
+    {
+      "ingredient": {
+        "item": "minecraft:prismarine_shard"
+      },
+      "count": 8
+    }
+  ],
+  "result": {
+    "item": "minecraft:diamond_chestplate",
+    "nbt": "{StandIn:1b}"
+  },
+  "seam": "immersive_tanning:chestplate",
+  "replaces": [
+    "minecraft:diamond_chestplate"
+  ]
+}

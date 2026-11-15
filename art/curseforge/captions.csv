@@ -1,0 +1,16 @@
+group,order,file,title,caption
+upload,1,upload/01_the_tannery.png,A hands-on tannery,"Turn hides into leather and gear with the Tanner's Rack, Tanner's Vat, and Leatherworker's Bench."
+upload,2,upload/02_fleshing_a_hide.png,Prepare the hide,"Work the fleshing knife along the grain, clearing the hide with careful strokes."
+upload,3,upload/03_tending_the_vat.png,Tend the tanning vat,Soak hides in bark tanning liquor and work the paddle through the batch.
+upload,4,upload/04_finishing_the_leather.png,Finish by hand,Choose a leather finish at the rack and work the hide before leaving it to dry.
+upload,5,upload/05_three_leather_finishes.png,"Supple, Harness, and Hardened",Three leather finishes bring distinct colors and uses to the tannery.
+upload,6,upload/06_cutting_the_pattern.png,Cut the pattern,"Trace the tunic's shaped cutting paths, with translucent arms keeping the work visible."
+upload,7,upload/07_fitting_the_panels.png,Fit the panels,Move and rotate each leather panel into its outline before sewing.
+upload,8,upload/08_stitching_the_seams.png,Every stitch matters,Pierce the marked holes and draw the thread to the right tension along the tunic's seams.
+upload,9,upload/09_finished_on_the_bench.png,Made by hand,Clean cuts and even seams reward careful work with a Masterwork result.
+upload,10,upload/10_masterwork_leather_gear.png,Quality carries through,"The finished tunic retains its leather finish, hide integrity, and workmanship ratings."
+alternates,1,alternates/A1_raw_hide_on_the_rack.png,Ready for the knife,"A raw hide on the Tanner's Rack, ready for fleshing."
+alternates,2,alternates/A2_tanning_vats.png,A working batch,Wooden vats hold the hides and tanning liquor beside the workshop.
+alternates,3,alternates/A3_pattern_book.png,Choose your next project,Browse patterns for leather armor and tack from the bench's Pattern Book.
+alternates,4,alternates/A4_finished_armor.png,From the workshop to the world,Finished leather armor on display beside the tannery.
+alternates,5,alternates/A5_workshop_alternate_angle.png,"The workshop, another angle","The rack, vat, and bench together in a small tannery yard."

@@ -1,0 +1,33 @@
+{
+  "type": "immersive_tanning:leatherworking",
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "iceandfire"
+    },
+    {
+      "type": "forge:item_exists",
+      "item": "iceandfire:armor_gray_chestplate"
+    },
+    {
+      "type": "forge:item_exists",
+      "item": "iceandfire:dragonscales_gray"
+    }
+  ],
+  "leather": 2,
+  "auxiliary": [
+    {
+      "ingredient": {
+        "item": "iceandfire:dragonscales_gray"
+      },
+      "count": 8
+    }
+  ],
+  "result": {
+    "item": "iceandfire:armor_gray_chestplate"
+  },
+  "seam": "immersive_tanning:chestplate",
+  "replaces": [
+    "iceandfire:armor_gray_chestplate"
+  ]
+}

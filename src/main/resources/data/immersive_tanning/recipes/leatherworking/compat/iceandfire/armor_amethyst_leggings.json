@@ -1,0 +1,33 @@
+{
+  "type": "immersive_tanning:leatherworking",
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "iceandfire"
+    },
+    {
+      "type": "forge:item_exists",
+      "item": "iceandfire:armor_amethyst_leggings"
+    },
+    {
+      "type": "forge:item_exists",
+      "item": "iceandfire:dragonscales_amethyst"
+    }
+  ],
+  "leather": 2,
+  "auxiliary": [
+    {
+      "ingredient": {
+        "item": "iceandfire:dragonscales_amethyst"
+      },
+      "count": 7
+    }
+  ],
+  "result": {
+    "item": "iceandfire:armor_amethyst_leggings"
+  },
+  "seam": "immersive_tanning:leggings",
+  "replaces": [
+    "iceandfire:armor_amythest_leggings"
+  ]
+}

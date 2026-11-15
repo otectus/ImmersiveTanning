@@ -1,0 +1,12 @@
+{
+  "values": [
+    {
+      "id": "eanimod:collar_basic_leather",
+      "required": false
+    },
+    {
+      "id": "eanimod:bridle_basic_leather",
+      "required": false
+    }
+  ]
+}

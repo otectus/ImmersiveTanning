@@ -22,10 +22,17 @@ import java.util.List;
  *   "leather": 5,
  *   "auxiliary": [{"ingredient": {"item": "minecraft:string"}, "count": 2}],
  *   "result": {"item": "minecraft:saddle"},
- *   "seam": "immersive_tanning:saddle"
+ *   "seam": "immersive_tanning:saddle",
+ *   "work_pattern": "immersive_tanning:saddle",
+ *   "replaces": ["minecraft:saddle"]
  * }
  * </pre>
- * {@code seam} is optional; without it the seam follows the result's equipment slot.
+ * {@code work_pattern} (1.3, optional) names the work pattern: panels, cuts and seams worked at the bench. Without it
+ * the seam's work pattern, the seam pattern adapted, or the generic wrap is used. It changes how the piece is worked,
+ * never what it costs.
+ * {@code seam} is optional; without it the seam follows the result's equipment slot. {@code replaces} is optional: the
+ * crafting recipe ids (a list or one id) this recipe takes over, disabled while it is active. It never travels to
+ * clients. Protocol 3 adds the work pattern and its size to the recipe's network form.
  */
 public class LeatherworkingRecipeSerializer implements RecipeSerializer<LeatherworkingRecipe> {
 
@@ -42,7 +49,18 @@ public class LeatherworkingRecipeSerializer implements RecipeSerializer<Leatherw
         ItemStack result = CraftingHelper.getItemStack(GsonHelper.getAsJsonObject(json, "result"), true);
         if (result.isEmpty()) throw new JsonParseException("Leatherworking recipe result is empty");
         ResourceLocation seam = json.has("seam") ? new ResourceLocation(GsonHelper.getAsString(json, "seam")) : null;
-        return new LeatherworkingRecipe(id, leather, aux, result, seam, false, null);
+        List<ResourceLocation> replaces = new ArrayList<>();
+        if (json.has("replaces")) {
+            JsonElement element = json.get("replaces");
+            if (element.isJsonArray()) {
+                for (JsonElement e : element.getAsJsonArray()) replaces.add(new ResourceLocation(GsonHelper.convertToString(e, "replaces")));
+            } else {
+                replaces.add(new ResourceLocation(GsonHelper.convertToString(element, "replaces")));
+            }
+        }
+        LeatherworkingRecipe recipe = new LeatherworkingRecipe(id, leather, aux, result, seam, false, null, replaces);
+        if (json.has("work_pattern")) recipe.setWorkPattern(new ResourceLocation(GsonHelper.getAsString(json, "work_pattern")));
+        return recipe;
     }
 
     @Override
@@ -57,6 +75,8 @@ public class LeatherworkingRecipeSerializer implements RecipeSerializer<Leatherw
         ResourceLocation source = buf.readBoolean() ? buf.readResourceLocation() : null;
         LeatherworkingRecipe recipe = new LeatherworkingRecipe(id, leather, aux, result, seam, auto, source);
         recipe.resolveSeam(buf.readResourceLocation());
+        if (buf.readBoolean()) recipe.setWorkPattern(buf.readResourceLocation());
+        recipe.resolvePattern(buf.readResourceLocation(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt());
         return recipe;
     }
 
@@ -72,5 +92,11 @@ public class LeatherworkingRecipeSerializer implements RecipeSerializer<Leatherw
         buf.writeBoolean(recipe.sourceRecipe() != null);
         if (recipe.sourceRecipe() != null) buf.writeResourceLocation(recipe.sourceRecipe());
         buf.writeResourceLocation(recipe.seam());
+        buf.writeBoolean(recipe.workPattern() != null);
+        if (recipe.workPattern() != null) buf.writeResourceLocation(recipe.workPattern());
+        buf.writeResourceLocation(recipe.resolvedPattern());
+        buf.writeVarInt(recipe.patternCuts());
+        buf.writeVarInt(recipe.patternPanels());
+        buf.writeVarInt(recipe.patternStitches());
     }
 }

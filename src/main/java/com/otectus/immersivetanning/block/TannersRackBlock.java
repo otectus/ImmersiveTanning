@@ -6,7 +6,7 @@ import com.otectus.immersivetanning.config.ClientConfig;
 import com.otectus.immersivetanning.hide.HideData;
 import com.otectus.immersivetanning.hide.HideItems;
 import com.otectus.immersivetanning.item.TannersKnifeItem;
-import com.otectus.immersivetanning.minigame.SessionManager;
+import com.otectus.immersivetanning.station.StationInteraction;
 import com.otectus.immersivetanning.registry.ModBlockEntities;
 import com.otectus.immersivetanning.registry.ModItems;
 import com.otectus.immersivetanning.registry.ModSounds;
@@ -47,8 +47,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Optional;
 
 /**
- * The Tanner's Rack: a timber frame with a fleshing beam in front. A raw hide drapes over the beam to be fleshed with
- * the Tanner's Knife; a wet tanned hide is laced into the frame with the chosen finish and dries by itself.
+ * The Tanner's Rack: a timber frame with a fleshing beam in front. A raw hide drapes over the beam to be scraped with
+ * the Tanner's Knife; a wet tanned hide is laced into the frame, its finish chosen by working the tension lever, and
+ * dries by itself. Using it leans in to the work ({@link StationInteraction}); sneak-use is the quick route.
  */
 public class TannersRackBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
@@ -116,7 +117,7 @@ public class TannersRackBlock extends BaseEntityBlock {
     @SuppressWarnings("deprecation")
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moved) {
         if (!state.is(newState.getBlock()) && !level.isClientSide && level.getBlockEntity(pos) instanceof TannersRackBlockEntity rack) {
-            SessionManager.onStationRemoved(level, pos);
+            rack.releaseAll();
             rack.dropContents();
         }
         super.onRemove(state, level, pos, newState, moved);
@@ -125,68 +126,13 @@ public class TannersRackBlock extends BaseEntityBlock {
     @Override
     @SuppressWarnings("deprecation")
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        if (hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
-        ItemStack held = player.getItemInHand(hand);
-        if (player.isSecondaryUseActive() && held.getItem() instanceof BlockItem) return InteractionResult.PASS;
-        if (level.isClientSide) return InteractionResult.SUCCESS;
-        if (!(level.getBlockEntity(pos) instanceof TannersRackBlockEntity rack) || !(player instanceof ServerPlayer sp)) {
-            return InteractionResult.PASS;
-        }
-        interact(sp, rack, held, hand);
-        return InteractionResult.CONSUME;
-    }
-
-    private void interact(ServerPlayer player, TannersRackBlockEntity rack, ItemStack held, InteractionHand hand) {
-        if (rack.isLockedFor(player.getUUID())) {
-            Feedback.fail(player, "station_in_use");
-            return;
-        }
-        Level level = player.level();
-        switch (rack.mode()) {
-            case EMPTY -> {
-                Optional<HideData> raw = HideItems.resolve(level, held);
-                if (raw.isPresent()) {
-                    rack.mountRaw(raw.get());
-                    if (!player.getAbilities().instabuild) held.shrink(1);
-                    level.playSound(null, rack.getBlockPos(), ModSounds.RACK_MOUNT.get(), SoundSource.BLOCKS, 0.9F, 1.0F);
-                    Feedback.info(player, "flesh_with_knife");
-                } else if (held.is(ModItems.WET_TANNED_HIDE.get())) {
-                    if (player.isSecondaryUseActive()) SessionManager.mountWet(player, rack, held, SessionManager.lastFinish(player));
-                    else SessionManager.openFinish(player, rack, held);
-                } else if (held.is(ModItems.SCRAPED_HIDE.get())) {
-                    Feedback.info(player, "scraped_to_vat");
-                } else {
-                    Feedback.info(player, "rack_empty");
-                }
-            }
-            case RAW -> {
-                if (held.getItem() instanceof TannersKnifeItem) {
-                    SessionManager.openFleshing(player, rack, hand);
-                } else if (held.isEmpty() && player.isSecondaryUseActive()) {
-                    ItemHandlerHelper.giveItemToPlayer(player, rack.takeRaw());
-                } else {
-                    Feedback.info(player, "flesh_with_knife");
-                }
-            }
-            case DRYING -> {
-                if (rack.isDry()) {
-                    ItemStack leather = rack.collectLeather();
-                    ItemHandlerHelper.giveItemToPlayer(player, leather);
-                    level.playSound(null, rack.getBlockPos(), ModSounds.BENCH_FINISH.get(), SoundSource.BLOCKS, 0.8F, 1.1F);
-                    ModAdvancements.award(player, ModAdvancements.FINISHED);
-                } else if (held.isEmpty() && player.isSecondaryUseActive()) {
-                    ItemHandlerHelper.giveItemToPlayer(player, rack.takeWet());
-                } else {
-                    int percent = Math.round(rack.dryProgress(level.getGameTime()) * 100F);
-                    Feedback.info(player, "drying_progress", rack.finish().displayName(), percent);
-                }
-            }
-        }
+        return StationInteraction.use(level, pos, player, hand);
     }
 
     @Override
     public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
-        if (!(level.getBlockEntity(pos) instanceof TannersRackBlockEntity rack) || rack.mode() != TannersRackBlockEntity.Mode.DRYING) return;
+        if (!(level.getBlockEntity(pos) instanceof TannersRackBlockEntity rack)) return;
+        if (rack.mode() != TannersRackBlockEntity.Mode.DRYING && rack.mode() != TannersRackBlockEntity.Mode.FRAMING) return;
         float progress = rack.dryProgress(level.getGameTime());
         if (progress >= 0.6F || random.nextFloat() > 0.35F * (1F - progress) * ClientConfig.scaleParticles(10) / 10F) return;
         Direction facing = state.getValue(FACING);

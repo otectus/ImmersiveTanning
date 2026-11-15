@@ -64,7 +64,10 @@ public record LeatherworkData(Finish finish, int integrity, int workmanship, @Nu
         return root.hasUUID(CRAFTER_UUID) ? Optional.of(root.getUUID(CRAFTER_UUID)) : Optional.empty();
     }
 
-    /** Writes this identity onto the stack, keeping any durability carry already accumulated. */
+    /**
+     * Writes this identity onto the stack, keeping any durability carry already accumulated, and records the
+     * scale-backed profile when the item is scale-backed (see {@link LeatherworkProfile}).
+     */
     public void apply(ItemStack stack) {
         CompoundTag root = stack.getOrCreateTagElement(ROOT);
         root.putInt("Version", VERSION);
@@ -75,5 +78,6 @@ public record LeatherworkData(Finish finish, int integrity, int workmanship, @Nu
         if (trait != null) trait.save(root);
         if (crafter != null) root.putString("Crafter", crafter);
         else root.remove("Crafter");
+        LeatherworkProfile.record(stack);
     }
 }

@@ -1,8 +1,7 @@
 package com.otectus.immersivetanning.client;
 
 import com.otectus.immersivetanning.ImmersiveTanning;
-import com.otectus.immersivetanning.config.ServerConfig;
-import com.otectus.immersivetanning.effect.LeatherworkEffects;
+import com.otectus.immersivetanning.effect.LeatherworkPolicy;
 import com.otectus.immersivetanning.hide.HideItems;
 import com.otectus.immersivetanning.leather.FieldRepair;
 import com.otectus.immersivetanning.leather.Finish;
@@ -12,6 +11,8 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -26,7 +27,10 @@ import java.util.Optional;
 
 /**
  * The leatherwork tooltip. The important information is the word identity: the name reads "Fine Supple Leather
- * Boots", the next line says what Supple means. Scores and effect details follow; Shift shows the numbers.
+ * Boots", the next line says what Supple means. Scores and effect details follow; Shift shows the numbers, taken from
+ * the piece's {@link LeatherworkPolicy} (ordinary or scale-backed), so they match what the server applies. A piece
+ * that is neither worn nor wears out (a saddle, horse armor, Genetic Animals tack) says that its finish and quality
+ * are a record of its making, and claims no durability, repair or trait effect.
  */
 @Mod.EventBusSubscriber(modid = ImmersiveTanning.MOD_ID, value = Dist.CLIENT)
 public final class ClientEvents {
@@ -48,6 +52,7 @@ public final class ClientEvents {
             return;
         }
         LeatherworkData data = found.get();
+        LeatherworkPolicy policy = LeatherworkPolicy.of(stack);
         Finish finish = data.finish();
         if (!tooltip.isEmpty() && !stack.hasCustomHoverName()) {
             tooltip.set(0, Component.translatable("tooltip.immersive_tanning.named", data.quality().displayName(), finish.displayName(),
@@ -61,36 +66,58 @@ public final class ClientEvents {
         if (data.trait() != null) {
             lines.add(Component.translatable("tooltip.immersive_tanning.trait", data.trait().displayName()).withStyle(ChatFormatting.GRAY));
         }
+        if (policy.isScaleBacked()) lines.add(Component.translatable("tooltip.immersive_tanning.scale_backed").withStyle(ChatFormatting.GRAY));
+        boolean damageable = stack.isDamageableItem();
+        boolean recordOnly = !damageable && LivingEntity.getEquipmentSlotForItem(stack).getType() != EquipmentSlot.Type.ARMOR;
+        if (recordOnly) lines.add(Component.translatable("tooltip.immersive_tanning.record_only").withStyle(ChatFormatting.DARK_GRAY));
         if (Screen.hasShiftDown()) {
-            double efficacy = LeatherworkEffects.efficacy(data);
-            lines.add(Component.translatable("tooltip.immersive_tanning.durability", percent(LeatherworkEffects.durability(data))).withStyle(ChatFormatting.DARK_GRAY));
+            // Every number here comes from the piece's own policy, the one the server applies.
+            double efficacy = policy.efficacy(data);
+            if (damageable) {
+                lines.add(Component.translatable("tooltip.immersive_tanning.durability", percent(policy.durability(data))).withStyle(ChatFormatting.DARK_GRAY));
+            }
             boolean wearable = stack.getItem() instanceof ArmorItem;
+            boolean patchable = FieldRepair.isRepairable(stack);
             switch (finish) {
                 case SUPPLE -> {
                     if (wearable) {
-                        lines.add(Component.translatable("tooltip.immersive_tanning.effect.supple_speed",
-                                oneDecimal(ServerConfig.get(ServerConfig.SUPPLE_SPEED_PER_PIECE) * efficacy * 100)).withStyle(ChatFormatting.DARK_GRAY));
-                        lines.add(Component.translatable("tooltip.immersive_tanning.effect.supple_quiet",
-                                Math.round(ServerConfig.get(ServerConfig.SUPPLE_VISIBILITY_PER_PIECE) * efficacy * 100)).withStyle(ChatFormatting.DARK_GRAY));
-                        if (stack.getItem() instanceof ArmorItem armor && armor.getType() == ArmorItem.Type.BOOTS
-                                && ServerConfig.get(ServerConfig.SUPPLE_BOOTS_MUFFLE_STEPS)) {
+                        if (policy.suppleSpeed() > 0) {
+                            lines.add(Component.translatable("tooltip.immersive_tanning.effect.supple_speed",
+                                    oneDecimal(policy.suppleSpeed() * efficacy * 100)).withStyle(ChatFormatting.DARK_GRAY));
+                        }
+                        if (policy.suppleVisibility() > 0) {
+                            lines.add(Component.translatable("tooltip.immersive_tanning.effect.supple_quiet",
+                                    Math.round(policy.suppleVisibility() * efficacy * 100)).withStyle(ChatFormatting.DARK_GRAY));
+                        }
+                        if (stack.getItem() instanceof ArmorItem armor && armor.getType() == ArmorItem.Type.BOOTS && policy.suppleMuffle()) {
                             lines.add(Component.translatable("tooltip.immersive_tanning.effect.supple_steps").withStyle(ChatFormatting.DARK_GRAY));
                         }
                     }
                 }
-                case HARNESS -> lines.add(Component.translatable("tooltip.immersive_tanning.effect.harness_repair",
-                        oneDecimal(ServerConfig.get(ServerConfig.HARNESS_REPAIR_MULTIPLIER))).withStyle(ChatFormatting.DARK_GRAY));
+                case HARNESS -> {
+                    if (patchable || (!policy.isScaleBacked() && damageable)) {
+                        lines.add(Component.translatable("tooltip.immersive_tanning.effect.harness_repair",
+                                oneDecimal(policy.harnessRepair())).withStyle(ChatFormatting.DARK_GRAY));
+                    }
+                }
                 case HARDENED -> {
-                    if (wearable) {
+                    if (wearable && policy.isScaleBacked()) {
+                        if (policy.hardenedArmor() > 0 || policy.hardenedToughness() > 0) {
+                            lines.add(Component.translatable("tooltip.immersive_tanning.effect.hardened_flat",
+                                    ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(policy.hardenedArmor() * efficacy),
+                                    ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(policy.hardenedToughness() * efficacy)).withStyle(ChatFormatting.DARK_GRAY));
+                        }
+                    } else if (wearable && (policy.hardenedArmorShare() > 0 || policy.hardenedToughness() > 0)) {
                         lines.add(Component.translatable("tooltip.immersive_tanning.effect.hardened",
-                                Math.round(ServerConfig.get(ServerConfig.HARDENED_ARMOR_FACTOR) * efficacy * 100),
-                                oneDecimal(ServerConfig.get(ServerConfig.HARDENED_TOUGHNESS_PER_PIECE) * efficacy)).withStyle(ChatFormatting.DARK_GRAY));
+                                Math.round(policy.hardenedArmorShare() * efficacy * 100),
+                                oneDecimal(policy.hardenedToughness() * efficacy)).withStyle(ChatFormatting.DARK_GRAY));
                     }
                 }
             }
-            if (data.trait() != null) lines.add(data.trait().effectDescription());
+            if (data.trait() != null && !recordOnly) lines.add(data.trait().effectDescription());
             if (wearable) lines.add(Component.translatable("tooltip.immersive_tanning.per_piece").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
-            if (FieldRepair.isRepairable(stack)) lines.add(Component.translatable("tooltip.immersive_tanning.field_repairable").withStyle(ChatFormatting.DARK_GRAY));
+            if (patchable) lines.add(Component.translatable("tooltip.immersive_tanning.field_repairable").withStyle(ChatFormatting.DARK_GRAY));
+            else if (policy.isScaleBacked()) lines.add(Component.translatable("tooltip.immersive_tanning.scale_backed_repair").withStyle(ChatFormatting.DARK_GRAY));
             if (data.crafter() != null) {
                 lines.add(Component.translatable("tooltip.immersive_tanning.crafted_by", data.crafter()).withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
             }

@@ -1,0 +1,72 @@
+Immersive Tanning — CurseForge screenshot gallery
+
+10 recommended images, followed by 5 optional alternates.
+All images: native 1920 × 1080 PNG captures from Minecraft Java 1.20.1 / Forge 47.4.23.
+Captured in a staged in-game workshop using Immersive Tanning 1.3.0.
+Vanilla rendering; original PNG captures without shaders, cropping, or image retouching.
+Station instructions and feedback are the real in-game interface.
+Upload the files in upload/ in filename order; use the following titles and captions.
+
+RECOMMENDED UPLOAD ORDER
+
+upload/01_the_tannery.png
+A hands-on tannery
+Turn hides into leather and gear with the Tanner's Rack, Tanner's Vat, and Leatherworker's Bench.
+
+upload/02_fleshing_a_hide.png
+Prepare the hide
+Work the fleshing knife along the grain, clearing the hide with careful strokes.
+
+upload/03_tending_the_vat.png
+Tend the tanning vat
+Soak hides in bark tanning liquor and work the paddle through the batch.
+
+upload/04_finishing_the_leather.png
+Finish by hand
+Choose a leather finish at the rack and work the hide before leaving it to dry.
+
+upload/05_three_leather_finishes.png
+Supple, Harness, and Hardened
+Three leather finishes bring distinct colors and uses to the tannery.
+
+upload/06_cutting_the_pattern.png
+Cut the pattern
+Trace the tunic's shaped cutting paths, with translucent arms keeping the work visible.
+
+upload/07_fitting_the_panels.png
+Fit the panels
+Move and rotate each leather panel into its outline before sewing.
+
+upload/08_stitching_the_seams.png
+Every stitch matters
+Pierce the marked holes and draw the thread to the right tension along the tunic's seams.
+
+upload/09_finished_on_the_bench.png
+Made by hand
+Clean cuts and even seams reward careful work with a Masterwork result.
+
+upload/10_masterwork_leather_gear.png
+Quality carries through
+The finished tunic retains its leather finish, hide integrity, and workmanship ratings.
+
+OPTIONAL ALTERNATES
+
+alternates/A1_raw_hide_on_the_rack.png
+Ready for the knife
+A raw hide on the Tanner's Rack, ready for fleshing.
+
+alternates/A2_tanning_vats.png
+A working batch
+Wooden vats hold the hides and tanning liquor beside the workshop.
+
+alternates/A3_pattern_book.png
+Choose your next project
+Browse patterns for leather armor and tack from the bench's Pattern Book.
+
+alternates/A4_finished_armor.png
+From the workshop to the world
+Finished leather armor on display beside the tannery.
+
+alternates/A5_workshop_alternate_angle.png
+The workshop, another angle
+The rack, vat, and bench together in a small tannery yard.

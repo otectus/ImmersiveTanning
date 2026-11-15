@@ -76,17 +76,22 @@ public final class StationNotices {
         int bottom = height - Math.max(84, Math.max(gui.leftHeight, gui.rightHeight) + 24);
         List<Notice> newestFirst = new ArrayList<>(NOTICES);
         java.util.Collections.reverse(newestFirst);
-        // Older notices stop short of the crosshair; the newest is always drawn.
+        // Older notices stop short of the crosshair; the newest is always drawn. While working at a station the bottom
+        // of the view holds its own guidance, so notices hang from the top centre instead, newest first.
+        boolean focused = com.otectus.immersivetanning.client.station.StationFocus.active();
         int ceiling = height / 2 + 12;
         int y = bottom;
+        int down = 26; // below the station's own buttons at the top right
         for (Notice notice : newestFirst) {
             List<FormattedCharSequence> lines = font.split(notice.text(), wrap);
             if (lines.size() > MAX_LINES) lines = lines.subList(0, MAX_LINES);
-            if (y != bottom && y - lines.size() * 10 < ceiling) break;
+            if (!focused && y != bottom && y - lines.size() * 10 < ceiling) break;
+            if (focused && down != 26 && down + lines.size() * 10 > height / 2 - 12) break;
             int lineWidth = 0;
             for (FormattedCharSequence line : lines) lineWidth = Math.max(lineWidth, font.width(line));
             float fade = Mth.clamp((lifetime - (now - notice.shownMs())) / (float) FADE_MS, 0F, 1F);
             int alpha = Math.max(8, Math.round(255 * fade));
+            if (focused) y = down + lines.size() * 10;
             int top = y - lines.size() * 10;
             int left = (width - lineWidth) / 2;
             int background = mc.options.getBackgroundColor(0.5F);
@@ -98,6 +103,7 @@ public final class StationNotices {
                 g.drawString(font, line, (width - font.width(line)) / 2, top + i * 10, (alpha << 24) | color, true);
             }
             y = top - 4;
+            down = top + lines.size() * 10 + 6;
         }
     }
 

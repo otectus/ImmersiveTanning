@@ -1,0 +1,10 @@
+{
+  "entities": [
+    "eanimod:enhanced_chicken",
+    "eanimod:enhanced_turtle",
+    "eanimod:enhanced_axolotl",
+    "eanimod:enhanced_horse"
+  ],
+  "size": "none",
+  "priority": 5
+}

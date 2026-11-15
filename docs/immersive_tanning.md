@@ -1,5 +1,13 @@
 # Immersive Tanning: What Minecraft Mods and Survival RPGs Teach Us About Making Leather Matter
 
+> **Note (1.3.0).** This brief predates the hands-on stations. Its goals still hold: two scored moments (Integrity from
+> fleshing, Workmanship from the bench), one strategic choice (the finish), passive batch stages, and failures that
+> never destroy material. The interactions it proposes have since changed. Fleshing is untimed by default; the finish is
+> chosen on the rack's tension lever with a short treatment and no score; and the bench adds cutting and assembly to
+> stitching, judged by thread tension rather than rhythm. All of it happens in the world, not in screens. Read the
+> "fleshing interaction", "finishing interaction" and "leatherworking minigame" sections below as history; the current
+> design and its reasons are in `docs/hands-on-stations.md`.
+
 ## Executive summary
 
 The comparative research points to a fairly strong conclusion: **Immersive Tanning should not become a more accurate simulation of tanning. It should become a more expressive craft with fewer, more meaningful interactions.**

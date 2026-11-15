@@ -4,33 +4,31 @@ import com.google.gson.GsonBuilder;
 import com.otectus.immersivetanning.ImmersiveTanning;
 import com.otectus.immersivetanning.block.LeatherworkersBenchBlock;
 import com.otectus.immersivetanning.block.TannersRackBlock;
+import com.otectus.immersivetanning.block.TannersVatBlock;
 import com.otectus.immersivetanning.blockentity.LeatherworkersBenchBlockEntity;
 import com.otectus.immersivetanning.blockentity.TannersRackBlockEntity;
 import com.otectus.immersivetanning.blockentity.TannersVatBlockEntity;
-import com.otectus.immersivetanning.client.StationNotices;
 import com.otectus.immersivetanning.client.compat.jei.LeatherworkingCategory;
 import com.otectus.immersivetanning.client.compat.jei.TanneryCategory;
-import com.otectus.immersivetanning.client.screen.FinishSelectScreen;
-import com.otectus.immersivetanning.client.screen.FleshingScreen;
-import com.otectus.immersivetanning.client.screen.LeatherworkScreen;
 import com.otectus.immersivetanning.config.ServerConfig;
 import com.otectus.immersivetanning.hide.HideData;
 import com.otectus.immersivetanning.hide.HideSize;
 import com.otectus.immersivetanning.leather.Finish;
+import com.otectus.immersivetanning.effect.LeatherworkPolicy;
 import com.otectus.immersivetanning.leather.LeatherworkData;
+import com.otectus.immersivetanning.leather.LeatherworkProfile;
 import com.otectus.immersivetanning.minigame.SeamPatterns;
-import com.otectus.immersivetanning.minigame.TanningSession;
-import com.otectus.immersivetanning.network.packet.OpenBenchPacket;
-import com.otectus.immersivetanning.network.packet.OpenFinishPacket;
-import com.otectus.immersivetanning.network.packet.OpenFleshingPacket;
-import com.otectus.immersivetanning.network.packet.SessionResultPacket;
-import com.otectus.immersivetanning.network.packet.StitchStartPacket;
+import com.otectus.immersivetanning.minigame.StitchPattern;
 import com.otectus.immersivetanning.recipe.TanningData;
 import com.otectus.immersivetanning.registry.ModBlocks;
 import com.otectus.immersivetanning.registry.ModItems;
 import com.otectus.immersivetanning.registry.ModRecipeTypes;
 import com.otectus.immersivetanning.trait.HideTraitLoader;
 import com.otectus.immersivetanning.trait.TraitRef;
+import com.otectus.immersivetanning.work.LeatherworkJob;
+import com.otectus.immersivetanning.work.MaterialLedger;
+import com.otectus.immersivetanning.work.WorkPattern;
+import com.otectus.immersivetanning.work.WorkPatterns;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
@@ -46,20 +44,28 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Difficulty;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LevelSettings;
 import net.minecraft.world.level.WorldDataConfiguration;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
@@ -72,8 +78,9 @@ import java.util.Map;
 
 /**
  * Drives a dev client from the title screen into a fresh flat world, checks that Immersive Tanning built its data,
- * stages every station state and every screen for framebuffer screenshots, writes {@code smoketest-result.json} and
- * quits. Screenshots land in {@code run/screenshots/smoketest_*.png}.
+ * stages every station state, tours each in the focused view with real input ({@link FocusTour}), photographs the
+ * screens that remain (tooltips, inventory, JEI), plays the tannery through ({@link TanneryPlaythrough}), writes
+ * {@code smoketest-result.json} and quits. Screenshots land in {@code run/screenshots/smoketest_*.png}.
  */
 @Mod.EventBusSubscriber(modid = SmokeTestAgent.MOD_ID, value = Dist.CLIENT)
 public final class ClientSmokeTest {
@@ -81,6 +88,8 @@ public final class ClientSmokeTest {
     /** Pack check groups requested by the Ultima harness (see PackChecks); empty in the dev smoke test. */
     private static final java.util.Set<String> EXPECT = java.util.Arrays.stream(System.getProperty("immersive_tanning.smoketest.expect", "").split(","))
             .map(String::trim).filter(s -> !s.isEmpty()).collect(java.util.stream.Collectors.toUnmodifiableSet());
+    /** A dedicated server to join instead of a fresh world (the server check, -PjoinServer=host:port). */
+    private static final String JOIN = System.getProperty("immersive_tanning.smoketest.join");
     private static final Map<String, Object> checks = new LinkedHashMap<>();
     private static final long START = Util.getMillis();
     private static int titleTicks;
@@ -92,6 +101,8 @@ public final class ClientSmokeTest {
     private static Integer originalFrameLimit;
     private static int settledAt = -1;
     private static int quietTicks;
+    /** Ticks the timeline waited while the focus tour ran. */
+    private static int paused;
     private static BlockPos base;
 
     @SubscribeEvent
@@ -112,17 +123,28 @@ public final class ClientSmokeTest {
                 if (mc.screen instanceof TitleScreen && titleTicks == 40 && !worldRequested) {
                     worldRequested = true;
                     checks.put("title_ms", Util.getMillis() - START);
-                    createWorld(mc);
+                    log("title screen reached");
+                    if (JOIN != null) ServerJoinCheck.connect(mc, JOIN);
+                    else createWorld(mc);
                 }
                 return;
             }
             worldTicks++;
+            if (JOIN != null) {
+                if (ServerJoinCheck.tick(mc, checks)) finish(mc, allPassed(), "joined " + JOIN);
+                return;
+            }
             if (settledAt < 0 && !settle(mc)) return;
             if (StoreScreenshots.enabled()) {
                 StoreScreenshots.tick(mc);
                 return;
             }
-            step(mc, worldTicks - settledAt + 40);
+            if (FocusTour.running()) {
+                FocusTour.tick();
+                paused++;
+                return;
+            }
+            step(mc, worldTicks - settledAt + 40 - paused);
         } catch (Exception e) {
             ImmersiveTanning.LOGGER.error("SMOKETEST failed at world tick {}", worldTicks, e);
             checks.put("agent_exception", e.toString());
@@ -179,9 +201,19 @@ public final class ClientSmokeTest {
                 IntegratedServer server = mc.getSingleplayerServer();
                 if (server != null && base != null && !EXPECT.isEmpty()) server.execute(() -> PackChecks.startKills(server, base, EXPECT));
             }
+            case 64 -> {
+                IntegratedServer server = mc.getSingleplayerServer();
+                if (server != null && base != null && !EXPECT.isEmpty()) server.execute(() -> PackChecks.world(server, base, EXPECT, checks));
+            }
             case 160 -> {
                 IntegratedServer server = mc.getSingleplayerServer();
                 if (server != null && !EXPECT.isEmpty()) server.execute(() -> PackChecks.collectKills(server, checks));
+            }
+            case 233 -> {
+                // Genetic Animals' animals cannot be hurt for 100 ticks after they spawn (staged at tick 64).
+                IntegratedServer server = mc.getSingleplayerServer();
+                if (EXPECT.contains("geneticanimals") && net.minecraftforge.fml.ModList.get().isLoaded("jei")) GeneticAnimalsChecks.jei(checks);
+                if (server != null && EXPECT.contains("geneticanimals")) server.execute(() -> GeneticAnimalsChecks.kill(server, checks));
             }
             case 70 -> camera(mc, 2.5, 5.5, 180F, 24F);
             case 110 -> {
@@ -200,45 +232,16 @@ public final class ClientSmokeTest {
             case 215 -> shot(mc, "smoketest_vats");
             case 217 -> camera(mc, 8.0, 3.7, 180F, 40F);
             case 235 -> shot(mc, "smoketest_benches");
+            // Every station in the focused view with real input; the timeline waits while the tour runs.
             case 237 -> {
                 mc.options.hideGui = false;
-                mc.setScreen(new FleshingScreen(new OpenFleshingPacket(999_001, BlockPos.ZERO, HideSize.LARGE, 42L, 25_000, 0, null)));
+                FocusTour.start(base, checks);
             }
-            case 241 -> scrape(mc);
-            case 252 -> shot(mc, "smoketest_fleshing");
-            case 254 -> {
-                if (mc.screen instanceof FleshingScreen s) {
-                    s.onResult(new SessionResultPacket(999_001, TanningSession.Kind.FLESHING, 80, 0.93F, 0.97F, 0.22F, false));
-                }
-            }
-            case 264 -> shot(mc, "smoketest_fleshing_result");
-            case 266 -> mc.setScreen(new FinishSelectScreen(new OpenFinishPacket(BlockPos.ZERO,
-                    new HideData(HideSize.LARGE, 80, HideTraitLoader.get(ImmersiveTanning.id("heatproof"))), Finish.SUPPLE)));
-            case 278 -> shot(mc, "smoketest_finish_select");
-            case 280 -> mc.setScreen(new LeatherworkScreen(benchOffer()));
-            case 292 -> shot(mc, "smoketest_bench_select");
-            case 294 -> {
-                if (mc.screen instanceof LeatherworkScreen s) {
-                    s.onStart(new StitchStartPacket(999_002, SeamPatterns.get(ImmersiveTanning.id("chestplate")), 1500,
-                            new ItemStack(Items.LEATHER_CHESTPLATE), Finish.HARNESS, null, 80));
-                }
-            }
-            case 309 -> shot(mc, "smoketest_bench_cutting");
-            case 324, 333, 342 -> {
-                if (mc.screen instanceof LeatherworkScreen s) s.keyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_SPACE, 0, 0);
-            }
-            case 345 -> shot(mc, "smoketest_bench_stitching");
-            case 347 -> {
-                if (mc.screen instanceof LeatherworkScreen s) {
-                    s.onResult(new SessionResultPacket(999_002, TanningSession.Kind.STITCHING, 88, 0F, 0F, 0F, false));
-                }
-            }
-            case 360 -> shot(mc, "smoketest_bench_result");
-            case 362 -> mc.setScreen(new TooltipSheet());
-            case 374 -> shot(mc, "smoketest_tooltips");
-            case 376 -> mc.setScreen(new InventoryScreen(mc.player));
-            case 388 -> shot(mc, "smoketest_inventory");
-            case 390 -> {
+            case 240 -> mc.setScreen(new TooltipSheet());
+            case 252 -> shot(mc, "smoketest_tooltips");
+            case 254 -> mc.setScreen(new InventoryScreen(mc.player));
+            case 266 -> shot(mc, "smoketest_inventory");
+            case 268 -> {
                 mc.setScreen(null);
                 if (SmokeJeiPlugin.runtime != null) {
                     SmokeJeiPlugin.runtime.getRecipesGui().showTypes(List.of(TanneryCategory.TYPE));
@@ -247,105 +250,61 @@ public final class ClientSmokeTest {
                     checks.put("jei_runtime", false);
                 }
             }
-            case 406 -> shot(mc, "smoketest_jei_tannery");
-            case 408 -> {
+            case 284 -> shot(mc, "smoketest_jei_tannery");
+            case 286 -> {
                 if (SmokeJeiPlugin.runtime != null) SmokeJeiPlugin.runtime.getRecipesGui().showTypes(List.of(LeatherworkingCategory.TYPE));
             }
-            case 424 -> shot(mc, "smoketest_jei_leatherworking");
-            case 426 -> {
+            case 302 -> shot(mc, "smoketest_jei_leatherworking");
+            case 304 -> {
                 if (SmokeJeiPlugin.runtime != null) {
                     var focus = SmokeJeiPlugin.runtime.getJeiHelpers().getFocusFactory().createFocus(
                             mezz.jei.api.recipe.RecipeIngredientRole.OUTPUT, mezz.jei.api.constants.VanillaTypes.ITEM_STACK, new ItemStack(Items.BOOK));
                     SmokeJeiPlugin.runtime.getRecipesGui().show(focus);
                 }
             }
-            case 442 -> shot(mc, "smoketest_jei_book");
-            case 444 -> {
+            case 320 -> shot(mc, "smoketest_jei_book");
+            case 322 -> {
                 mc.setScreen(null);
                 verifyWorld(mc);
             }
-            case 454 -> {
+            case 332 -> {
                 checks.put("art_models", ArtSheet.checkModels(mc));
+                checks.put("panel_uvs_continuous", ArtSheet.checkPanelUvs());
+                checks.put("hide_normals_face_work", ArtSheet.checkHideNormals());
+                checks.put("working_arms_keep_vanilla_dimensions", ArtSheet.checkArmDimensions());
                 mc.setScreen(new ArtSheet());
             }
-            case 466 -> shot(mc, "smoketest_art");
-            case 478 -> {
-                originalGuiScale = mc.options.guiScale().get();
-                mc.options.guiScale().set(3);
-                mc.resizeDisplay();
-                mc.setScreen(new FleshingScreen(new OpenFleshingPacket(999_002, BlockPos.ZERO, HideSize.LARGE, 42L, 25_000, 0, null)));
-            }
-            case 484 -> scrape(mc);
-            case 488 -> {
-                checks.put("scaled_fleshing_input", mc.screen != null && mc.screen.children().stream().anyMatch(child ->
-                        child instanceof net.minecraft.client.gui.components.Button button && button.visible && button.active
-                                && button.getMessage().getString().equals(Component.translatable("screen.immersive_tanning.fleshing.finish").getString())));
-            }
-            case 492 -> {
-                checks.put("gui_scale3_active", mc.getWindow().getGuiScale() == 3D);
-                shot(mc, "smoketest_fleshing_scale3");
-            }
-            case 496 -> mc.setScreen(new FinishSelectScreen(new OpenFinishPacket(BlockPos.ZERO,
-                    new HideData(HideSize.LARGE, 90, null), Finish.HARNESS)));
-            case 510 -> shot(mc, "smoketest_finish_scale3");
-            case 514 -> mc.setScreen(new LeatherworkScreen(benchOffer()));
-            case 528 -> shot(mc, "smoketest_bench_scale3");
-            // Vat messages through the real block interaction: they must stay on screen, several at once.
-            case 532 -> {
+            case 344 -> shot(mc, "smoketest_art");
+            // The knife strips a log through the real client and server: the client only predicts the strip, the
+            // server makes it once and pays the bark and the wear; a stripped log and stone give nothing.
+            case 350 -> {
                 mc.setScreen(null);
-                vatNotices(mc);
+                knifeStage(mc);
             }
-            case 540 -> {
-                checks.put("vat_notices_shown", StationNotices.count() >= 2);
-                shot(mc, "smoketest_vat_notices_scale3");
+            case 356 -> knifeUse(mc, KNIFE_LOG, "knife_client_predicts_without_changing_the_block");
+            case 362 -> knifeUse(mc, KNIFE_LOG, null);
+            case 364 -> knifeUse(mc, KNIFE_STONE, null);
+            case 370 -> knifeCheck(mc);
+            // A scale-backed piece names its profile and its attribute lines carry the scale-backed policy's numbers.
+            case 372 -> {
+                scaleBackedTooltip(mc);
+                mc.setScreen(new ScaleBackedSheet());
             }
-            // One press, one stitch, through the real screen input path (generic seam: first hole at 900 ms, 520 ms beat).
-            case 544 -> {
-                mc.setScreen(new LeatherworkScreen(benchOffer()));
-                if (mc.screen instanceof LeatherworkScreen s) {
-                    s.onStart(new StitchStartPacket(999_002, SeamPatterns.get(ImmersiveTanning.id("generic")), 0,
-                            new ItemStack(Items.LEATHER_BOOTS), Finish.SUPPLE, null, 80));
-                }
+            case 384 -> shot(mc, "smoketest_tooltips_scale_backed");
+            // JEI finds the chestplate's bench recipe (dragon scales in the pack, leather here) and no crafting recipe.
+            case 388 -> {
+                mc.setScreen(null);
+                jeiBenchOutput(mc);
             }
-            case 546 -> {
-                if (mc.screen instanceof LeatherworkScreen s) {
-                    s.keyPressed(GLFW.GLFW_KEY_SPACE, 0, 0);
-                    s.keyReleased(GLFW.GLFW_KEY_SPACE, 0, 0);
-                    checks.put("stitch_early_press_explained_not_counted", s.run() != null && s.run().next() == 0 && s.tooEarlyShown());
-                }
+            case 404 -> shot(mc, "smoketest_jei_bench_output");
+            // The whole tannery through the real client and network; the dev client has no Farmer's Delight.
+            case 408 -> {
+                mc.setScreen(null);
+                if (EXPECT.isEmpty()) TanneryPlaythrough.start(mc, base, checks);
+                else finish(mc, allPassed(), "complete");
             }
-            case 548 -> shot(mc, "smoketest_bench_too_early");
-            case 562 -> {
-                if (mc.screen instanceof LeatherworkScreen s) {
-                    for (int i = 0; i < 4; i++) s.keyPressed(GLFW.GLFW_KEY_SPACE, 0, 0); // a press and three auto-repeats
-                    checks.put("stitch_held_space_counts_once", s.run().next() == 1 && s.run().accuracy(0) > 0F);
-                }
-            }
-            case 572 -> {
-                if (mc.screen instanceof LeatherworkScreen s) {
-                    s.keyReleased(GLFW.GLFW_KEY_SPACE, 0, 0);
-                    s.keyPressed(GLFW.GLFW_KEY_SPACE, 0, 0);
-                    s.mouseClicked(s.width / 2.0, s.height / 2.0, 0); // a click landing with the key press
-                    checks.put("stitch_click_with_space_counts_once", s.run().next() == 2 && !s.tooEarlyShown());
-                }
-            }
-            case 574 -> {
-                if (mc.screen instanceof LeatherworkScreen s) {
-                    s.onResult(new SessionResultPacket(999_002, TanningSession.Kind.STITCHING, 75, 0F, 0F, 0F, false));
-                    s.keyPressed(GLFW.GLFW_KEY_SPACE, 0, 0); // Space is still held from the last stitch
-                }
-            }
-            case 576 -> checks.put("stitch_result_survives_held_space", mc.screen instanceof LeatherworkScreen);
-            case 577 -> {
-                if (mc.screen instanceof LeatherworkScreen s) s.keyReleased(GLFW.GLFW_KEY_SPACE, 0, 0);
-            }
-            case 578 -> shot(mc, "smoketest_bench_result_held_space");
-            case 592 -> {
-                if (mc.screen instanceof LeatherworkScreen s) s.keyPressed(GLFW.GLFW_KEY_SPACE, 0, 0);
-            }
-            case 594 -> checks.put("stitch_result_closes_on_fresh_press", !(mc.screen instanceof LeatherworkScreen));
-            case 598 -> finish(mc, allPassed(), "complete");
             default -> {
+                if (t > 408 && TanneryPlaythrough.tick(mc)) finish(mc, allPassed(), "complete");
             }
         }
     }
@@ -392,7 +351,17 @@ public final class ClientSmokeTest {
         checks.put("bench_recipes_server", data.recipes().size() >= 6);
         checks.put("bench_recipes_client", mc.level.getRecipeManager().getAllRecipesFor(ModRecipeTypes.LEATHERWORKING.get()).size() >= 6);
         checks.put("chestplate_crafting_disabled_client", mc.level.getRecipeManager().byKey(new net.minecraft.resources.ResourceLocation("minecraft", "leather_chestplate")).isEmpty());
-        checks.put("seam_patterns", SeamPatterns.has(ImmersiveTanning.id("saddle")));
+        checks.put("seam_patterns", SeamPatterns.has(ImmersiveTanning.id("saddle")) && SeamPatterns.has(ImmersiveTanning.id("strap")));
+        checks.put("work_patterns", WorkPatterns.ids().size() >= 9 && WorkPatterns.get(ImmersiveTanning.id("boots")) != null
+                && WorkPatterns.failures().isEmpty());
+        checks.put("work_patterns_detail", WorkPatterns.ids().stream().map(Object::toString).sorted().toList() + " failures " + WorkPatterns.failures());
+        // A piece that is neither worn nor wears out says its finish is a record; worn armor does not.
+        String recordOnly = Component.translatable("tooltip.immersive_tanning.record_only").getString();
+        boolean saddleSays = leatherwork(Items.SADDLE, Finish.HARNESS, 80, 85, null).getTooltipLines(mc.player, net.minecraft.world.item.TooltipFlag.NORMAL)
+                .stream().anyMatch(c -> c.getString().equals(recordOnly));
+        boolean bootsSay = leatherwork(Items.LEATHER_BOOTS, Finish.HARNESS, 80, 85, null).getTooltipLines(mc.player, net.minecraft.world.item.TooltipFlag.NORMAL)
+                .stream().anyMatch(c -> c.getString().equals(recordOnly));
+        checks.put("tooltip_record_only_on_saddle_not_boots", saddleSays && !bootsSay);
         checks.put("hide_traits", HideTraitLoader.all().size());
         ItemStack binding = new ItemStack(ModItems.BINDING_LEATHER.get());
         checks.put("client_ingredient_takes_binding", net.minecraft.world.item.crafting.Ingredient.of(Items.LEATHER).test(binding)
@@ -429,8 +398,13 @@ public final class ClientSmokeTest {
                 be.mountWet(new HideData(HideSize.LARGE, 80, i == 2 ? tough : null), finishes[i]);
                 be.advance(Math.round(ServerConfig.get(ServerConfig.DRYING_TICKS) * progress[i]));
             }
+            BlockPos framePos = base.offset(FocusTour.FRAME_RACK);
+            place(level, framePos, rack);
+            HideData framed = new HideData(HideSize.LARGE, 85, null);
+            ((TannersRackBlockEntity) level.getBlockEntity(framePos)).mountWet(ModItems.WET_TANNED_HIDE.get().create(framed), framed, Finish.HARNESS);
+            BlockState vatState = ModBlocks.TANNERS_VAT.get().defaultBlockState().setValue(TannersVatBlock.FACING, Direction.SOUTH);
             BlockPos vatPos = base.offset(6, 0, -2);
-            place(level, vatPos, ModBlocks.TANNERS_VAT.get().defaultBlockState());
+            place(level, vatPos, vatState);
             TannersVatBlockEntity vat = (TannersVatBlockEntity) level.getBlockEntity(vatPos);
             vat.fillWater();
             vat.addTannin(8);
@@ -439,12 +413,10 @@ public final class ClientSmokeTest {
             vat.insertHide(new HideData(HideSize.MEDIUM, 60, null));
             vat.insertHide(new HideData(HideSize.SMALL, 90, null));
             BlockPos emptyVat = base.offset(8, 0, -2);
-            place(level, emptyVat, ModBlocks.TANNERS_VAT.get().defaultBlockState());
+            place(level, emptyVat, vatState);
             BlockPos benchPos = base.offset(6, 0, 2);
             place(level, benchPos, ModBlocks.LEATHERWORKERS_BENCH.get().defaultBlockState().setValue(LeatherworkersBenchBlock.FACING, Direction.SOUTH));
-            ((LeatherworkersBenchBlockEntity) level.getBlockEntity(benchPos)).beginSession(player.getUUID(), List.of(),
-                    new ItemStack(Items.LEATHER_CHESTPLATE), Finish.HARNESS.leatherColor());
-            ((LeatherworkersBenchBlockEntity) level.getBlockEntity(benchPos)).unlock();
+            ((LeatherworkersBenchBlockEntity) level.getBlockEntity(benchPos)).setJob(stagedJob(player));
             place(level, base.offset(8, 0, 2), ModBlocks.LEATHERWORKERS_BENCH.get().defaultBlockState().setValue(LeatherworkersBenchBlock.FACING, Direction.SOUTH));
 
             player.getInventory().clearContent();
@@ -473,8 +445,6 @@ public final class ClientSmokeTest {
             ServerLevel level = server.overworld();
             TannersRackBlockEntity dry = (TannersRackBlockEntity) level.getBlockEntity(base.offset(3, 0, -2));
             checks.put("hardened_rack_dry_and_settled", dry != null && dry.isDry() && dry.isSettled());
-            TannersVatBlockEntity vat = (TannersVatBlockEntity) level.getBlockEntity(base.offset(6, 0, -2));
-            checks.put("vat_one_hide_ready", vat != null && vat.finishedCount() == 1);
         });
     }
 
@@ -489,57 +459,160 @@ public final class ClientSmokeTest {
         level.setBlockAndUpdate(pos, state);
     }
 
-    /** The player fills the empty vat, adds one bark, a large hide (waits for a second bark), then a small hide (starts). */
-    private static void vatNotices(Minecraft mc) {
+    /** A chestplate half stitched on the bench: every cut and seat made, the first half of the stitches pulled well. */
+    private static LeatherworkJob stagedJob(ServerPlayer player) {
+        return stagedJob(player, "chestplate", true);
+    }
+
+    /** Test fixture for photographing every gear pattern through the production bench renderer. */
+    static LeatherworkJob stagedJob(ServerPlayer player, String name, boolean sewn) {
+        WorkPattern pattern = WorkPatterns.get(ImmersiveTanning.id(name));
+        if (pattern == null) pattern = WorkPatterns.generic();
+        MaterialLedger ledger = new MaterialLedger();
+        ledger.add(MaterialLedger.Role.LEATHER, ModItems.leather(Finish.HARNESS).create(80, null, 8));
+        var item = switch (name) {
+            case "boots" -> Items.LEATHER_BOOTS;
+            case "helmet" -> Items.LEATHER_HELMET;
+            case "leggings" -> Items.LEATHER_LEGGINGS;
+            case "saddle" -> Items.SADDLE;
+            case "horse_armor" -> Items.LEATHER_HORSE_ARMOR;
+            case "strap" -> Items.LEAD;
+            default -> Items.LEATHER_CHESTPLATE;
+        };
+        LeatherworkJob job = LeatherworkJob.craft(player.getUUID(), player.getGameProfile().getName(), ImmersiveTanning.id("leatherworking/leather_" + name),
+                new ItemStack(item), Finish.HARNESS, null, 80, 8, ledger, pattern);
+        if (!sewn) return job;
+        for (int c = 0; c < pattern.cuts().size(); c++) {
+            float[] path = pattern.cutPath(c);
+            int n = 80;
+            float[] xs = new float[n + 1];
+            float[] ys = new float[n + 1];
+            for (int i = 0; i <= n; i++) {
+                float[] p = StitchPattern.pointAt(path, i / (float) n);
+                xs[i] = p[0];
+                ys[i] = p[1];
+            }
+            job.cut(true, true, xs, ys, 1F);
+        }
+        for (int p = 0; p < pattern.panels().size(); p++) {
+            WorkPattern.Placement target = pattern.placement(p);
+            job.place(p, target.x(), target.y(), target.rot(), 1F);
+        }
+        for (int a = 0; a < job.stitchCount() / 2; a++) {
+            float[] f = job.stitchFrame(a);
+            float pull = pattern.joinOf(a).pullIdeal();
+            job.puncture(a, f[4], f[5], 1F);
+            job.releaseThread(f[4] + f[6] * pull, f[5] + f[7] * pull, false);
+        }
+        return job;
+    }
+
+    /** Knife stage positions, relative to the staged floor's origin (a free corner, within reach of the player). */
+    private static final BlockPos KNIFE_LOG = new BlockPos(-6, 0, 5);
+    private static final BlockPos KNIFE_STONE = new BlockPos(-4, 0, 5);
+    private static volatile int knifeBark;
+
+    /** A survival player beside an oak log lying east-west and a stone block, the knife in hand. */
+    private static void knifeStage(Minecraft mc) {
         IntegratedServer server = mc.getSingleplayerServer();
         if (server == null || base == null) return;
         server.execute(() -> {
             ServerLevel level = server.overworld();
             ServerPlayer player = server.getPlayerList().getPlayers().get(0);
-            player.setGameMode(GameType.CREATIVE);
-            player.teleportTo(level, base.getX() + 8.5, base.getY(), base.getZ() + 0.5, 180F, 40F);
-            BlockPos vat = base.offset(8, 0, -2);
-            ItemStack[] steps = {new ItemStack(Items.WATER_BUCKET), new ItemStack(ModItems.BARK.get()),
-                    ModItems.SCRAPED_HIDE.get().create(HideSize.LARGE, 80, null), ModItems.SCRAPED_HIDE.get().create(HideSize.SMALL, 80, null)};
-            for (ItemStack held : steps) {
-                player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, held);
-                level.getBlockState(vat).use(level, player, net.minecraft.world.InteractionHand.MAIN_HAND,
-                        new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(vat), Direction.UP, vat, false));
-            }
-            player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, ItemStack.EMPTY);
-            TannersVatBlockEntity be = (TannersVatBlockEntity) level.getBlockEntity(vat);
-            checks.put("vat_small_starts_past_waiting_large", be.slots().size() == 2 && !be.slots().get(0).started()
-                    && be.slots().get(1).started() && be.tannin() == 0);
+            player.setGameMode(GameType.SURVIVAL);
+            player.teleportTo(level, base.getX() - 4.5, base.getY(), base.getZ() + 3.5, 0F, 45F);
+            level.setBlockAndUpdate(base.offset(KNIFE_LOG), Blocks.OAK_LOG.defaultBlockState().setValue(RotatedPillarBlock.AXIS, Direction.Axis.X));
+            level.setBlockAndUpdate(base.offset(KNIFE_STONE), Blocks.STONE.defaultBlockState());
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.TANNERS_KNIFE.get()));
+            knifeBark = player.getInventory().countItem(ModItems.BARK.get());
         });
     }
 
-    private static OpenBenchPacket benchOffer() {
-        TraitRef tough = HideTraitLoader.get(ImmersiveTanning.id("tough"));
-        return new OpenBenchPacket(999_002, BlockPos.ZERO, List.of(
-                new OpenBenchPacket.Entry(ImmersiveTanning.id("leatherworking/leather_boots"), new ItemStack(Items.LEATHER_BOOTS), 4, Finish.SUPPLE, null, 80, List.of()),
-                new OpenBenchPacket.Entry(ImmersiveTanning.id("leatherworking/leather_chestplate"), new ItemStack(Items.LEATHER_CHESTPLATE), 8, Finish.HARNESS, null, 90, List.of()),
-                new OpenBenchPacket.Entry(ImmersiveTanning.id("leatherworking/leather_helmet"), new ItemStack(Items.LEATHER_HELMET), 5, Finish.HARDENED, tough, 70, List.of()),
-                new OpenBenchPacket.Entry(ImmersiveTanning.id("leatherworking/saddle"), new ItemStack(Items.SADDLE), 5, Finish.HARNESS, null, 90,
-                        List.of(new ItemStack(Items.IRON_INGOT), new ItemStack(Items.STRING, 2))),
-                new OpenBenchPacket.Entry(ImmersiveTanning.id("leatherworking/leather_horse_armor"), new ItemStack(Items.LEATHER_HORSE_ARMOR), 7, Finish.HARDENED, null, 60, List.of())));
+    /** A right-click on the block with the held knife, through the client's own interaction path. */
+    private static void knifeUse(Minecraft mc, BlockPos relative, String predictionCheck) {
+        if (base == null || mc.gameMode == null || mc.player == null) return;
+        BlockPos pos = base.offset(relative);
+        boolean log = mc.level.getBlockState(pos).is(Blocks.OAK_LOG);
+        InteractionResult result = mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND,
+                new BlockHitResult(Vec3.atCenterOf(pos), Direction.UP, pos, false));
+        if (predictionCheck != null) {
+            checks.put(predictionCheck, log && result.consumesAction() && mc.level.getBlockState(pos).is(Blocks.OAK_LOG));
+        }
     }
 
-    /** Drags the knife through the hide with real mouse events, like a player would. */
-    private static void scrape(Minecraft mc) {
-        if (!(mc.screen instanceof FleshingScreen screen)) return;
-        int[] area = screen.workArea();
-        for (int row = 0; row < 5; row++) {
-            double y = area[1] + area[3] * (0.3 + row * 0.08);
-            double x0 = area[0] + area[2] * 0.25;
-            double x1 = area[0] + area[2] * 0.62;
-            screen.mouseClicked(x0, y, 0);
-            for (int i = 1; i <= 30; i++) {
-                double x = x0 + (x1 - x0) * i / 30.0;
-                screen.mouseDragged(x, y, 0, (x1 - x0) / 30.0, 0);
-            }
-            screen.mouseReleased(x1, y, 0);
+    private static void knifeCheck(Minecraft mc) {
+        IntegratedServer server = mc.getSingleplayerServer();
+        if (server == null || base == null) return;
+        checks.put("knife_client_sees_the_stripped_log", mc.level.getBlockState(base.offset(KNIFE_LOG)).is(Blocks.STRIPPED_OAK_LOG));
+        server.execute(() -> {
+            ServerLevel level = server.overworld();
+            ServerPlayer player = server.getPlayerList().getPlayers().get(0);
+            BlockState log = level.getBlockState(base.offset(KNIFE_LOG));
+            int bark = player.getInventory().countItem(ModItems.BARK.get()) - knifeBark;
+            int wear = player.getMainHandItem().getDamageValue();
+            checks.put("knife_strips_once_for_bark_and_wear", log.is(Blocks.STRIPPED_OAK_LOG) && log.getValue(RotatedPillarBlock.AXIS) == Direction.Axis.X
+                    && bark == ServerConfig.get(ServerConfig.BARK_PER_LOG) && wear == 1 && level.getBlockState(base.offset(KNIFE_STONE)).is(Blocks.STONE));
+            checks.put("knife_detail", "log=" + log + ", bark=" + bark + ", wear=" + wear);
+            player.setGameMode(GameType.CREATIVE);
+        });
+    }
+
+    /**
+     * A scale-backed chestplate: Ice and Fire's red one in the pack, a diamond stand-in here (not in the tag without the
+     * test datapack, so the profile record makes it scale-backed).
+     */
+    private static ItemStack scaleBackedPiece(Finish finish, int integrity, int workmanship) {
+        net.minecraft.world.item.Item dragon = ForgeRegistries.ITEMS.getValue(new net.minecraft.resources.ResourceLocation("iceandfire", "armor_red_chestplate"));
+        ItemStack stack = leatherwork(dragon == null || dragon == Items.AIR ? Items.DIAMOND_CHESTPLATE : dragon, finish, integrity, workmanship, null);
+        stack.getOrCreateTagElement(LeatherworkData.ROOT).putString(LeatherworkProfile.KEY, "scale_backed");
+        return stack;
+    }
+
+    /** The client tooltip of a Masterwork Hardened scale-backed piece against the policy's own numbers. */
+    private static void scaleBackedTooltip(Minecraft mc) {
+        ItemStack piece = scaleBackedPiece(Finish.HARDENED, 86, 91);
+        LeatherworkPolicy policy = LeatherworkPolicy.of(piece);
+        LeatherworkData data = LeatherworkData.get(piece).orElseThrow();
+        net.minecraft.world.entity.EquipmentSlot slot = net.minecraft.world.entity.LivingEntity.getEquipmentSlotForItem(piece);
+        double nativeArmor = 0;
+        double nativeToughness = 0;
+        for (var m : new ItemStack(piece.getItem()).getAttributeModifiers(slot).get(Attributes.ARMOR)) nativeArmor += m.getAmount();
+        for (var m : new ItemStack(piece.getItem()).getAttributeModifiers(slot).get(Attributes.ARMOR_TOUGHNESS)) nativeToughness += m.getAmount();
+        double efficacy = policy.efficacy(data);
+        double bonus = policy.hardenedToughness() * efficacy;
+        String armor = attributeLine(nativeArmor * efficacy + policy.hardenedArmor() * efficacy, Attributes.ARMOR);
+        List<String> lines = piece.getTooltipLines(mc.player, TooltipFlag.NORMAL).stream().map(Component::getString).toList();
+        // Vanilla lists the piece's own toughness and the Hardened bonus apart; tooltip mods (Ultima has one) add them up.
+        boolean toughness = lines.contains(attributeLine(nativeToughness + bonus, Attributes.ARMOR_TOUGHNESS))
+                || lines.contains(attributeLine(bonus, Attributes.ARMOR_TOUGHNESS)) && (nativeToughness == 0 || lines.contains(attributeLine(nativeToughness, Attributes.ARMOR_TOUGHNESS)));
+        checks.put("scale_backed_tooltip_names_the_profile", policy.isScaleBacked()
+                && lines.contains(Component.translatable("tooltip.immersive_tanning.scale_backed").getString()));
+        checks.put("scale_backed_tooltip_shows_the_policy_armor", lines.contains(armor) && toughness);
+        checks.put("scale_backed_tooltip_lines", lines);
+    }
+
+    private static String attributeLine(double amount, net.minecraft.world.entity.ai.attributes.Attribute attribute) {
+        return Component.translatable("attribute.modifier.plus.0", ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(amount),
+                Component.translatable(attribute.getDescriptionId())).getString();
+    }
+
+    private static void jeiBenchOutput(Minecraft mc) {
+        if (SmokeJeiPlugin.runtime == null) {
+            checks.put("jei_bench_output_not_crafting", false);
+            return;
         }
-        screen.mouseMoved(area[0] + area[2] * 0.7, area[1] + area[3] * 0.6);
+        net.minecraft.world.item.Item dragon = ForgeRegistries.ITEMS.getValue(new net.minecraft.resources.ResourceLocation("iceandfire", "armor_red_chestplate"));
+        net.minecraft.world.item.Item item = dragon == null || dragon == Items.AIR ? Items.LEATHER_CHESTPLATE : dragon;
+        var jei = SmokeJeiPlugin.runtime;
+        var focus = jei.getJeiHelpers().getFocusFactory().createFocus(mezz.jei.api.recipe.RecipeIngredientRole.OUTPUT,
+                mezz.jei.api.constants.VanillaTypes.ITEM_STACK, new ItemStack(item));
+        List<com.otectus.immersivetanning.recipe.LeatherworkingRecipe> bench = jei.getRecipeManager().createRecipeLookup(LeatherworkingCategory.TYPE)
+                .limitFocus(List.of(focus)).get().filter(r -> r.result().is(item)).toList();
+        long crafting = jei.getRecipeManager().createRecipeLookup(mezz.jei.api.constants.RecipeTypes.CRAFTING).limitFocus(List.of(focus)).get().count();
+        checks.put("jei_bench_output_not_crafting", bench.size() == 1 && crafting == 0);
+        checks.put("jei_bench_output_detail", bench.stream().map(r -> r.getId() + ": " + r.leather() + " leather, "
+                + r.auxiliary().stream().map(a -> a.count() + " " + a.displayStack().getHoverName().getString()).toList()).toList() + ", crafting recipes " + crafting);
+        jei.getRecipesGui().show(focus);
     }
 
     private static void camera(Minecraft mc, double dx, double dz, float yaw, float pitch) {
@@ -552,7 +625,7 @@ public final class ClientSmokeTest {
         });
     }
 
-    private static void shot(Minecraft mc, String name) {
+    static void shot(Minecraft mc, String name) {
         mc.getToasts().clear();
         Screenshot.grab(mc.gameDirectory, name + ".png", mc.getMainRenderTarget(), msg -> log("screenshot " + name));
     }
@@ -604,6 +677,23 @@ public final class ClientSmokeTest {
                     ModItems.leather(Finish.HARDENED).create(70, tough, 3),
                     ModItems.WET_TANNED_HIDE.get().create(HideSize.LARGE, 80, tough)};
             int[][] at = {{6, 16}, {width / 2 + 6, 16}, {6, height / 2 + 8}, {width / 2 + 6, height / 2 + 8}};
+            for (int i = 0; i < stacks.length; i++) {
+                g.renderComponentTooltip(font, Screen.getTooltipFromItem(minecraft, stacks[i]), at[i][0], at[i][1]);
+            }
+        }
+    }
+
+    /** Tooltips of scale-backed pieces: Masterwork Hardened and Standard Supple. */
+    private static final class ScaleBackedSheet extends Screen {
+        private ScaleBackedSheet() {
+            super(Component.literal("Scale-backed tooltips"));
+        }
+
+        @Override
+        public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+            renderBackground(g);
+            ItemStack[] stacks = {scaleBackedPiece(Finish.HARDENED, 86, 91), scaleBackedPiece(Finish.SUPPLE, 50, 50)};
+            int[][] at = {{6, 16}, {width / 2 + 6, 16}};
             for (int i = 0; i < stacks.length; i++) {
                 g.renderComponentTooltip(font, Screen.getTooltipFromItem(minecraft, stacks[i]), at[i][0], at[i][1]);
             }

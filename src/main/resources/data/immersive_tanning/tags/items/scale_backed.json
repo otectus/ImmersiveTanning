@@ -1,0 +1,212 @@
+{
+  "values": [
+    {
+      "id": "iceandfire:armor_red_helmet",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_red_chestplate",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_red_leggings",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_red_boots",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_green_helmet",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_green_chestplate",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_green_leggings",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_green_boots",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_bronze_helmet",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_bronze_chestplate",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_bronze_leggings",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_bronze_boots",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_gray_helmet",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_gray_chestplate",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_gray_leggings",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_gray_boots",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_blue_helmet",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_blue_chestplate",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_blue_leggings",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_blue_boots",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_sapphire_helmet",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_sapphire_chestplate",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_sapphire_leggings",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_sapphire_boots",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_silver_helmet",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_silver_chestplate",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_silver_leggings",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_silver_boots",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_white_helmet",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_white_chestplate",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_white_leggings",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_white_boots",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_electric_helmet",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_electric_chestplate",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_electric_leggings",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_electric_boots",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_copper_helmet",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_copper_chestplate",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_copper_leggings",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_copper_boots",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_black_helmet",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_black_chestplate",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_black_leggings",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_black_boots",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_amythest_helmet",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_amythest_chestplate",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_amythest_leggings",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_amythest_boots",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_amethyst_helmet",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_amethyst_chestplate",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_amethyst_leggings",
+      "required": false
+    },
+    {
+      "id": "iceandfire:armor_amethyst_boots",
+      "required": false
+    }
+  ]
+}

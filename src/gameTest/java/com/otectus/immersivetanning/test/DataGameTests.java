@@ -98,8 +98,8 @@ public final class DataGameTests {
         h.assertTrue(toughness(hardened) > 0, "Hardened adds toughness");
         h.assertTrue(speed(supple) > 0.02, "Supple adds movement speed per piece");
         h.assertTrue(speed(harness) == 0 && speed(hardened) == 0, "Only Supple speeds you up");
-        double harnessDurability = LeatherworkEffects.durability(LeatherworkData.get(harness).orElseThrow());
-        double suppleDurability = LeatherworkEffects.durability(LeatherworkData.get(supple).orElseThrow());
+        double harnessDurability = LeatherworkEffects.durability(harness, LeatherworkData.get(harness).orElseThrow());
+        double suppleDurability = LeatherworkEffects.durability(supple, LeatherworkData.get(supple).orElseThrow());
         h.assertTrue(harnessDurability > suppleDurability * 1.4, "Harness lasts longest: " + harnessDurability + " vs " + suppleDurability);
         h.succeed();
     }

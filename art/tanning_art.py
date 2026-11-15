@@ -402,19 +402,72 @@ def entity_hide_leather():
             if not mask[y][x]:
                 continue
             rim = not all(inside(x + dx, y + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
-            h = hash2(x, y, 15)
             if rim:
-                v = 150
-            elif h < 36:
-                v = 205
-            elif h > 236:
-                v = 255
+                v = 187 if not inside(x - 1, y - 1) else 158
             else:
-                v = 232
-            # Faint diagonal grain.
-            if (x + 2 * y) % 7 == 0 and not rim:
-                v -= 12
+                # Clustered fibres and a broad shoulder plane; avoid salt-and-pepper grain in the close view.
+                v = 237 + (hash2(x // 3, y // 4, 15) % 3 - 1) * 4
+                if 7 < x < 17 and 5 < y < 23:
+                    v += 6
+                if (x + y // 3) % 9 == 0:
+                    v -= 10
+                if (x + y // 3) % 9 == 1 and y % 4 < 2:
+                    v += 4
             d.point((x, y), fill=(v, v, v, 255))
+    return im
+
+
+# ---------------------------------------------------------------------------------------------- 1.3 work
+
+def unfinished_leatherwork():
+    """A cut harness-leather panel on a backing piece, half stitched: dashed thread, the open end still loose."""
+    im, d = canvas((16, 16))
+    d.polygon([(1, 5), (9, 2), (14, 4), (13, 11), (6, 14), (2, 12)], fill=HARNESS[0])
+    d.polygon([(2, 6), (9, 3), (13, 5), (12, 10), (6, 13), (3, 11)], fill=HARNESS[3])
+    d.line([(2, 6), (9, 3), (13, 5)], fill=HARNESS[5])
+    d.polygon([(4, 7), (10, 5), (11, 9), (6, 11)], fill=SUPPLE[2])
+    d.line([(4, 7), (10, 5)], fill=SUPPLE[4]); d.line([(6, 11), (11, 9)], fill=SUPPLE[0])
+    for x, y in ((4, 9), (6, 9), (8, 8), (10, 7)):
+        d.point((x, y), fill=THREAD)
+    d.line((11, 7, 14, 9), fill=THREAD); d.point((15, 10), fill=BONE[2])
+    return im
+
+
+def work_props():
+    """32px atlas of plain surfaces the station renderers tint: white, pattern paper, linen thread, oiled wood,
+    iron, plain leather grain, a soft ring and a dark hole, each in an 8px square."""
+    im, d = canvas((32, 32), (0, 0, 0, 0))
+    d.rectangle((0, 0, 7, 7), fill='#ffffff')
+    for y in range(8):
+        for x in range(8, 16):
+            v = 240 - (6 if y % 3 == 0 else 0) - (hash2(x, y, 31) & 3)
+            d.point((x, y), fill=(v, v - 4, v - 14, 255))
+    for y in range(8):
+        for x in range(16, 24):
+            v = 236 - (18 if (x + y) % 4 == 0 else 0) - (hash2(x, y, 32) & 7)
+            d.point((x, y), fill=(v, v - 8, v - 30, 255))
+    for y in range(8):
+        for x in range(24, 32):
+            v = 232 - (22 if (x + y // 4) % 4 == 0 else 0) - (6 if y == 7 else 0)
+            d.point((x, y), fill=(v, v, v, 255))
+    for y in range(8, 16):
+        for x in range(0, 8):
+            v = 225 + (12 if y == 8 else 0) - (14 if y == 15 else 0) - (hash2(x // 2, y // 2, 34) & 7)
+            d.point((x, y), fill=(v, v, v, 255))
+    for y in range(8, 16):
+        for x in range(8, 16):
+            v = 238 - (hash2(x // 2, y // 2, 35) & 7)
+            if (x + y // 3) % 6 == 0:
+                v -= 12
+            elif (x + y // 3) % 6 == 1 and y % 3 == 0:
+                v += 10
+            d.point((x, y), fill=(v, v, v, 255))
+    for y in range(8, 16):
+        for x in range(16, 24):
+            r = math.hypot(x - 19.5, y - 11.5)
+            a = max(0, int(255 * (1 - abs(r - 2.8) / 1.2))) if r < 4 else 0
+            d.point((x, y), fill=(255, 255, 255, a))
+    d.rectangle((24, 8, 31, 15), fill='#120c08')
     return im
 
 
@@ -439,4 +492,6 @@ def textures():
     out['block/rack_lashing.png'] = rack_lashing()
     out['entity/hide_raw.png'] = entity_hide_raw()
     out['entity/hide_leather.png'] = entity_hide_leather()
+    out['entity/work_props.png'] = work_props()
+    out['item/unfinished_leatherwork.png'] = unfinished_leatherwork()
     return out

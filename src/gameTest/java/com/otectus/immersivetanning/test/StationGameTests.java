@@ -11,13 +11,6 @@ import com.otectus.immersivetanning.item.ProcessedHideItem;
 import com.otectus.immersivetanning.leather.Finish;
 import com.otectus.immersivetanning.leather.LeatherData;
 import com.otectus.immersivetanning.leather.LeatherworkData;
-import com.otectus.immersivetanning.minigame.FleshingSession;
-import com.otectus.immersivetanning.minigame.FleshingSurface;
-import com.otectus.immersivetanning.minigame.SessionManager;
-import com.otectus.immersivetanning.minigame.StitchRun;
-import com.otectus.immersivetanning.minigame.StitchingSession;
-import com.otectus.immersivetanning.minigame.TanningSession;
-import com.otectus.immersivetanning.network.packet.FleshStrokePacket;
 import com.otectus.immersivetanning.registry.ModBlocks;
 import com.otectus.immersivetanning.registry.ModItems;
 import com.otectus.immersivetanning.trait.HideTraitLoader;
@@ -25,8 +18,8 @@ import com.otectus.immersivetanning.trait.TraitRef;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
+import com.otectus.immersivetanning.work.WorkAction;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -121,8 +114,10 @@ public final class StationGameTests {
         player.setItemInHand(InteractionHand.MAIN_HAND, ModItems.WET_TANNED_HIDE.get().create(HideSize.MEDIUM, 50, null));
         TestSupport.use(h, player);
         h.assertTrue(rack.mode() == TannersRackBlockEntity.Mode.DRYING && rack.finish() == Finish.HARNESS, "Sneak-mount uses the last finish");
-        SessionManager.selectFinish(player, h.absolutePos(STATION), Finish.SUPPLE);
-        h.assertTrue(rack.finish() == Finish.HARNESS, "An occupied rack refuses a second hide");
+        TestSupport.Operator op = TestSupport.operate(h, player);
+        player.setItemInHand(InteractionHand.MAIN_HAND, ModItems.WET_TANNED_HIDE.get().create(HideSize.MEDIUM, 50, null));
+        op.act(WorkAction.RACK_MOUNT);
+        h.assertTrue(rack.finish() == Finish.HARNESS && player.getMainHandItem().getCount() == 1, "An occupied rack refuses a second hide");
         player.setShiftKeyDown(false);
         h.succeed();
     }
@@ -159,57 +154,22 @@ public final class StationGameTests {
         rack.mountRaw(HideData.raw(HideSize.MEDIUM, null));
         FakePlayer player = TestSupport.player(h);
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.TANNERS_KNIFE.get()));
-        TestSupport.use(h, player);
-        TanningSession session = SessionManager.byPlayer(player.getUUID()).orElse(null);
-        h.assertTrue(session instanceof FleshingSession, "The knife opens a fleshing session");
-        FleshingSession fleshing = (FleshingSession) session;
-        h.assertTrue(rack.isLocked(), "The rack is locked while fleshing");
+        TestSupport.Operator op = TestSupport.operate(h, player);
+        h.assertTrue(rack.isLocked() && rack.operator().equals(player.getUUID()), "Leaning in makes the player the rack's operator");
 
-        // Replay a careful path through the server's own copy of the hide, as the client would send it.
-        FleshingSurface mirror = new FleshingSurface(HideSize.MEDIUM, fleshing.seed);
-        List<int[]> points = new ArrayList<>();
-        List<Boolean> begins = new ArrayList<>();
-        for (int p = 0; p < mirror.patches(); p++) {
-            float cos = Mth.cos(mirror.grain(p));
-            float sin = Mth.sin(mirror.grain(p));
-            for (float off = -9F; off <= 9F; off += 2.2F) {
-                float cx = mirror.patchX(p) - sin * off;
-                float cy = mirror.patchY(p) + cos * off;
-                for (int i = 0; i <= 24; i++) {
-                    float t = i / 24F;
-                    float x = Mth.lerp(t, cx - cos * 11F, cx + cos * 11F);
-                    float y = Mth.lerp(t, cy - sin * 11F, cy + sin * 11F);
-                    points.add(new int[]{FleshingSurface.quantize(x / FleshingSurface.W), FleshingSurface.quantize(y / FleshingSurface.H)});
-                    begins.add(i == 0);
-                }
-            }
-        }
-        int sequence = 0;
-        int clientMs = 100;
-        for (int start = 0; start < points.size(); ) {
-            int end = start + 1;
-            while (end < points.size() && !begins.get(end)) end++;
-            short[] xs = new short[end - start];
-            short[] ys = new short[end - start];
-            for (int i = start; i < end; i++) {
-                xs[i - start] = (short) points.get(i)[0];
-                ys[i - start] = (short) points.get(i)[1];
-            }
-            clientMs += 150;
-            SessionManager.fleshStroke(player, new FleshStrokePacket(fleshing.id, ++sequence, true, true, clientMs, xs, ys), fleshing.startMs() + clientMs);
-            if (SessionManager.byPlayer(player.getUUID()).isEmpty()) break;
-            start = end;
-        }
-        if (SessionManager.byPlayer(player.getUUID()).isPresent()) SessionManager.finishFleshingEarly(player, fleshing.id);
+        TestSupport.fleshCarefully(op, rack);
 
-        h.assertTrue(SessionManager.byPlayer(player.getUUID()).isEmpty(), "The session ends");
-        h.assertTrue(rack.isEmpty() && !rack.isLocked(), "The fleshed hide leaves the rack");
-        ItemStack scraped = findItem(player.getInventory(), ModItems.SCRAPED_HIDE.get());
-        h.assertTrue(!scraped.isEmpty(), "The player receives the scraped hide");
-        HideData data = ProcessedHideItem.data(scraped);
+        h.assertTrue(rack.mode() == TannersRackBlockEntity.Mode.SCRAPED, "The clean hide stays on the beam until it is picked up");
+        HideData data = rack.hide();
         h.assertTrue(data.size() == HideSize.MEDIUM && data.integrity() >= 80 && data.integrity() % HideData.INTEGRITY_STEP == 0,
                 "Careful fleshing gives high Integrity in steps of ten, got " + data.integrity());
-        h.assertTrue(player.getMainHandItem().getDamageValue() == 1, "The knife wears by one");
+        h.assertTrue(player.getMainHandItem().getDamageValue() == 1, "The knife wears by one for the hide");
+        op.act(WorkAction.RACK_TAKE);
+        h.assertTrue(rack.isEmpty(), "Picking it up empties the beam");
+        ItemStack scraped = findItem(player.getInventory(), ModItems.SCRAPED_HIDE.get());
+        h.assertTrue(!scraped.isEmpty() && ProcessedHideItem.data(scraped).integrity() == data.integrity(), "The player receives the scraped hide");
+        op.act(WorkAction.RACK_TAKE);
+        h.assertTrue(player.getInventory().countItem(ModItems.SCRAPED_HIDE.get()) == 1, "Taking twice takes nothing more");
         h.succeed();
     }
 
@@ -220,12 +180,15 @@ public final class StationGameTests {
         FakePlayer player = TestSupport.player(h);
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.TANNERS_KNIFE.get()));
         player.getInventory().add(new ItemStack(ModItems.rawHide(HideSize.SMALL), 2));
-        SessionManager.fleshNext(player, h.absolutePos(STATION));
+        TestSupport.Operator op = TestSupport.operate(h, player);
+        op.act(WorkAction.NEXT_HIDE);
         h.assertTrue(rack.mode() == TannersRackBlockEntity.Mode.RAW && rack.hide().size() == HideSize.SMALL, "The next hide is mounted");
-        h.assertTrue(SessionManager.byPlayer(player.getUUID()).orElse(null) instanceof FleshingSession, "Fleshing starts at once");
+        h.assertTrue(rack.work() != null && !rack.work().started(), "It carries untouched fleshing work");
         h.assertTrue(player.getInventory().countItem(ModItems.rawHide(HideSize.SMALL)) == 1, "One hide left the inventory");
-        SessionManager.cancelFromClient(player, SessionManager.byPlayer(player.getUUID()).orElseThrow().id);
-        h.assertTrue(rack.mode() == TannersRackBlockEntity.Mode.RAW && !rack.isLocked(), "Cancelling leaves the hide on the rack, unlocked");
+        long seed = rack.work().surface().seed();
+        op.act(WorkAction.RELEASE);
+        h.assertTrue(rack.mode() == TannersRackBlockEntity.Mode.RAW && !rack.isLocked() && rack.work().surface().seed() == seed,
+                "Leaving keeps the same hide and patches on the rack, unlocked");
         h.succeed();
     }
 
@@ -235,30 +198,34 @@ public final class StationGameTests {
         LeatherworkersBenchBlockEntity bench = (LeatherworkersBenchBlockEntity) h.getLevel().getBlockEntity(h.absolutePos(STATION));
         FakePlayer player = TestSupport.player(h);
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.AWL.get()));
+        player.getInventory().add(new ItemStack(ModItems.TANNERS_KNIFE.get()));
         player.getInventory().add(ModItems.leather(Finish.SUPPLE).create(90, null, 3));
         player.getInventory().add(ModItems.leather(Finish.SUPPLE).create(70, null, 3));
-        TestSupport.use(h, player);
-        StitchingSession session = (StitchingSession) SessionManager.byPlayer(player.getUUID()).orElse(null);
-        h.assertTrue(session != null, "The awl opens the bench");
+        TestSupport.Operator op = TestSupport.operate(h, player);
 
-        SessionManager.selectBenchRecipe(player, session.id, ImmersiveTanning.id("leatherworking/leather_boots"), Finish.SUPPLE, null);
-        h.assertTrue(session.isPlaying() && bench.hasEscrow(), "Choosing boots cuts four leather into escrow");
+        op.send(WorkAction.BENCH_PREPARE, 0, new int[]{Finish.SUPPLE.ordinal()}, new short[0], new short[0],
+                ImmersiveTanning.id("leatherworking/leather_boots"), null);
+        h.assertTrue(bench.job() != null && bench.hasEscrow() && !bench.job().started(), "Preparing boots lays out four leather on the bench");
         h.assertTrue(countLeather(player.getInventory()) == 2, "Four of six leather left the inventory");
-        StitchRun run = session.run();
-        for (int i = 0; i < run.count(); i++) {
-            SessionManager.stitchPress(player, session.id, i + 1, run.time(i), session.startMs() + run.time(i));
-        }
-        h.assertTrue(SessionManager.byPlayer(player.getUUID()).isEmpty(), "The last stitch finishes the piece");
-        h.assertTrue(!bench.hasEscrow() && !bench.isLocked(), "Escrow is consumed exactly once");
+        h.assertTrue(bench.job().pattern().id().equals(ImmersiveTanning.id("boots")), "Boots are worked on the boots pattern");
+
+        TestSupport.craftCleanly(op, bench);
+        h.assertTrue(bench.job() == null && bench.hasOutput(), "The knot commits the piece to the output pad");
+        h.assertTrue(countLeather(player.getInventory()) == 2, "Nothing came back: the leather was consumed exactly once");
+        op.act(WorkAction.BENCH_COLLECT);
         ItemStack boots = findItem(player.getInventory(), Items.LEATHER_BOOTS);
         LeatherworkData data = LeatherworkData.get(boots).orElse(null);
-        h.assertTrue(data != null && data.finish() == Finish.SUPPLE && data.workmanship() == 100, "On-beat stitching gives Workmanship 100");
+        h.assertTrue(data != null && data.finish() == Finish.SUPPLE && data.workmanship() >= 95,
+                "Clean cuts, true seats and ideal pulls give near-perfect Workmanship, got " + (data == null ? -1 : data.workmanship()));
         h.assertTrue(data.integrity() == 85, "Integrity is the mean of the best leather cut (90,90,90,70), got " + data.integrity());
         h.assertTrue(LeatherworkData.crafterId(boots).map(player.getUUID()::equals).orElse(false)
-                && com.otectus.immersivetanning.api.ImmersiveTanningAPI.playerMade(boots), "The bench records the player who stitched it");
+                && com.otectus.immersivetanning.api.ImmersiveTanningAPI.playerMade(boots), "The bench records the player who tied it off");
         h.assertTrue(((net.minecraft.world.item.DyeableLeatherItem) Items.LEATHER_BOOTS).getColor(boots) == Finish.SUPPLE.leatherColor(),
                 "Leather armor takes the colour of its finish");
-        h.assertTrue(findItem(player.getInventory(), ModItems.LEATHER_SCRAPS.get()).getCount() == 1, "Offcuts come back as scraps");
+        h.assertTrue(findItem(player.getInventory(), ModItems.LEATHER_SCRAPS.get()).getCount() == 1, "Offcuts come back as scraps with the piece");
+        h.assertTrue(player.getMainHandItem().getDamageValue() == 1 && findItem(player.getInventory(), ModItems.TANNERS_KNIFE.get()).getDamageValue() == 1,
+                "The awl and the knife each wear once for the piece");
+        h.assertTrue(!bench.hasOutput(), "Collecting empties the output pad");
         h.succeed();
     }
 
@@ -271,14 +238,16 @@ public final class StationGameTests {
         player.getInventory().add(ModItems.leather(Finish.HARNESS).create(60, null, 5));
         player.getInventory().add(new ItemStack(Items.IRON_INGOT));
         player.getInventory().add(new ItemStack(Items.STRING, 2));
-        TestSupport.use(h, player);
-        StitchingSession session = (StitchingSession) SessionManager.byPlayer(player.getUUID()).orElseThrow();
-        SessionManager.selectBenchRecipe(player, session.id, ImmersiveTanning.id("leatherworking/saddle"), Finish.HARNESS, null);
+        TestSupport.Operator op = TestSupport.operate(h, player);
+        op.send(WorkAction.BENCH_PREPARE, 0, new int[]{Finish.HARNESS.ordinal()}, new short[0], new short[0],
+                ImmersiveTanning.id("leatherworking/saddle"), null);
         h.assertTrue(countLeather(player.getInventory()) == 0 && player.getInventory().countItem(Items.STRING) == 0, "The saddle takes its materials");
-        SessionManager.cancelFromClient(player, session.id);
+        op.act(WorkAction.BENCH_CANCEL);
         h.assertTrue(countLeather(player.getInventory()) == 5 && player.getInventory().countItem(Items.IRON_INGOT) == 1
-                && player.getInventory().countItem(Items.STRING) == 2, "Cancelling refunds leather and components");
-        h.assertTrue(!bench.hasEscrow() && !bench.isLocked(), "The bench is free again");
+                && player.getInventory().countItem(Items.STRING) == 2, "Cancelling before any cut refunds leather and components");
+        h.assertTrue(!bench.hasEscrow() && bench.job() == null, "The bench is free again");
+        op.act(WorkAction.BENCH_CANCEL);
+        h.assertTrue(countLeather(player.getInventory()) == 5, "A second cancel refunds nothing");
         h.succeed();
     }
 

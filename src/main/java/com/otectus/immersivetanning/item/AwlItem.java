@@ -32,7 +32,11 @@ public class AwlItem extends Item {
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack awl = player.getItemInHand(hand);
         if (FieldRepair.mostWornEquipped(player) == null) {
-            if (!level.isClientSide) Feedback.info(player, "nothing_to_patch");
+            if (!level.isClientSide) {
+                ItemStack unpatchable = FieldRepair.mostWornUnpatchable(player);
+                if (unpatchable != null) Feedback.info(player, "scraps_cannot_patch", unpatchable.getHoverName());
+                else Feedback.info(player, "nothing_to_patch");
+            }
             return InteractionResultHolder.pass(awl);
         }
         if (FieldRepair.findScraps(player) == null) {
@@ -74,5 +78,13 @@ public class AwlItem extends Item {
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(Component.translatable("item.immersive_tanning.awl.hint").withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.translatable("item.immersive_tanning.awl.hint_repair").withStyle(ChatFormatting.DARK_GRAY));
+    }
+
+    /** Watchers see the arm reach to the work while its holder works a station (client presentation only). */
+    @Override
+    public void initializeClient(java.util.function.Consumer<net.minecraftforge.client.extensions.common.IClientItemExtensions> consumer) {
+        net.minecraftforge.client.extensions.common.IClientItemExtensions extensions = net.minecraftforge.fml.DistExecutor.unsafeCallWhenOn(
+                net.minecraftforge.api.distmarker.Dist.CLIENT, () -> () -> com.otectus.immersivetanning.client.station.WorkArmPose.TOOL);
+        if (extensions != null) consumer.accept(extensions);
     }
 }

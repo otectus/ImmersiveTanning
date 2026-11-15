@@ -53,6 +53,14 @@
     {
       "id": "dragnpets:leather_dog_armor",
       "required": false
+    },
+    {
+      "id": "eanimod:collar_basic_leather",
+      "required": false
+    },
+    {
+      "id": "eanimod:bridle_basic_leather",
+      "required": false
     }
   ]
 }

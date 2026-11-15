@@ -1,0 +1,1066 @@
+{
+  "mod": {
+    "id": "eanimod",
+    "name": "Genetic Animals",
+    "version": "0.11.12",
+    "minecraft": "1.20.1",
+    "loader": "forge",
+    "file": "GeneticAnimals-0_11_12.jar",
+    "source": "https://modrinth.com/mod/genetic-animals/version/QpwmrbVK",
+    "maven": "maven.modrinth:genetic-animals:0.11.12",
+    "manifest": {
+      "Implementation-Version": "0_11_12",
+      "Implementation-Timestamp": "2025-01-29T02:47:40+1000"
+    },
+    "sha1": "7809ea135dd2abbb18060d832032b590ce0d8294",
+    "sha256": "2f5cfa5014bec5297e7db08d8ff574e1e891b1c8613c993724c7b597ee9465e4",
+    "sha512": "a923e1c704b1a9e8a9e482c6ce5290076e012ad417749d3e0e41128c63830fe330759b7c74e4acf2c7fce5826f2ebc0641fd7fcd1c3df567e0a882437178240e"
+  },
+  "entities": {
+    "eanimod:enhanced_cow": {
+      "tanning_source": "compat/eanimod/large",
+      "adult_age_ticks": 84000,
+      "native_skin": "leather 0-5 (size, genes, age, chance); none while burning (cooked beef)"
+    },
+    "eanimod:enhanced_mooshroom": {
+      "tanning_source": "compat/eanimod/large",
+      "adult_age_ticks": 84000,
+      "native_skin": "as the cow (inherits its death loot)"
+    },
+    "eanimod:enhanced_moobloom": {
+      "tanning_source": "compat/eanimod/large",
+      "adult_age_ticks": 84000,
+      "native_skin": "as the cow (inherits its death loot)"
+    },
+    "eanimod:enhanced_llama": {
+      "tanning_source": "compat/eanimod/large",
+      "adult_age_ticks": 120000,
+      "native_skin": "leather 0-2, or wool by coat genes; none while burning; its loot table id is null"
+    },
+    "eanimod:enhanced_sheep": {
+      "tanning_source": "compat/eanimod/medium",
+      "adult_age_ticks": 72000,
+      "native_skin": "1 leather only for short-coated sheep (max coat length under 5) not dropping wool; none while burning"
+    },
+    "eanimod:enhanced_pig": {
+      "tanning_source": "compat/eanimod/medium",
+      "adult_age_ticks": 60000,
+      "native_skin": "none (pork only)"
+    },
+    "eanimod:enhanced_rabbit": {
+      "tanning_source": "compat/eanimod/small",
+      "adult_age_ticks": 48000,
+      "native_skin": "rabbit hide x(1 + Looting) or white wool by coat, chance by size; none while burning"
+    },
+    "eanimod:enhanced_horse": {
+      "tanning_source": "compat/eanimod/none",
+      "adult_age_ticks": 24000,
+      "native_skin": "leather 0-2",
+      "available": "registered with attributes only: no renderer, spawn egg or natural spawn in 0.11.12; not covered"
+    },
+    "eanimod:enhanced_chicken": {
+      "tanning_source": "compat/eanimod/none",
+      "adult_age_ticks": 60000,
+      "native_skin": "none"
+    },
+    "eanimod:enhanced_turtle": {
+      "tanning_source": "compat/eanimod/none",
+      "adult_age_ticks": 120000,
+      "native_skin": "none"
+    },
+    "eanimod:enhanced_axolotl": {
+      "tanning_source": "compat/eanimod/none",
+      "adult_age_ticks": 60000,
+      "native_skin": "none"
+    },
+    "eanimod:enhanced_entity_egg": {
+      "tanning_source": null,
+      "native_skin": "not an animal"
+    },
+    "eanimod:enhanced_axolotl_egg": {
+      "tanning_source": null,
+      "native_skin": "not an animal"
+    },
+    "eanimod:enhanced_entity_llama_spit": {
+      "tanning_source": null,
+      "native_skin": "not an animal"
+    }
+  },
+  "entity_tags": {
+    "#eanimod:genetic_animals": [
+      "eanimod:enhanced_chicken",
+      "eanimod:enhanced_rabbit",
+      "eanimod:enhanced_cow",
+      "eanimod:enhanced_pig",
+      "eanimod:enhanced_llama",
+      "eanimod:enhanced_sheep",
+      "eanimod:enhanced_axolotl",
+      "eanimod:enhanced_turtle"
+    ],
+    "#forge:axolotls": [
+      "eanimod:enhanced_axolotl"
+    ],
+    "#forge:chickens": [
+      "eanimod:enhanced_chicken"
+    ],
+    "#forge:cows": [
+      "eanimod:enhanced_cow"
+    ],
+    "#forge:llamas": [
+      "eanimod:enhanced_llama"
+    ],
+    "#forge:moobloom": [
+      "eanimod:enhanced_moobloom"
+    ],
+    "#forge:mooshroom": [
+      "eanimod:enhanced_mooshroom"
+    ],
+    "#forge:pigs": [
+      "eanimod:enhanced_pig"
+    ],
+    "#forge:rabbits": [
+      "eanimod:enhanced_rabbit"
+    ],
+    "#forge:sheep": [
+      "eanimod:enhanced_sheep"
+    ],
+    "#iceandfire:chickens": [
+      "minecraft:chicken",
+      "eanimod:enhanced_chicken"
+    ],
+    "#iceandfire:cows": [
+      "minecraft:cow",
+      "eanimod:enhanced_cow"
+    ]
+  },
+  "item_tags": {
+    "#forge:saddles": [
+      "eanimod:saddle_basic_cloth",
+      "eanimod:saddle_basic_cloth_diamond",
+      "eanimod:saddle_basic_cloth_gold",
+      "eanimod:saddle_basic_cloth_wood",
+      "eanimod:saddle_basic_leather",
+      "eanimod:saddle_basic_leather_diamond",
+      "eanimod:saddle_basic_leather_gold",
+      "eanimod:saddle_basic_leather_wood",
+      "eanimod:saddle_basic_leatherclothseat",
+      "eanimod:saddle_basic_leatherclothseat_diamond",
+      "eanimod:saddle_basic_leatherclothseat_gold",
+      "eanimod:saddle_basic_leatherclothseat_wood",
+      "eanimod:saddle_basicpomel_cloth",
+      "eanimod:saddle_basicpomel_cloth_diamond",
+      "eanimod:saddle_basicpomel_cloth_gold",
+      "eanimod:saddle_basicpomel_cloth_wood",
+      "eanimod:saddle_basicpomel_leather",
+      "eanimod:saddle_basicpomel_leather_diamond",
+      "eanimod:saddle_basicpomel_leather_gold",
+      "eanimod:saddle_basicpomel_leather_wood",
+      "eanimod:saddle_basicpomel_leatherclothseat",
+      "eanimod:saddle_basicpomel_leatherclothseat_diamond",
+      "eanimod:saddle_basicpomel_leatherclothseat_gold",
+      "eanimod:saddle_basicpomel_leatherclothseat_wood",
+      "eanimod:saddle_english_cloth",
+      "eanimod:saddle_english_cloth_diamond",
+      "eanimod:saddle_english_cloth_gold",
+      "eanimod:saddle_english_cloth_wood",
+      "eanimod:saddle_english_leather",
+      "eanimod:saddle_english_leather_diamond",
+      "eanimod:saddle_english_leather_gold",
+      "eanimod:saddle_english_leather_wood",
+      "eanimod:saddle_english_leatherclothseat",
+      "eanimod:saddle_english_leatherclothseat_diamond",
+      "eanimod:saddle_english_leatherclothseat_gold",
+      "eanimod:saddle_english_leatherclothseat_wood"
+    ],
+    "#minecraft:saddle": [
+      "eanimod:saddle_basic_leather"
+    ]
+  },
+  "tack_recipes": {
+    "eanimod:bridle_basic_cloth": {
+      "type": "minecraft:crafting_shaped",
+      "result": "eanimod:bridle_basic_cloth",
+      "ingredients": {
+        "minecraft:string": 4,
+        "minecraft:iron_nugget": 2
+      }
+    },
+    "eanimod:bridle_basic_leather": {
+      "type": "minecraft:crafting_shaped",
+      "result": "eanimod:bridle_basic_leather",
+      "ingredients": {
+        "minecraft:leather": 4,
+        "minecraft:iron_nugget": 2
+      }
+    },
+    "eanimod:collar_basic_cloth": {
+      "type": "minecraft:crafting_shapeless",
+      "result": "eanimod:collar_basic_cloth",
+      "ingredients": {
+        "minecraft:string": 3
+      }
+    },
+    "eanimod:collar_basic_leather": {
+      "type": "minecraft:crafting_shapeless",
+      "result": "eanimod:collar_basic_leather",
+      "ingredients": {
+        "minecraft:leather": 1
+      }
+    }
+  },
+  "tack": [
+    {
+      "id": "eanimod:saddle_basic_leather",
+      "class": "CustomizableSaddleVanilla",
+      "kind": "saddle (basic)",
+      "material": "leather",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_basic_leather_gold",
+      "class": "CustomizableSaddleVanilla",
+      "kind": "saddle (basic)",
+      "material": "leather",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_basic_leather_diamond",
+      "class": "CustomizableSaddleVanilla",
+      "kind": "saddle (basic)",
+      "material": "leather",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_basic_leather_wood",
+      "class": "CustomizableSaddleVanilla",
+      "kind": "saddle (basic)",
+      "material": "leather",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_basic_cloth",
+      "class": "CustomizableSaddleVanilla",
+      "kind": "saddle (basic)",
+      "material": "cloth",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_basic_cloth_gold",
+      "class": "CustomizableSaddleVanilla",
+      "kind": "saddle (basic)",
+      "material": "cloth",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_basic_cloth_diamond",
+      "class": "CustomizableSaddleVanilla",
+      "kind": "saddle (basic)",
+      "material": "cloth",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_basic_cloth_wood",
+      "class": "CustomizableSaddleVanilla",
+      "kind": "saddle (basic)",
+      "material": "cloth",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_basic_leatherclothseat",
+      "class": "CustomizableSaddleVanilla",
+      "kind": "saddle (basic)",
+      "material": "leather_cloth_seat",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_basic_leatherclothseat_gold",
+      "class": "CustomizableSaddleVanilla",
+      "kind": "saddle (basic)",
+      "material": "leather_cloth_seat",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_basic_leatherclothseat_diamond",
+      "class": "CustomizableSaddleVanilla",
+      "kind": "saddle (basic)",
+      "material": "leather_cloth_seat",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_basic_leatherclothseat_wood",
+      "class": "CustomizableSaddleVanilla",
+      "kind": "saddle (basic)",
+      "material": "leather_cloth_seat",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_basicpomel_leather",
+      "class": "CustomizableSaddleWestern",
+      "kind": "saddle (western, pommel)",
+      "material": "leather",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_basicpomel_leather_gold",
+      "class": "CustomizableSaddleWestern",
+      "kind": "saddle (western, pommel)",
+      "material": "leather",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_basicpomel_leather_diamond",
+      "class": "CustomizableSaddleWestern",
+      "kind": "saddle (western, pommel)",
+      "material": "leather",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_basicpomel_leather_wood",
+      "class": "CustomizableSaddleWestern",
+      "kind": "saddle (western, pommel)",
+      "material": "leather",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_basicpomel_cloth",
+      "class": "CustomizableSaddleWestern",
+      "kind": "saddle (western, pommel)",
+      "material": "cloth",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_basicpomel_cloth_gold",
+      "class": "CustomizableSaddleWestern",
+      "kind": "saddle (western, pommel)",
+      "material": "cloth",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_basicpomel_cloth_diamond",
+      "class": "CustomizableSaddleWestern",
+      "kind": "saddle (western, pommel)",
+      "material": "cloth",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_basicpomel_cloth_wood",
+      "class": "CustomizableSaddleWestern",
+      "kind": "saddle (western, pommel)",
+      "material": "cloth",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_basicpomel_leatherclothseat",
+      "class": "CustomizableSaddleWestern",
+      "kind": "saddle (western, pommel)",
+      "material": "leather_cloth_seat",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_basicpomel_leatherclothseat_gold",
+      "class": "CustomizableSaddleWestern",
+      "kind": "saddle (western, pommel)",
+      "material": "leather_cloth_seat",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_basicpomel_leatherclothseat_diamond",
+      "class": "CustomizableSaddleWestern",
+      "kind": "saddle (western, pommel)",
+      "material": "leather_cloth_seat",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_basicpomel_leatherclothseat_wood",
+      "class": "CustomizableSaddleWestern",
+      "kind": "saddle (western, pommel)",
+      "material": "leather_cloth_seat",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_english_leather",
+      "class": "CustomizableSaddleEnglish",
+      "kind": "saddle (english)",
+      "material": "leather",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_english_leather_gold",
+      "class": "CustomizableSaddleEnglish",
+      "kind": "saddle (english)",
+      "material": "leather",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_english_leather_diamond",
+      "class": "CustomizableSaddleEnglish",
+      "kind": "saddle (english)",
+      "material": "leather",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_english_leather_wood",
+      "class": "CustomizableSaddleEnglish",
+      "kind": "saddle (english)",
+      "material": "leather",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_english_cloth",
+      "class": "CustomizableSaddleEnglish",
+      "kind": "saddle (english)",
+      "material": "cloth",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_english_cloth_gold",
+      "class": "CustomizableSaddleEnglish",
+      "kind": "saddle (english)",
+      "material": "cloth",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_english_cloth_diamond",
+      "class": "CustomizableSaddleEnglish",
+      "kind": "saddle (english)",
+      "material": "cloth",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_english_cloth_wood",
+      "class": "CustomizableSaddleEnglish",
+      "kind": "saddle (english)",
+      "material": "cloth",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_english_leatherclothseat",
+      "class": "CustomizableSaddleEnglish",
+      "kind": "saddle (english)",
+      "material": "leather_cloth_seat",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_english_leatherclothseat_gold",
+      "class": "CustomizableSaddleEnglish",
+      "kind": "saddle (english)",
+      "material": "leather_cloth_seat",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_english_leatherclothseat_diamond",
+      "class": "CustomizableSaddleEnglish",
+      "kind": "saddle (english)",
+      "material": "leather_cloth_seat",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:saddle_english_leatherclothseat_wood",
+      "class": "CustomizableSaddleEnglish",
+      "kind": "saddle (english)",
+      "material": "leather_cloth_seat",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade",
+        "payment for a vanilla saddle (leatherworker exchange)"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:bridle_basic_leather",
+      "class": "CustomizableBridle",
+      "kind": "bridle",
+      "material": "leather",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "crafting (eanimod:bridle_basic_leather)",
+        "leatherworker trade",
+        "wandering trader trade"
+      ],
+      "immersive_tanning": "bench recipe (original cost)"
+    },
+    {
+      "id": "eanimod:bridle_basic_leather_gold",
+      "class": "CustomizableBridle",
+      "kind": "bridle",
+      "material": "leather",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:bridle_basic_leather_diamond",
+      "class": "CustomizableBridle",
+      "kind": "bridle",
+      "material": "leather",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:bridle_basic_cloth",
+      "class": "CustomizableBridle",
+      "kind": "bridle",
+      "material": "cloth",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "crafting (eanimod:bridle_basic_cloth)",
+        "leatherworker trade",
+        "shepherd trade",
+        "wandering trader trade"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:bridle_basic_cloth_gold",
+      "class": "CustomizableBridle",
+      "kind": "bridle",
+      "material": "cloth",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "shepherd trade",
+        "wandering trader trade"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:bridle_basic_cloth_diamond",
+      "class": "CustomizableBridle",
+      "kind": "bridle",
+      "material": "cloth",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "shepherd trade",
+        "wandering trader trade"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:collar_basic_cloth",
+      "class": "CustomizableCollar",
+      "kind": "collar",
+      "material": "cloth",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "crafting (eanimod:collar_basic_cloth)",
+        "leatherworker trade",
+        "shepherd trade",
+        "wandering trader trade"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:collar_basic_cloth_ironring",
+      "class": "CustomizableCollar",
+      "kind": "collar",
+      "material": "cloth",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "shepherd trade",
+        "wandering trader trade"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:collar_basic_cloth_ironbell",
+      "class": "CustomizableCollar",
+      "kind": "collar",
+      "material": "cloth",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "shepherd trade",
+        "wandering trader trade"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:collar_basic_cloth_goldring",
+      "class": "CustomizableCollar",
+      "kind": "collar",
+      "material": "cloth",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "shepherd trade",
+        "wandering trader trade"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:collar_basic_cloth_goldbell",
+      "class": "CustomizableCollar",
+      "kind": "collar",
+      "material": "cloth",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "shepherd trade",
+        "wandering trader trade"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:collar_basic_cloth_diamondring",
+      "class": "CustomizableCollar",
+      "kind": "collar",
+      "material": "cloth",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "shepherd trade",
+        "wandering trader trade"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:collar_basic_cloth_diamondbell",
+      "class": "CustomizableCollar",
+      "kind": "collar",
+      "material": "cloth",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "shepherd trade",
+        "wandering trader trade"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:collar_basic_leather",
+      "class": "CustomizableCollar",
+      "kind": "collar",
+      "material": "leather",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "crafting (eanimod:collar_basic_leather)",
+        "leatherworker trade",
+        "wandering trader trade"
+      ],
+      "immersive_tanning": "bench recipe (original cost)"
+    },
+    {
+      "id": "eanimod:collar_basic_leather_ironring",
+      "class": "CustomizableCollar",
+      "kind": "collar",
+      "material": "leather",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:collar_basic_leather_ironbell",
+      "class": "CustomizableCollar",
+      "kind": "collar",
+      "material": "leather",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:collar_basic_leather_goldring",
+      "class": "CustomizableCollar",
+      "kind": "collar",
+      "material": "leather",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:collar_basic_leather_goldbell",
+      "class": "CustomizableCollar",
+      "kind": "collar",
+      "material": "leather",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:collar_basic_leather_diamondring",
+      "class": "CustomizableCollar",
+      "kind": "collar",
+      "material": "leather",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    },
+    {
+      "id": "eanimod:collar_basic_leather_diamondbell",
+      "class": "CustomizableCollar",
+      "kind": "collar",
+      "material": "leather",
+      "max_stack": 1,
+      "damageable": false,
+      "dyeable": true,
+      "acquisition": [
+        "leatherworker trade",
+        "wandering trader trade"
+      ],
+      "immersive_tanning": "unchanged (own acquisition)"
+    }
+  ],
+  "trades": {
+    "leatherworker": "EanimodVillagerTrades.getEanimodTrade(LEATHERWORKER, level); payment is emeralds, or 1 in 4 one of the item's listed materials or leather",
+    "shepherd": "EanimodVillagerTrades.getEanimodTrade(SHEPHERD, level); payment emeralds, string or wool",
+    "wandering": "EanimodVillagerTrades.getWanderingEanimodTrade(); emeralds",
+    "added_by": "EventSubscriber.onLivingUpdateEvent (villagers tagged eanimodTrader, by level) and livingspawnEvent/onLivingUpdateEvent (wandering traders), straight into MerchantOffers",
+    "config": [
+      "Extra leather worker trades",
+      "Extra shepard trades",
+      "Extra wandering traders trades"
+    ]
+  },
+  "hooks": {
+    "equipment": "mokiyoki.enhancedanimals.entity.EnhancedAnimalAbstract#getReplacementItemWithColour(Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/item/ItemStack;",
+    "saddle": "mokiyoki.enhancedanimals.entity.EnhancedAnimalRideableAbstract#saddleAnimal(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/entity/LivingEntity;)Z (NEW ItemStack(ItemLike,int))",
+    "villager_trades": "mokiyoki.enhancedanimals.util.EanimodVillagerTrades#getEanimodTrade(Lnet/minecraft/world/entity/npc/VillagerProfession;I)Lnet/minecraft/world/item/trading/MerchantOffer;",
+    "wandering_trades": "mokiyoki.enhancedanimals.util.EanimodVillagerTrades#getWanderingEanimodTrade()Lnet/minecraft/world/item/trading/MerchantOffer;",
+    "death_drops": "net.minecraft.world.entity.LivingEntity#dropAllDeathLoot brackets around dropCustomDeathLoot (its Java death loot, m_7472_) and dropEquipment (its inventory, m_5907_); Mob#dropCustomDeathLoot for worn items"
+  },
+  "spawn_protection_ticks": 100
+}

@@ -21,6 +21,10 @@ public final class ModTags {
     public static final TagKey<Item> FIELD_REPAIRABLE = item("field_repairable");
     /** Weapons that butcher a carcass (another mod's skinning path) instead of letting a hide drop. */
     public static final TagKey<Item> CARCASS_TOOLS = item("carcass_tools");
+    /** Other mods' armor stitched at the bench over a leather backing; finish and quality act on it by the scale-backed policy. */
+    public static final TagKey<Item> SCALE_BACKED = item("scale_backed");
+    /** Carcass items another mod spawns at an animal's death; seeing one confirms that death went to the carcass. */
+    public static final TagKey<Item> CARCASSES = item("carcasses");
 
     /** Animals whose carcass another mod skins, so a carcass kill drops no hide of ours. */
     public static final TagKey<EntityType<?>> CARCASS_ANIMALS = TagKey.create(Registries.ENTITY_TYPE, ImmersiveTanning.id("carcass_animals"));

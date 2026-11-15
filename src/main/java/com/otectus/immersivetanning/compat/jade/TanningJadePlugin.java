@@ -7,6 +7,7 @@ import com.otectus.immersivetanning.block.TannersVatBlock;
 import com.otectus.immersivetanning.blockentity.LeatherworkersBenchBlockEntity;
 import com.otectus.immersivetanning.blockentity.TannersRackBlockEntity;
 import com.otectus.immersivetanning.blockentity.TannersVatBlockEntity;
+import com.otectus.immersivetanning.work.LeatherworkJob;
 import com.otectus.immersivetanning.hide.HideData;
 import com.otectus.immersivetanning.hide.HideSize;
 import com.otectus.immersivetanning.leather.Finish;
@@ -51,6 +52,10 @@ public class TanningJadePlugin implements IWailaPlugin {
         registration.registerBlockComponent(RackProvider.INSTANCE, TannersRackBlock.class);
         registration.registerBlockComponent(VatProvider.INSTANCE, TannersVatBlock.class);
         registration.registerBlockComponent(BenchProvider.INSTANCE, LeatherworkersBenchBlock.class);
+        // While working at a station the station explains itself; Jade steps aside unless the player keeps it.
+        registration.addBeforeRenderCallback((tooltip, rect, graphics, accessor, color) ->
+                com.otectus.immersivetanning.client.station.StationFocus.active()
+                        && !com.otectus.immersivetanning.config.ClientConfig.get(com.otectus.immersivetanning.config.ClientConfig.JADE_IN_FOCUS));
     }
 
     private static MutableComponent line(String key, Object... args) {
@@ -75,11 +80,16 @@ public class TanningJadePlugin implements IWailaPlugin {
             if (!(accessor.getBlockEntity() instanceof TannersRackBlockEntity rack)) return;
             data.putString("Mode", rack.mode().name());
             data.putBoolean("Locked", rack.isLocked());
+            data.putString("Operator", rack.operatorName());
             if (rack.hide() != null) data.put("Hide", rack.hide().save());
-            if (rack.mode() == TannersRackBlockEntity.Mode.DRYING) {
-                data.putString("Finish", rack.finish().getSerializedName());
-                data.putInt("Dry", percent(rack.dryProgress(accessor.getLevel().getGameTime())));
+            data.putString("Finish", rack.finish().getSerializedName());
+            if (rack.mode() == TannersRackBlockEntity.Mode.DRYING) data.putInt("Dry", percent(rack.dryProgress(accessor.getLevel().getGameTime())));
+            if (rack.mode() == TannersRackBlockEntity.Mode.FRAMING) data.putInt("Treated", percent(rack.treatment()));
+            if (rack.work() != null) {
+                data.putInt("Clean", percent(rack.work().surface().coverage()));
+                data.putString("Owner", rack.work().started() ? rack.work().ownerName() : "");
             }
+            if (rack.mode() == TannersRackBlockEntity.Mode.SCRAPED) data.putString("Owner", rack.scrapedByName());
         }
 
         @Override
@@ -87,13 +97,23 @@ public class TanningJadePlugin implements IWailaPlugin {
             CompoundTag data = accessor.getServerData();
             if (!data.contains("Mode")) return;
             HideData hide = data.contains("Hide", Tag.TAG_COMPOUND) ? HideData.load(data.getCompound("Hide"), HideSize.MEDIUM) : null;
+            Finish finish = Finish.byName(data.getString("Finish"));
+            String owner = data.getString("Owner");
             switch (data.getString("Mode")) {
                 case "RAW" -> {
                     if (hide != null) tooltip.add(line("rack.raw", hideName(hide)).withStyle(ChatFormatting.GOLD));
-                    tooltip.add(line("rack.flesh").withStyle(ChatFormatting.GRAY));
+                    tooltip.add(line("rack.clean", data.getInt("Clean")).withStyle(ChatFormatting.GRAY));
+                    if (!owner.isEmpty()) tooltip.add(line("owner", owner).withStyle(ChatFormatting.DARK_GRAY));
+                }
+                case "SCRAPED" -> {
+                    if (hide != null) tooltip.add(line("rack.scraped", hideName(hide)).withStyle(ChatFormatting.GREEN));
+                    if (!owner.isEmpty()) tooltip.add(line("owner", owner).withStyle(ChatFormatting.DARK_GRAY));
+                }
+                case "FRAMING" -> {
+                    if (hide != null && finish != null) tooltip.add(line("rack.framing", hideName(hide), finish.displayName()).withStyle(ChatFormatting.GOLD));
+                    tooltip.add(line("rack.treated", data.getInt("Treated")).withStyle(ChatFormatting.GRAY));
                 }
                 case "DRYING" -> {
-                    Finish finish = Finish.byName(data.getString("Finish"));
                     if (hide != null && finish != null) tooltip.add(line("rack.drying", finish.displayName(), hideName(hide)));
                     int dry = data.getInt("Dry");
                     tooltip.add(dry >= 100 ? line("rack.dry").withStyle(ChatFormatting.GREEN)
@@ -101,7 +121,7 @@ public class TanningJadePlugin implements IWailaPlugin {
                 }
                 default -> tooltip.add(line("rack.empty").withStyle(ChatFormatting.GRAY));
             }
-            if (data.getBoolean("Locked")) tooltip.add(line("in_use").withStyle(ChatFormatting.RED));
+            if (data.getBoolean("Locked")) tooltip.add(line("in_use_by", data.getString("Operator")).withStyle(ChatFormatting.RED));
         }
 
         @Override
@@ -128,6 +148,8 @@ public class TanningJadePlugin implements IWailaPlugin {
                 entry.putBoolean("Started", slot.started());
                 entry.putBoolean("Paused", slot.paused());
                 entry.putInt("Progress", percent(slot.progress(time)));
+                entry.putInt("MissingBark", vat.missingBark(slot));
+                entry.putBoolean("Tended", slot.tended());
                 hides.add(entry);
             }
             data.put("Hides", hides);
@@ -154,12 +176,13 @@ public class TanningJadePlugin implements IWailaPlugin {
                 HideData hide = HideData.load(entry, HideSize.MEDIUM);
                 int progress = entry.getInt("Progress");
                 // A waiting hide says what it waits for: water first, then the bark still missing for its size.
-                int missingBark = Math.max(1, hide.size().tannin() - data.getInt("Tannin"));
+                int missingBark = entry.contains("MissingBark") ? Math.max(1, entry.getInt("MissingBark"))
+                        : Math.max(1, hide.size().tannin() - data.getInt("Tannin"));
                 MutableComponent state = !entry.getBoolean("Started")
                         ? (water ? line("vat.waiting_bark", missingBark) : line("vat.waiting_water")).withStyle(ChatFormatting.GOLD)
                         : progress >= 100 ? line("vat.tanned").withStyle(ChatFormatting.GREEN)
                         : entry.getBoolean("Paused") ? line("vat.paused", progress).withStyle(ChatFormatting.GOLD)
-                        : line("vat.progress", progress).withStyle(ChatFormatting.AQUA);
+                        : line(entry.getBoolean("Tended") ? "vat.progress_tended" : "vat.progress", progress).withStyle(ChatFormatting.AQUA);
                 tooltip.add(line("vat.hide", hideName(hide), state));
             }
         }
@@ -175,14 +198,57 @@ public class TanningJadePlugin implements IWailaPlugin {
 
         @Override
         public void appendServerData(CompoundTag data, BlockAccessor accessor) {
-            if (accessor.getBlockEntity() instanceof LeatherworkersBenchBlockEntity bench) data.putBoolean("Locked", bench.isLocked());
+            if (!(accessor.getBlockEntity() instanceof LeatherworkersBenchBlockEntity bench)) return;
+            data.putBoolean("Locked", bench.isLocked());
+            data.putString("Operator", bench.operatorName());
+            data.putInt("Output", bench.output().size());
+            data.putString("OutputOwner", bench.outputOwnerName());
+            LeatherworkJob job = bench.job();
+            if (job != null) {
+                data.putString("Stage", job.stage().name());
+                data.put("Piece", LeatherworkJob.displayCopy(job.result()).save(new CompoundTag()));
+                data.putString("Owner", job.ownerName());
+                int step;
+                int of;
+                switch (job.stage()) {
+                    case CUTTING, RESERVED -> {
+                        of = job.pattern().cuts().size();
+                        step = job.activeCut() < 0 ? of : job.activeCut();
+                    }
+                    case ASSEMBLY -> {
+                        of = job.pattern().panels().size();
+                        int seated = 0;
+                        for (int p = 0; p < of; p++) if (job.seated(p)) seated++;
+                        step = seated;
+                    }
+                    default -> {
+                        of = job.stitchCount();
+                        step = job.nextStitch() < 0 ? of : job.nextStitch();
+                    }
+                }
+                data.putInt("Step", step);
+                data.putInt("Of", of);
+            }
         }
 
         @Override
         public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
             CompoundTag data = accessor.getServerData();
             if (!data.contains("Locked")) return;
-            tooltip.add(data.getBoolean("Locked") ? line("in_use").withStyle(ChatFormatting.RED) : line("bench.idle").withStyle(ChatFormatting.GRAY));
+            if (data.contains("Stage")) {
+                net.minecraft.world.item.ItemStack piece = net.minecraft.world.item.ItemStack.of(data.getCompound("Piece"));
+                String stage = data.getString("Stage").toLowerCase(java.util.Locale.ROOT);
+                tooltip.add(line("bench.piece", piece.getHoverName(), Component.translatable("stage.immersive_tanning.bench." + stage),
+                        data.getInt("Step"), data.getInt("Of")).withStyle(ChatFormatting.GOLD));
+                if (!data.getString("Owner").isEmpty()) tooltip.add(line("owner", data.getString("Owner")).withStyle(ChatFormatting.DARK_GRAY));
+            } else if (data.getInt("Output") == 0) {
+                tooltip.add(line("bench.idle").withStyle(ChatFormatting.GRAY));
+            }
+            if (data.getInt("Output") > 0) {
+                tooltip.add(line("bench.output", data.getInt("Output")).withStyle(ChatFormatting.GREEN));
+                if (!data.getString("OutputOwner").isEmpty()) tooltip.add(line("owner", data.getString("OutputOwner")).withStyle(ChatFormatting.DARK_GRAY));
+            }
+            if (data.getBoolean("Locked")) tooltip.add(line("in_use_by", data.getString("Operator")).withStyle(ChatFormatting.RED));
         }
 
         @Override

@@ -1,0 +1,27 @@
+{
+  "_comment": "Camera framing of each station task (resource packs may override this file). Station-local pixels of the north-facing model: x to the viewer's left, y up, z towards the back (the front is -z). The first shot that fits (open air at the camera, a clear line to the work) is used, else the next; if none fits, the player works from their own view. Framing never changes what the work accepts.",
+  "fleshing": [
+    {"position": [8, 11.6, -7.2], "target": [8, 4.3, 1.6], "fov": 52},
+    {"position": [8, 10.2, -4.6], "target": [8, 4.2, 1.6], "fov": 56}
+  ],
+  "finishing": [
+    {"position": [5.6, 10.8, -13.0], "target": [8, 8.8, 7.5], "fov": 56},
+    {"position": [8, 10.0, -8.0], "target": [8, 8.6, 7.5], "fov": 64}
+  ],
+  "vat": [
+    {"position": [12.0, 25.0, -6.0], "target": [8, 10.5, 7.5], "fov": 55},
+    {"position": [8, 23.0, -1.5], "target": [8, 10.5, 8.0], "fov": 62}
+  ],
+  "bench": [
+    {"position": [8, 30.0, -6.0], "target": [8, 15.6, 7.6], "fov": 52},
+    {"position": [8, 27.0, -1.0], "target": [8, 15.6, 8.0], "fov": 62}
+  ],
+  "stitching": [
+    {"position": [8, 26.5, -2.4], "target": [8, 15.6, 7.8], "fov": 50},
+    {"position": [8, 25.0, 0.5], "target": [8, 15.6, 8.0], "fov": 58}
+  ],
+  "result": [
+    {"position": [8, 31.0, -9.0], "target": [8, 16.0, 6.5], "fov": 55},
+    {"position": [8, 27.0, -2.0], "target": [8, 16.0, 7.0], "fov": 62}
+  ]
+}

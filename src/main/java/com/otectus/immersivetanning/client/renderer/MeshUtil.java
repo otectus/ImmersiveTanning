@@ -15,6 +15,11 @@ public final class MeshUtil {
      * no-cull render type, so both faces show.
      */
     public static void sheet(PoseStack pose, VertexConsumer buffer, float[][][] pos, int argb, int light) {
+        sheet(pose, buffer, pos, argb, light, false);
+    }
+
+    /** Reverse both winding and normals for grids whose UV direction runs into the visible surface. */
+    public static void sheet(PoseStack pose, VertexConsumer buffer, float[][][] pos, int argb, int light, boolean reverse) {
         Matrix4f m = pose.last().pose();
         Matrix3f n = pose.last().normal();
         int rows = pos.length;
@@ -30,10 +35,17 @@ public final class MeshUtil {
                 float[] cc = pos[r + 1][c + 1];
                 float[] d = pos[r + 1][c];
                 Vector3f normal = normal(a, b, d);
+                if (reverse) normal.negate();
                 vertex(buffer, m, n, a, u0, v0, argb, light, normal);
-                vertex(buffer, m, n, d, u0, v1, argb, light, normal);
-                vertex(buffer, m, n, cc, u1, v1, argb, light, normal);
-                vertex(buffer, m, n, b, u1, v0, argb, light, normal);
+                if (reverse) {
+                    vertex(buffer, m, n, d, u0, v1, argb, light, normal);
+                    vertex(buffer, m, n, cc, u1, v1, argb, light, normal);
+                    vertex(buffer, m, n, b, u1, v0, argb, light, normal);
+                } else {
+                    vertex(buffer, m, n, b, u1, v0, argb, light, normal);
+                    vertex(buffer, m, n, cc, u1, v1, argb, light, normal);
+                    vertex(buffer, m, n, d, u0, v1, argb, light, normal);
+                }
             }
         }
     }

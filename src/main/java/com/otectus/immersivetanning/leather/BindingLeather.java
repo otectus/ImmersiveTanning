@@ -2,6 +2,7 @@ package com.otectus.immersivetanning.leather;
 
 import com.otectus.immersivetanning.config.ServerConfig;
 import com.otectus.immersivetanning.registry.ModItems;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.npc.VillagerTrades;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -73,13 +74,22 @@ public final class BindingLeather {
         };
     }
 
+    /**
+     * The offer with vanilla leather in either cost or the result swapped for Binding Leather, or the same offer when it
+     * holds none (so applying it again changes nothing). Everything else is kept: uses, maximum uses, experience and
+     * whether it rewards it, demand, price multiplier, special price, and every stack's count and NBT.
+     */
     public static MerchantOffer offer(MerchantOffer offer) {
         ItemStack a = offer.getBaseCostA();
         ItemStack b = offer.getCostB();
         ItemStack result = offer.getResult();
         if (!a.is(Items.LEATHER) && !b.is(Items.LEATHER) && !result.is(Items.LEATHER)) return offer;
-        return new MerchantOffer(replace(a), replace(b), replace(result), offer.getUses(), offer.getMaxUses(), offer.getXp(),
-                offer.getPriceMultiplier(), offer.getDemand());
+        // The saved form carries every field, including the reward flag and special price no constructor takes.
+        CompoundTag tag = offer.createTag();
+        tag.put("buy", replace(a).save(new CompoundTag()));
+        tag.put("buyB", replace(b).save(new CompoundTag()));
+        tag.put("sell", replace(result).save(new CompoundTag()));
+        return new MerchantOffer(tag);
     }
 
     private BindingLeather() {}

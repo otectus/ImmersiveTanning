@@ -47,11 +47,14 @@ minecraft {
             if (project.hasProperty('smokeTest')) {
                 property 'immersive_tanning.smoketest.output', file('run/smoketest').absolutePath
                 mods { immersive_tanning_smoketest { source sourceSets.smokeTest } }
+                // -PjoinServer=host:port: join that dedicated server instead of a fresh world (ServerJoinCheck).
+                if (project.hasProperty('joinServer')) property 'immersive_tanning.smoketest.join', project.property('joinServer')
             }
         }
         server { args '--nogui' }
         gameTestServer {
-            workingDirectory project.file('run-gametest')
+            // -PgeneticAnimals: the same GameTests with Genetic Animals loaded, in a world and config of their own.
+            workingDirectory project.file(project.hasProperty('geneticAnimals') ? 'run-gametest-ga' : 'run-gametest')
             mods { immersive_tanning { source sourceSets.gameTest } }
         }
     }
@@ -63,6 +66,19 @@ repositories {
         url = 'https://www.cursemaven.com'
         content { includeGroup 'curse.maven' }
     }
+    // Genetic Animals for the -PgeneticAnimals profile and the pack test (see genetic_animals_version).
+    maven {
+        url = 'https://api.modrinth.com/maven'
+        content { includeGroup 'maven.modrinth' }
+    }
+}
+
+configurations {
+    // The Genetic Animals release exactly as published (production names), for its hash check and the pack test.
+    geneticAnimals {
+        canBeConsumed = false
+        transitive = false
+    }
 }
 
 dependencies {
@@ -73,6 +89,28 @@ dependencies {
     // Station overlays (compat/jade). Jade discovers the plugin by annotation; nothing references it otherwise.
     compileOnly fg.deobf("curse.maven:jade-324717:${jade_curse_file}")
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    // Optional integration: nothing compiles against Genetic Animals (its hooks name its classes as strings).
+    geneticAnimals "maven.modrinth:genetic-animals:${genetic_animals_version}"
+    if (project.hasProperty('geneticAnimals')) {
+        runtimeOnly fg.deobf("maven.modrinth:genetic-animals:${genetic_animals_version}")
+    }
+}
+
+// Copies the pinned Genetic Animals release to build/compat/ after checking it is the verified file.
+tasks.register('geneticAnimalsJar', Copy) {
+    from configurations.geneticAnimals
+    into layout.buildDirectory.dir('compat')
+    doFirst {
+        File jar = configurations.geneticAnimals.singleFile
+        String sha1 = java.security.MessageDigest.getInstance('SHA-1').digest(jar.bytes).encodeHex().toString()
+        if (sha1 != genetic_animals_sha1) {
+            throw new GradleException("Genetic Animals ${genetic_animals_version}: ${jar.name} has SHA-1 ${sha1}, expected ${genetic_animals_sha1}")
+        }
+    }
+}
+
+if (project.hasProperty('geneticAnimals')) {
+    tasks.matching { it.name.startsWith('prepareRun') }.configureEach { dependsOn 'geneticAnimalsJar' }
 }
 
 tasks.named('processResources', ProcessResources).configure {

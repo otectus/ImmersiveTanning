@@ -1,0 +1,268 @@
+{
+  "schema_version": 1,
+  "panels": [
+    {
+      "id": "strap",
+      "outline": [
+        [
+          0.02,
+          0.1
+        ],
+        [
+          0.85,
+          0.1
+        ],
+        [
+          0.98,
+          0.5
+        ],
+        [
+          0.85,
+          0.9
+        ],
+        [
+          0.02,
+          0.9
+        ]
+      ],
+      "size": [
+        0.64,
+        0.12
+      ],
+      "layout": [
+        0.4,
+        0.35
+      ]
+    },
+    {
+      "id": "keeper",
+      "outline": [
+        [
+          0.05,
+          0.1
+        ],
+        [
+          0.95,
+          0.1
+        ],
+        [
+          0.95,
+          0.9
+        ],
+        [
+          0.05,
+          0.9
+        ]
+      ],
+      "size": [
+        0.2,
+        0.12
+      ],
+      "layout": [
+        0.75,
+        0.6
+      ],
+      "layout_rotation_deg": 90
+    }
+  ],
+  "cuts": [
+    {
+      "id": "strap_edge",
+      "panel": "strap",
+      "path": [
+        [
+          0.02,
+          0.1
+        ],
+        [
+          0.85,
+          0.1
+        ],
+        [
+          0.98,
+          0.5
+        ]
+      ],
+      "tolerance": 0.03
+    },
+    {
+      "id": "strap_tip",
+      "panel": "strap",
+      "path": [
+        [
+          0.98,
+          0.5
+        ],
+        [
+          0.85,
+          0.9
+        ],
+        [
+          0.02,
+          0.9
+        ],
+        [
+          0.02,
+          0.1
+        ]
+      ],
+      "tolerance": 0.03
+    },
+    {
+      "id": "keeper",
+      "panel": "keeper",
+      "path": [
+        [
+          0.05,
+          0.1
+        ],
+        [
+          0.95,
+          0.1
+        ],
+        [
+          0.95,
+          0.9
+        ]
+      ],
+      "tolerance": 0.035
+    }
+  ],
+  "assembly": [
+    {
+      "panel": "strap",
+      "anchor": "strap_jig",
+      "target": [
+        0.42,
+        0.55
+      ],
+      "rotation_deg": 0,
+      "position_tolerance": 0.045,
+      "rotation_tolerance_deg": 9
+    },
+    {
+      "panel": "keeper",
+      "anchor": "strap_jig",
+      "target": [
+        0.86,
+        0.55
+      ],
+      "rotation_deg": 0,
+      "position_tolerance": 0.045,
+      "rotation_tolerance_deg": 9
+    }
+  ],
+  "joins": [
+    {
+      "id": "keeper_loop",
+      "a": {
+        "panel": "strap",
+        "path": [
+          [
+            0.9,
+            0.3
+          ],
+          [
+            0.9,
+            0.7
+          ]
+        ]
+      },
+      "b": {
+        "panel": "keeper",
+        "path": [
+          [
+            0.08,
+            0.3
+          ],
+          [
+            0.08,
+            0.7
+          ]
+        ]
+      },
+      "actions": 2,
+      "pull": {
+        "min": 0.195,
+        "ideal": 0.24,
+        "max": 0.295
+      }
+    },
+    {
+      "id": "fold_top",
+      "a": {
+        "panel": "strap",
+        "path": [
+          [
+            0.13,
+            0.25
+          ],
+          [
+            0.42,
+            0.25
+          ]
+        ]
+      },
+      "b": {
+        "panel": "strap",
+        "path": [
+          [
+            0.13,
+            0.65
+          ],
+          [
+            0.42,
+            0.65
+          ]
+        ]
+      },
+      "actions": 4,
+      "pull": {
+        "min": 0.185,
+        "ideal": 0.23,
+        "max": 0.285
+      }
+    },
+    {
+      "id": "fold_return",
+      "a": {
+        "panel": "strap",
+        "path": [
+          [
+            0.47,
+            0.25
+          ],
+          [
+            0.47,
+            0.75
+          ]
+        ]
+      },
+      "b": {
+        "panel": "strap",
+        "path": [
+          [
+            0.52,
+            0.25
+          ],
+          [
+            0.52,
+            0.75
+          ]
+        ]
+      },
+      "actions": 2,
+      "pull": {
+        "min": 0.195,
+        "ideal": 0.24,
+        "max": 0.295
+      }
+    }
+  ],
+  "quality_weights": {
+    "cutting": 0.3,
+    "assembly": 0.2,
+    "stitching": 0.5
+  },
+  "presentation": "immersive_tanning:strap_jig"
+}

@@ -10,6 +10,7 @@ import com.otectus.immersivetanning.item.ProcessedHideItem;
 import com.otectus.immersivetanning.item.RawHideItem;
 import com.otectus.immersivetanning.item.StationBlockItem;
 import com.otectus.immersivetanning.item.TannersKnifeItem;
+import com.otectus.immersivetanning.item.UnfinishedLeatherworkItem;
 import com.otectus.immersivetanning.leather.Finish;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.registries.DeferredRegister;
@@ -61,6 +62,9 @@ public final class ModItems {
             () -> new TannersKnifeItem(new Item.Properties().durability(250)));
     public static final RegistryObject<AwlItem> AWL = ITEMS.register("awl",
             () -> new AwlItem(new Item.Properties().durability(200)));
+    /** 1.3: a bench piece carried off before it was finished (the job travels inside). Not in the creative tab. */
+    public static final RegistryObject<UnfinishedLeatherworkItem> UNFINISHED_LEATHERWORK = ITEMS.register("unfinished_leatherwork",
+            () -> new UnfinishedLeatherworkItem(new Item.Properties()));
 
     public static RawHideItem rawHide(HideSize size) {
         return RAW_HIDES.get(size).get();

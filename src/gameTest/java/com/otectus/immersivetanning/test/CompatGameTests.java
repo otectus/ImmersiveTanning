@@ -10,7 +10,7 @@ import com.otectus.immersivetanning.item.RawHideItem;
 import com.otectus.immersivetanning.leather.Finish;
 import com.otectus.immersivetanning.leather.LeatherworkData;
 import com.otectus.immersivetanning.loot.HideDrops;
-import com.otectus.immersivetanning.minigame.SessionManager;
+import com.otectus.immersivetanning.station.BenchStationLogic;
 import com.otectus.immersivetanning.recipe.EquipmentSeams;
 import com.otectus.immersivetanning.recipe.TanningData;
 import com.otectus.immersivetanning.registry.ModBlocks;
@@ -213,9 +213,9 @@ public final class CompatGameTests {
 
     @GameTest(template = "empty")
     public static void progressionHooks(GameTestHelper h) {
-        h.assertTrue(SessionManager.benchExperience(new LeatherworkData(Finish.SUPPLE, 50, 50, null, null)) == 4, "Standard work gives the base experience");
-        h.assertTrue(SessionManager.benchExperience(new LeatherworkData(Finish.SUPPLE, 100, 100, null, null)) == 6, "Masterwork gives half again");
-        h.assertTrue(SessionManager.benchExperience(new LeatherworkData(Finish.SUPPLE, 0, 0, null, null)) == 2, "Crude work gives half");
+        h.assertTrue(BenchStationLogic.benchExperience(new LeatherworkData(Finish.SUPPLE, 50, 50, null, null)) == 4, "Standard work gives the base experience");
+        h.assertTrue(BenchStationLogic.benchExperience(new LeatherworkData(Finish.SUPPLE, 100, 100, null, null)) == 6, "Masterwork gives half again");
+        h.assertTrue(BenchStationLogic.benchExperience(new LeatherworkData(Finish.SUPPLE, 0, 0, null, null)) == 2, "Crude work gives half");
         h.assertTrue(EquipmentSeams.classify(new ItemStack(Items.CARROT_ON_A_STICK)).equals(ImmersiveTanning.id("saddle")),
                 "An item tag picks the seam");
         h.assertTrue(new ItemStack(ModItems.TANNERS_KNIFE.get()).is(net.minecraft.tags.ItemTags.create(new net.minecraft.resources.ResourceLocation("forge", "skinning_knives"))),

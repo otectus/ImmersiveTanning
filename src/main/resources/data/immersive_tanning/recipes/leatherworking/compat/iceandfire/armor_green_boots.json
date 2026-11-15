@@ -1,0 +1,33 @@
+{
+  "type": "immersive_tanning:leatherworking",
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "iceandfire"
+    },
+    {
+      "type": "forge:item_exists",
+      "item": "iceandfire:armor_green_boots"
+    },
+    {
+      "type": "forge:item_exists",
+      "item": "iceandfire:dragonscales_green"
+    }
+  ],
+  "leather": 1,
+  "auxiliary": [
+    {
+      "ingredient": {
+        "item": "iceandfire:dragonscales_green"
+      },
+      "count": 4
+    }
+  ],
+  "result": {
+    "item": "iceandfire:armor_green_boots"
+  },
+  "seam": "immersive_tanning:boots",
+  "replaces": [
+    "iceandfire:armor_green_boots"
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "type": "immersive_tanning:leatherworking",
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "iceandfire"
+    },
+    {
+      "type": "forge:item_exists",
+      "item": "iceandfire:armor_blue_leggings"
+    },
+    {
+      "type": "forge:item_exists",
+      "item": "iceandfire:dragonscales_blue"
+    }
+  ],
+  "leather": 2,
+  "auxiliary": [
+    {
+      "ingredient": {
+        "item": "iceandfire:dragonscales_blue"
+      },
+      "count": 7
+    }
+  ],
+  "result": {
+    "item": "iceandfire:armor_blue_leggings"
+  },
+  "seam": "immersive_tanning:leggings",
+  "replaces": [
+    "iceandfire:armor_blue_leggings"
+  ]
+}

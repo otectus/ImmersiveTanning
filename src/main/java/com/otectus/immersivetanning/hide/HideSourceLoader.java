@@ -34,11 +34,24 @@ import java.util.Map;
  *   "priority": 0                 // the highest priority source matching an entity wins
  * }
  * </pre>
- * Entity tags are resolved at lookup time, after tags are bound.
+ * Entity tags are resolved at lookup time, after tags are bound, so a reload or a tag change takes effect at once.
  */
 public class HideSourceLoader extends SimpleJsonResourceReloadListener {
     private static final Gson GSON = new Gson();
     private static volatile List<HideSource> sources = List.of();
+    private static volatile List<String> invalid = List.of();
+
+    /** What the sources say about an entity type: nothing, an explicit "no hide", or a hide. */
+    public enum Kind { NO_SOURCE, SUPPRESSED, HIDE }
+
+    /** The winning source for an entity type (null when none matches) and what it says. */
+    public record Decision(Kind kind, @Nullable HideSource source) {
+        static final Decision NONE = new Decision(Kind.NO_SOURCE, null);
+
+        public boolean dropsHide() {
+            return kind == Kind.HIDE;
+        }
+    }
 
     /** One parsed file. {@code size == null} means "drops no hide". */
     public record HideSource(ResourceLocation id, List<ResourceLocation> entities, List<TagKey<EntityType<?>>> tags,
@@ -49,6 +62,21 @@ public class HideSourceLoader extends SimpleJsonResourceReloadListener {
                 if (type.is(tag)) return true;
             }
             return false;
+        }
+
+        /** How this source names the entity type: "id", or the tags it matched through. Empty when it does not match. */
+        public List<String> matchedBy(EntityType<?> type) {
+            List<String> out = new ArrayList<>();
+            if (entities.contains(ForgeRegistries.ENTITY_TYPES.getKey(type))) out.add("id");
+            for (TagKey<EntityType<?>> tag : tags) {
+                if (type.is(tag)) out.add("#" + tag.location());
+            }
+            return out;
+        }
+
+        /** Whether this source stops hides: size "none" or count 0. */
+        public boolean suppresses() {
+            return size == null || count == 0;
         }
 
         /** The trait as it will be written onto the hide, or null if none or not defined by any datapack. */
@@ -65,17 +93,23 @@ public class HideSourceLoader extends SimpleJsonResourceReloadListener {
     @Override
     protected void apply(Map<ResourceLocation, JsonElement> files, ResourceManager manager, ProfilerFiller profiler) {
         List<HideSource> loaded = new ArrayList<>();
+        List<String> skipped = new ArrayList<>();
         files.forEach((id, element) -> {
             try {
                 loaded.add(parse(id, GsonHelper.convertToJsonObject(element, "hide source")));
             } catch (RuntimeException e) {
-                ImmersiveTanning.LOGGER.error("Skipping hide source {}: {}", id, e.getMessage());
+                // The file is left out entirely, so a lower-priority source may decide its entities instead.
+                ImmersiveTanning.LOGGER.error("Skipping hide source {} (data/{}/immersive_tanning/hide_sources/{}.json): {}",
+                        id, id.getNamespace(), id.getPath(), e.getMessage());
+                skipped.add(id + ": " + e.getMessage());
             }
         });
         // Highest priority first; ties resolved by id so the result never depends on load order.
         loaded.sort(Comparator.comparingInt(HideSource::priority).reversed().thenComparing(s -> s.id().toString(), Comparator.reverseOrder()));
         sources = List.copyOf(loaded);
-        ImmersiveTanning.LOGGER.info("Loaded {} hide sources", loaded.size());
+        skipped.sort(null);
+        invalid = List.copyOf(skipped);
+        ImmersiveTanning.LOGGER.info("Loaded {} hide sources{}", loaded.size(), skipped.isEmpty() ? "" : " (" + skipped.size() + " invalid, skipped)");
     }
 
     static HideSource parse(ResourceLocation id, JsonObject json) {
@@ -88,24 +122,43 @@ public class HideSourceLoader extends SimpleJsonResourceReloadListener {
         }
         String sizeName = GsonHelper.getAsString(json, "size");
         HideSize size = sizeName.equals("none") ? null : HideSize.byName(sizeName);
-        if (size == null && !sizeName.equals("none")) throw new JsonParseException("size must be small, medium, large or none");
+        if (size == null && !sizeName.equals("none")) throw new JsonParseException("size must be small, medium, large or none, not \"" + sizeName + "\"");
         int count = GsonHelper.getAsInt(json, "count", 1);
-        if (count < 0 || count > 64) throw new JsonParseException("count must be between 0 and 64");
+        if (count < 0 || count > 64) throw new JsonParseException("count must be between 0 and 64, not " + count);
         ResourceLocation trait = json.has("trait") ? new ResourceLocation(GsonHelper.getAsString(json, "trait")) : null;
         return new HideSource(id, List.copyOf(entities), List.copyOf(tags), size, count, trait, GsonHelper.getAsInt(json, "priority", 0));
+    }
+
+    /**
+     * What the highest-priority matching source says about an entity type. Unlike {@link #forEntity}, an explicit
+     * {@code "size": "none"} or {@code "count": 0} is told apart from no source at all.
+     */
+    public static Decision resolve(EntityType<?> type) {
+        for (HideSource source : sources) {
+            if (source.matches(type)) return new Decision(source.suppresses() ? Kind.SUPPRESSED : Kind.HIDE, source);
+        }
+        return Decision.NONE;
     }
 
     /** The hide source for an entity type, if any matches and it drops a hide. */
     @Nullable
     public static HideSource forEntity(EntityType<?> type) {
-        for (HideSource source : sources) {
-            if (source.matches(type)) return source.size() == null || source.count() == 0 ? null : source;
-        }
-        return null;
+        Decision decision = resolve(type);
+        return decision.dropsHide() ? decision.source() : null;
+    }
+
+    /** Every source that matches the entity type, winner first; the rest are shadowed by it. */
+    public static List<HideSource> matching(EntityType<?> type) {
+        return sources.stream().filter(s -> s.matches(type)).toList();
     }
 
     public static List<HideSource> all() {
         return sources;
+    }
+
+    /** Files skipped at the last load, each with the reason. */
+    public static List<String> invalid() {
+        return invalid;
     }
 
     /** Entity ids named by hide sources that no registered entity has (usually a mod that is not installed). */

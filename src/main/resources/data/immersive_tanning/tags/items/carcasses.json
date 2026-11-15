@@ -1,0 +1,132 @@
+{
+  "values": [
+    {
+      "id": "butchery:cow_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:red_mooshroom_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:brown_mooshroom_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:regular_black_horse_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:regular_brown_horse_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:regular_chestnut_horse_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:regular_creamy_horse_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:regular_dark_brown_horse_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:regular_gray_horse_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:regular_white_horse_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:donkey_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:mule_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:brown_llama_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:creamy_llama_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:gray_llama_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:white_llama_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:camel_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:polar_bear_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:hoglin_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:zoglin_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:panda_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:sniffer_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:pig_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:sheep_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:goat_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:wolf_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:fox_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:snow_fox_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:ocelot_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:rabbit_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:dolphin_carcass",
+      "required": false
+    },
+    {
+      "id": "butchery:bat_carcass",
+      "required": false
+    }
+  ]
+}

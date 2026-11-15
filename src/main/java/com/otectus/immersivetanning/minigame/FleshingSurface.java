@@ -1,33 +1,46 @@
 package com.otectus.immersivetanning.minigame;
 
 import com.otectus.immersivetanning.hide.HideSize;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.util.Mth;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.Random;
 
 /**
  * The hide being fleshed, shared by client and server. Both sides build it from the same seed and replay the same
- * quantised knife path, so the client's picture and the server's score always agree; only the server's score counts.
+ * quantised blade path, so the client's picture and the server's score always agree; only the server's score counts.
+ * Since 1.3 it is the material on the rack itself: its cells map onto the curved hide over the beam
+ * ({@code station.RackGeometry}), and its whole state is saved with the rack, so leaving and coming back resumes the
+ * same hide - same patches, same history - and nothing is ever rerolled.
  *
- * <p>The hide carries a few broad patches of flesh. Dragging the knife removes flesh under a broad blade; each patch
- * has a grain, and a pass along the grain removes the patch in one stroke while a pass across it needs two. Three
- * things are measured and folded into Integrity:</p>
+ * <p>The hide carries a few broad patches of flesh. Dragging the blade removes flesh under a broad edge; each patch
+ * has a grain, and a pass along the grain removes the patch in one stroke while a pass across it needs two. Flesh is
+ * removed in eighths, so the saved state is exact. Three things are measured and folded into Integrity:</p>
  * <ul>
  *     <li><b>Coverage</b> - how much of the flesh was removed;</li>
- *     <li><b>Control</b> - how much of the knife path stayed on the hide;</li>
- *     <li><b>Overworking</b> - how much of the path on the hide scraped without removing anything.</li>
+ *     <li><b>Control</b> - how much of the blade path stayed on the hide;</li>
+ *     <li><b>Overworking</b> - how much of the path on the hide scraped without removing anything. Clean leather
+ *     scraped again also roughens visibly.</li>
  * </ul>
- * The cell grid is only the simulation resolution: the blade covers dozens of cells, so there are no small targets.
+ * Only blade contact counts: hovering, moving with the blade lifted, pauses and frame rate never do. The cell grid is
+ * only the simulation resolution: the blade covers dozens of cells, so there are no small targets.
  */
 public final class FleshingSurface {
     public static final int W = 64;
     public static final int H = 48;
-    /** Knife positions travel as 12-bit fixed point per axis. */
+    /** Blade positions travel as 12-bit fixed point per axis. */
     public static final int COORD_MAX = 4095;
     public static final float BLADE_RADIUS = 3.4F;
-    public static final float COMPLETE_COVERAGE = 0.985F;
+    /** Coverage at which the hide is clean: a few stray cells at the edges never hold the work back. */
+    public static final float COMPLETE_COVERAGE = 0.975F;
+    /** Least coverage at which the hide may be finished roughly. */
+    public static final float ROUGH_FINISH_COVERAGE = 0.3F;
+    public static final int SAVE_VERSION = 1;
+    private static final int EIGHTHS = 8;
     private static final float EPS = 1.0E-4F;
-    private static final float WORK_THRESHOLD = 0.02F;
     private static final float OVERWORK_ALLOWANCE = 0.35F;
     private static final float OVERWORK_RANGE = 0.5F;
 
@@ -35,30 +48,35 @@ public final class FleshingSurface {
     private final long seed;
     private final boolean[] hide = new boolean[W * H];
     private final byte[] region = new byte[W * H];
-    private final float[] thickness = new float[W * H];
+    /** Flesh left per cell, in eighths. */
+    private final byte[] flesh = new byte[W * H];
+    /** Roughness of clean leather scraped again (0..3), and the last pass direction (0..3, 45 degree bins). */
+    private final byte[] rough = new byte[W * H];
+    private final byte[] dir = new byte[W * H];
     private final int[] lastSegment = new int[W * H];
     private final float[] grain;
     private final float[] patchX;
     private final float[] patchY;
-    private final float total;
+    private final int total;
 
     private boolean stroking;
     private float lastX;
     private float lastY;
     private int segment;
     private int strokeStart;
-    private float removed;
+    private int removed;
     private float workLength;
     private float idleLength;
     private float offLength;
+    private int lastRemovedCells;
     private int version;
 
     public FleshingSurface(HideSize size, long seed) {
         this.size = size;
         this.seed = seed;
         Random random = new Random(seed);
-        java.util.Arrays.fill(region, (byte) -1);
-        java.util.Arrays.fill(lastSegment, Integer.MIN_VALUE);
+        Arrays.fill(region, (byte) -1);
+        Arrays.fill(lastSegment, Integer.MIN_VALUE);
 
         // Hide outline: an irregular oval with four leg lobes, a neck and a tail.
         float cx = W / 2F;
@@ -131,14 +149,14 @@ public final class FleshingSurface {
                     float edge = 1F + 0.12F * Mth.sin(3 * angle + q1) + 0.07F * Mth.sin(5 * angle + q2);
                     if (u * u + v * v < edge * edge) {
                         region[c] = (byte) i;
-                        thickness[c] = 1F;
+                        flesh[c] = EIGHTHS;
                     }
                 }
             }
         }
-        float sum = 0F;
-        for (float t : thickness) sum += t;
-        total = Math.max(1F, sum);
+        int sum = 0;
+        for (byte f : flesh) sum += f;
+        total = Math.max(1, sum);
     }
 
     private static float outline(float angle, float p1, float p2) {
@@ -154,14 +172,14 @@ public final class FleshingSurface {
         return r;
     }
 
-    // ------------------------------------------------------------------ knife path
+    // ------------------------------------------------------------------ blade path
 
     /** Quantises a normalised coordinate exactly as it is sent over the network. */
     public static int quantize(float normalized) {
         return Mth.clamp(Math.round(normalized * COORD_MAX), 0, COORD_MAX);
     }
 
-    /** Places the knife on the hide (mouse pressed). Coordinates are quantised, see {@link #quantize}. */
+    /** Places the blade on the hide. Coordinates are quantised, see {@link #quantize}. */
     public void begin(int qx, int qy) {
         stroking = true;
         lastX = qx / (float) COORD_MAX * W;
@@ -169,8 +187,9 @@ public final class FleshingSurface {
         strokeStart = segment + 1;
     }
 
-    /** Drags the knife to a new point of the current stroke. Ignored when no stroke is in progress. */
+    /** Drags the blade to a new point of the current stroke. Ignored when no stroke is in progress. */
     public void drag(int qx, int qy) {
+        lastRemovedCells = 0;
         if (!stroking) return;
         float x = qx / (float) COORD_MAX * W;
         float y = qy / (float) COORD_MAX * H;
@@ -188,7 +207,8 @@ public final class FleshingSurface {
         }
 
         float direction = (float) StrictMath.atan2(dy, dx);
-        float before = removed;
+        byte bin = (byte) (Math.floorMod(Math.round(direction / (Mth.PI / 4F)), 4));
+        int before = removed;
         int x0 = Math.max(0, Mth.floor(Math.min(lastX, x) - BLADE_RADIUS));
         int x1 = Math.min(W - 1, Mth.floor(Math.max(lastX, x) + BLADE_RADIUS));
         int y0 = Math.max(0, Mth.floor(Math.min(lastY, y) - BLADE_RADIUS));
@@ -200,29 +220,39 @@ public final class FleshingSurface {
                 int c = cx + cy * W;
                 boolean samePass = lastSegment[c] == segment - 1 && segment - 1 >= strokeStart;
                 lastSegment[c] = segment;
-                if (samePass || thickness[c] <= 0F) continue;
+                if (samePass || !hide[c]) continue;
+                dir[c] = bin;
+                if (flesh[c] <= 0) {
+                    if (rough[c] < 3) rough[c]++;
+                    continue;
+                }
                 float along = Math.abs(Mth.cos(direction - grain[region[c]]));
-                float amount = Math.min(thickness[c], 0.5F + 0.5F * along);
-                thickness[c] -= amount;
-                if (thickness[c] < EPS) thickness[c] = 0F;
+                int amount = Math.min(flesh[c], Mth.ceil((0.5F + 0.5F * along) * EIGHTHS - EPS));
+                flesh[c] -= (byte) amount;
                 removed += amount;
+                lastRemovedCells++;
             }
         }
         offLength += off;
-        if (removed - before > WORK_THRESHOLD) workLength += length - off;
+        if (removed > before) workLength += length - off;
         else idleLength += length - off;
         lastX = x;
         lastY = y;
         version++;
     }
 
-    /** Lifts the knife (mouse released). */
+    /** Lifts the blade. */
     public void end() {
         stroking = false;
     }
 
     public boolean isStroking() {
         return stroking;
+    }
+
+    /** Cells the last drag cleared some flesh from (contact feedback). */
+    public int lastRemovedCells() {
+        return lastRemovedCells;
     }
 
     private boolean onHide(float x, float y) {
@@ -241,7 +271,7 @@ public final class FleshingSurface {
     // ------------------------------------------------------------------ scoring
 
     public float coverage() {
-        return Mth.clamp(removed / total, 0F, 1F);
+        return Mth.clamp(removed / (float) total, 0F, 1F);
     }
 
     public float control() {
@@ -249,7 +279,7 @@ public final class FleshingSurface {
         return path <= EPS ? 0F : (workLength + idleLength) / path;
     }
 
-    /** Share of the on-hide knife path that removed nothing. */
+    /** Share of the on-hide blade path that removed nothing. */
     public float overwork() {
         float onHide = workLength + idleLength;
         return onHide <= EPS ? 0F : idleLength / onHide;
@@ -259,7 +289,7 @@ public final class FleshingSurface {
         return Mth.clamp((overwork() - OVERWORK_ALLOWANCE) / OVERWORK_RANGE, 0F, 1F);
     }
 
-    /** Integrity 0-100. No knife work at all scores 0. */
+    /** Integrity 0-100. No blade work at all scores 0. */
     public int score() {
         if (workLength + idleLength + offLength <= EPS) return 0;
         float raw = 0.7F * coverage() + 0.15F * control() + 0.15F * (1F - overworkPenalty());
@@ -270,17 +300,94 @@ public final class FleshingSurface {
         return coverage() >= COMPLETE_COVERAGE;
     }
 
+    /** Whether enough work was done to finish roughly (at the current, lower, score). */
+    public boolean canFinishRoughly() {
+        return coverage() >= ROUGH_FINISH_COVERAGE;
+    }
+
+    public boolean hasWork() {
+        return workLength + idleLength + offLength > EPS;
+    }
+
+    // ------------------------------------------------------------------ persistence
+
+    /** The full state: seed, size and every cell. A stroke in progress is not part of it; loading starts lifted. */
+    public CompoundTag save() {
+        CompoundTag tag = new CompoundTag();
+        tag.putInt("Version", SAVE_VERSION);
+        tag.putLong("Seed", seed);
+        tag.putString("Size", size.getSerializedName());
+        byte[] cells = new byte[W * H];
+        for (int c = 0; c < cells.length; c++) cells[c] = (byte) (flesh[c] | rough[c] << 4 | dir[c] << 6);
+        tag.putByteArray("Cells", cells);
+        tag.putInt("Removed", removed);
+        tag.putFloat("Work", workLength);
+        tag.putFloat("Idle", idleLength);
+        tag.putFloat("Off", offLength);
+        return tag;
+    }
+
+    /** Rebuilds a saved surface; a state that does not fit its seed (wrong size, bad cells) starts untouched instead. */
+    public static FleshingSurface load(CompoundTag tag, HideSize fallback) {
+        HideSize size = HideSize.byName(tag.getString("Size"));
+        FleshingSurface surface = new FleshingSurface(size != null ? size : fallback, tag.getLong("Seed"));
+        byte[] cells = tag.getByteArray("Cells");
+        if (cells.length != W * H || !tag.contains("Removed", Tag.TAG_ANY_NUMERIC)) return surface;
+        int sum = 0;
+        for (int c = 0; c < cells.length; c++) {
+            int left = Math.min(cells[c] & 15, surface.region[c] >= 0 ? EIGHTHS : 0);
+            surface.flesh[c] = (byte) left;
+            surface.rough[c] = (byte) (surface.hide[c] ? (cells[c] >> 4) & 3 : 0);
+            surface.dir[c] = (byte) ((cells[c] >> 6) & 3);
+            sum += left;
+        }
+        surface.removed = Math.max(0, surface.total - sum);
+        surface.workLength = finite(tag.getFloat("Work"));
+        surface.idleLength = finite(tag.getFloat("Idle"));
+        surface.offLength = finite(tag.getFloat("Off"));
+        surface.version++;
+        return surface;
+    }
+
+    /** An independent copy (client prediction). */
+    public FleshingSurface copy() {
+        return load(save(), size);
+    }
+
+    private static float finite(float v) {
+        return Float.isFinite(v) && v >= 0F ? v : 0F;
+    }
+
+    @Nullable
+    public static FleshingSurface tryLoad(@Nullable CompoundTag tag, HideSize fallback) {
+        return tag == null || !tag.contains("Seed", Tag.TAG_ANY_NUMERIC) ? null : load(tag, fallback);
+    }
+
     // ------------------------------------------------------------------ presentation
 
     public HideSize size() { return size; }
     public long seed() { return seed; }
     public boolean isHide(int x, int y) { return hide[x + y * W]; }
-    public float thickness(int x, int y) { return thickness[x + y * W]; }
+    public float thickness(int x, int y) { return flesh[x + y * W] / (float) EIGHTHS; }
     public int region(int x, int y) { return region[x + y * W]; }
+    public int roughness(int x, int y) { return rough[x + y * W]; }
+    /** Direction of the last pass over a cell: 0..3 in 45 degree steps from +u. */
+    public int passDirection(int x, int y) { return dir[x + y * W]; }
     public int patches() { return grain.length; }
     public float grain(int patch) { return grain[patch]; }
     public float patchX(int patch) { return patchX[patch]; }
     public float patchY(int patch) { return patchY[patch]; }
+    /** Flesh left in a patch, 0..1. */
+    public float patchLeft(int patch) {
+        int left = 0;
+        int all = 0;
+        for (int c = 0; c < region.length; c++) {
+            if (region[c] != patch) continue;
+            all += EIGHTHS;
+            left += flesh[c];
+        }
+        return all == 0 ? 0F : left / (float) all;
+    }
     /** Increases whenever the surface changes, so a renderer knows when to refresh its texture. */
     public int version() { return version; }
 }

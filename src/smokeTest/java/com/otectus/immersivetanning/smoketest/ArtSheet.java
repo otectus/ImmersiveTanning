@@ -1,6 +1,11 @@
 package com.otectus.immersivetanning.smoketest;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.otectus.immersivetanning.client.render.WorkDraw;
+import com.otectus.immersivetanning.client.render.WorkHands;
+import com.otectus.immersivetanning.client.renderer.MeshUtil;
+import com.otectus.immersivetanning.station.RackGeometry;
 import com.mojang.math.Axis;
 import com.otectus.immersivetanning.hide.HideSize;
 import com.otectus.immersivetanning.leather.Finish;
@@ -14,6 +19,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
+import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,6 +75,86 @@ final class ArtSheet extends Screen {
                     == model.applyTransform(ItemDisplayContext.FIRST_PERSON_RIGHT_HAND, new PoseStack(), false)) return false;
         }
         return true;
+    }
+
+    /** Palm attachment and the vanilla 4x12x4 / 3x12x4 proportions survive every aim, including degenerate anchors. */
+    static boolean checkArmDimensions() {
+        Vec3 hand = new Vec3(7, 16, 11);
+        for (boolean slim : new boolean[]{false, true}) for (boolean right : new boolean[]{false, true}) {
+            for (Vec3 axis : new Vec3[]{new Vec3(2, -8, -4), new Vec3(-40, -80, 2), new Vec3(0, 0, 1), Vec3.ZERO}) {
+                PoseStack pose = new PoseStack();
+                WorkHands.poseArm(pose, hand, axis, new Vec3(0, 0, 1), right, slim);
+                var matrix = pose.last().pose();
+                float cx = right ? (slim ? -.5F : -1F) : (slim ? .5F : 1F);
+                Vector3f palm = matrix.transformPosition(new Vector3f(cx / 16F, 10F / 16F, 0));
+                if (palm.distance(new Vector3f(7F / 16F, 1, 11F / 16F)) > 0.00001F) return false;
+                Vector3f x = matrix.transformDirection(new Vector3f((slim ? 3F : 4F) / 16F, 0, 0));
+                Vector3f y = matrix.transformDirection(new Vector3f(0, 12F / 16F, 0));
+                Vector3f z = matrix.transformDirection(new Vector3f(0, 0, 4F / 16F));
+                if (Math.abs(x.length() - (slim ? 3F : 4F) / 16F) > 0.00001F
+                        || Math.abs(y.length() - 0.75F) > 0.00001F || Math.abs(z.length() - 0.25F) > 0.00001F
+                        || Math.abs(x.dot(y)) > 0.00001F || Math.abs(y.dot(z)) > 0.00001F || Math.abs(z.dot(x)) > 0.00001F) return false;
+            }
+        }
+        return true;
+    }
+
+    /** A concave panel must have one continuous grain map, independent of how its outline was triangulated. */
+    static boolean checkPanelUvs() {
+        class Capture implements VertexConsumer {
+            double x, z;
+            int vertices;
+            boolean valid = true;
+            public VertexConsumer vertex(double x, double y, double z) { this.x = x * 16; this.z = z * 16; return this; }
+            public VertexConsumer color(int r, int g, int b, int a) { return this; }
+            public VertexConsumer uv(float u, float v) {
+                float[] uv = WorkDraw.LEATHER;
+                valid &= Math.abs(u - (uv[0] + (uv[2] - uv[0]) * (x - 1) / 5)) < 0.00001;
+                valid &= Math.abs(v - (uv[1] + (uv[3] - uv[1]) * (z - 1) / 6)) < 0.00001;
+                return this;
+            }
+            public VertexConsumer overlayCoords(int u, int v) { return this; }
+            public VertexConsumer uv2(int u, int v) { return this; }
+            public VertexConsumer normal(float x, float y, float z) { valid &= y > 0.99F; return this; }
+            public void endVertex() { vertices++; }
+            public void defaultColor(int r, int g, int b, int a) {}
+            public void unsetDefaultColor() {}
+        }
+        Capture capture = new Capture();
+        WorkDraw.fill(new PoseStack(), capture, new float[]{1, 1, 6, 1, 6, 3, 4, 3, 4, 7, 1, 7},
+                16, 0xFFFFFFFF, LightTexture.FULL_BRIGHT, WorkDraw.LEATHER);
+        return capture.valid && capture.vertices == 16;
+    }
+
+    /** Compare each strip's light normal to the shared work surface, including the crest and steep front. */
+    static boolean checkHideNormals() {
+        class Capture implements VertexConsumer {
+            float[] expected;
+            boolean valid = true;
+            public VertexConsumer vertex(double x, double y, double z) { return this; }
+            public VertexConsumer color(int r, int g, int b, int a) { return this; }
+            public VertexConsumer uv(float u, float v) { return this; }
+            public VertexConsumer overlayCoords(int u, int v) { return this; }
+            public VertexConsumer uv2(int u, int v) { return this; }
+            public VertexConsumer normal(float x, float y, float z) {
+                valid &= x * expected[0] + y * expected[1] + z * expected[2] > 0.99F;
+                return this;
+            }
+            public void endVertex() {}
+            public void defaultColor(int r, int g, int b, int a) {}
+            public void unsetDefaultColor() {}
+        }
+        Capture capture = new Capture();
+        for (float v : new float[]{0.04F, 0.18F, 0.32F, 0.5F, 0.8F, 0.96F}) {
+            float[][][] strip = {{RackGeometry.fleshPoint(0.2F, v), RackGeometry.fleshPoint(0.8F, v)},
+                    {RackGeometry.fleshPoint(0.2F, v + 0.001F), RackGeometry.fleshPoint(0.8F, v + 0.001F)}};
+            capture.expected = RackGeometry.fleshNormal(v);
+            MeshUtil.sheet(new PoseStack(), capture, strip, 0xFFFFFFFF, LightTexture.FULL_BRIGHT, true);
+        }
+        capture.expected = new float[]{0, 1, 0};
+        MeshUtil.sheet(new PoseStack(), capture, new float[][][]{{{0, 0, 0}, {1, 0, 0}}, {{0, 0, 1}, {1, 0, 1}}},
+                0xFFFFFFFF, LightTexture.FULL_BRIGHT, true);
+        return capture.valid;
     }
 
     @Override

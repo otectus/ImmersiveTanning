@@ -5,7 +5,6 @@ import com.otectus.immersivetanning.hide.HideSize;
 import com.otectus.immersivetanning.minigame.FleshingSurface;
 import com.otectus.immersivetanning.minigame.SeamPatterns;
 import com.otectus.immersivetanning.minigame.StitchPattern;
-import com.otectus.immersivetanning.minigame.StitchRun;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.util.Mth;
@@ -88,26 +87,33 @@ public final class MinigameGameTests {
         h.succeed();
     }
 
+    /**
+     * The seam's replacement for 1.2's timing run: a stitch is judged by how far its thread was drawn away from the
+     * seam. Ideal pulls give 100; pulls at the edge of the clean band are fine but not perfect; slack or overpulled
+     * stitches still complete the piece (never an abort) at a low score; a redone stitch is capped.
+     */
     @GameTest(template = "empty")
-    public static void stitchingScoresTimingAndNeverAborts(GameTestHelper h) {
-        StitchPattern pattern = SeamPatterns.get(ImmersiveTanning.id("chestplate"));
-        h.assertTrue(pattern.id().equals(ImmersiveTanning.id("chestplate")), "The chestplate seam is loaded from data");
-
-        StitchRun perfect = new StitchRun(pattern);
-        for (int i = 0; i < perfect.count(); i++) perfect.press(perfect.time(i));
-        h.assertTrue(perfect.isComplete() && perfect.score() == 100, "On-beat presses score 100, got " + perfect.score());
-
-        StitchRun late = new StitchRun(pattern);
-        for (int i = 0; i < late.count(); i++) late.press(late.time(i) + pattern.windowMs() - 10);
-        h.assertTrue(late.score() > 20 && late.score() < 60, "Presses at the edge of the window are rough, got " + late.score());
-
-        StitchRun idle = new StitchRun(pattern);
-        idle.advanceTo(idle.endMs() + 1);
-        h.assertTrue(idle.isComplete() && idle.score() == 0, "Missing every stitch completes with 0, not an abort");
-
-        StitchRun spam = new StitchRun(pattern);
-        for (int t = 0; t < spam.endMs(); t += 40) spam.press(t);
-        h.assertTrue(spam.score() < 50, "Pressing constantly spoils stitches, got " + spam.score());
+    public static void stitchingScoresPullAndNeverAborts(GameTestHelper h) {
+        com.otectus.immersivetanning.work.WorkPattern pattern = com.otectus.immersivetanning.work.WorkPatterns.get(ImmersiveTanning.id("chestplate"));
+        h.assertTrue(pattern != null, "The chestplate work pattern is loaded from data");
+        float[] pulls = {0F, 0.2F, 1F, 1.6F};
+        int[] scores = new int[pulls.length];
+        for (int k = 0; k < pulls.length; k++) {
+            com.otectus.immersivetanning.work.LeatherworkJob job = WorkGameTests.job(pattern);
+            WorkGameTests.cutAndSeat(job);
+            for (int a = 0; a < job.stitchCount(); a++) {
+                com.otectus.immersivetanning.work.WorkPattern.Join join = pattern.joinOf(a);
+                float pull = k == 2 ? join.pullIdeal() : k == 1 ? join.pullMin() + 0.002F : k == 0 ? join.pullMin() * 0.2F : join.pullMax() * 1.6F;
+                float[] f = job.stitchFrame(a);
+                h.assertTrue(job.puncture(a, f[4], f[5], 1F) == com.otectus.immersivetanning.work.LeatherworkJob.Outcome.ACCEPTED, "Stitch " + a + " punctures");
+                job.releaseThread(f[4] + f[6] * pull, f[5] + f[7] * pull, false);
+            }
+            h.assertTrue(job.stage() == com.otectus.immersivetanning.work.LeatherworkJob.Stage.TIE, "Every pull completes the seam (never an abort)");
+            scores[k] = Math.round(job.stitchingScore() * 100F);
+        }
+        h.assertTrue(scores[2] == 100, "Ideal pulls stitch at 100, got " + scores[2]);
+        h.assertTrue(scores[1] >= 78 && scores[1] < 100, "Pulls at the edge of the clean band are good, got " + scores[1]);
+        h.assertTrue(scores[0] < 50 && scores[3] < 70, "Slack and puckered pulls are poor, got " + scores[0] + " and " + scores[3]);
         h.succeed();
     }
 

@@ -1,14 +1,18 @@
 package com.otectus.immersivetanning.recipe;
 
 import com.otectus.immersivetanning.ImmersiveTanning;
+import com.otectus.immersivetanning.compat.geneticanimals.GeneticAnimals;
 import com.otectus.immersivetanning.config.ServerConfig;
 import com.otectus.immersivetanning.leather.BindingLeather;
 import com.otectus.immersivetanning.minigame.SeamPatterns;
+import com.otectus.immersivetanning.work.WorkPatterns;
 import com.otectus.immersivetanning.registry.ModTags;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.packs.resources.PreparableReloadListener;
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -44,11 +48,27 @@ import java.util.Set;
  * <p>Automatic detection is conservative: a crafting recipe is routed through the bench only when its unstackable
  * result is leather armor or in {@code #immersive_tanning:leatherwork_equipment}, at least one ingredient is wholly
  * leather, and no ingredient is itself equipment. Everything else is left alone.</p>
+ *
+ * <p>Explicit replacement is narrower still: a bench recipe that names crafting recipes in {@code replaces} disables
+ * each one only while replacement is enabled, the bench recipe is active and can be made (every auxiliary matches an
+ * item), the named recipe is a loaded crafting recipe making the same item, and neither blacklist protects it. Every
+ * refusal is a note in {@code /immersive_tanning report}.</p>
+ *
+ * <p>Each rebuild starts from the recipes as the datapacks loaded them, so a rebuild without a reload in between
+ * recomputes the same result, and a reload (which brings fresh recipes) leaves nothing stale behind.</p>
+ *
+ * <p>Genetic Animals tack goes to the bench only while {@code compat.geneticAnimals} allows it; otherwise its bench
+ * recipes are dropped and nothing of it is detected, so its crafting recipes stay.</p>
  */
 public final class TanningData {
     private static final TanningData EMPTY = new TanningData(List.of(), Map.of(), List.of(), 0);
     private static volatile TanningData current = EMPTY;
     private static volatile boolean dirty = true;
+    /** Counts datapack loads (see {@link #reloadMarker()}); the loaded recipes are kept once per load. */
+    private static volatile int reloadGeneration;
+    private static int pristineGeneration = -1;
+    @Nullable
+    private static List<Recipe<?>> pristine;
 
     private final Map<ResourceLocation, LeatherworkingRecipe> byId;
     private final Map<Item, List<LeatherworkingRecipe>> byResult;
@@ -96,7 +116,15 @@ public final class TanningData {
                 + bindingResults + " leather recipes making Binding Leather";
     }
 
-    /** Rebuilds from the server's current recipes and tags, then rewrites its recipe manager. */
+    /**
+     * A reload listener that only counts datapack loads, so the next rebuild takes its recipes fresh from the reloaded
+     * recipe manager rather than from the copy kept since the last load.
+     */
+    public static PreparableReloadListener reloadMarker() {
+        return (ResourceManagerReloadListener) resources -> reloadGeneration++;
+    }
+
+    /** Rebuilds from the recipes the datapacks loaded and the current tags and config, then rewrites the recipe manager. */
     public static synchronized void rebuild(MinecraftServer server) {
         long start = System.nanoTime();
         RecipeManager manager = server.getRecipeManager();
@@ -104,9 +132,13 @@ public final class TanningData {
         List<String> notes = new ArrayList<>();
         Set<String> recipeBlacklist = new HashSet<>(ServerConfig.list(ServerConfig.RECIPE_BLACKLIST));
         Set<String> modBlacklist = new HashSet<>(ServerConfig.list(ServerConfig.MOD_BLACKLIST));
+        if (pristine == null || pristineGeneration != reloadGeneration) {
+            pristine = List.copyOf(manager.getRecipes());
+            pristineGeneration = reloadGeneration;
+        }
 
         // 0. Recipes that make vanilla leather make Binding Leather instead (ingredients are swapped by IngredientMixin).
-        List<Recipe<?>> all = new ArrayList<>(manager.getRecipes());
+        List<Recipe<?>> all = new ArrayList<>(pristine);
         int bindingResults = 0;
         for (int i = 0; i < all.size(); i++) {
             Recipe<?> r = all.get(i);
@@ -137,6 +169,9 @@ public final class TanningData {
             } else if (lr.result().is(ModTags.NON_LEATHERWORK_EQUIPMENT) || modBlacklist.contains(namespace(lr.resultItem()))) {
                 removed.add(lr.getId());
                 notes.add("Disabled " + lr.getId() + ": result is excluded from leatherworking");
+            } else if (GeneticAnimals.owns(lr.resultItem()) && !GeneticAnimals.tackAtBench()) {
+                removed.add(lr.getId());
+                notes.add("Disabled " + lr.getId() + ": Genetic Animals tack keeps its own recipes (compat.geneticAnimals)");
             } else {
                 active.add(lr);
                 explicitResults.add(lr.resultItem());
@@ -144,7 +179,12 @@ public final class TanningData {
         }
 
         // 2. Automatic recipes from crafting recipes of leather equipment.
-        List<CraftingRecipe> crafting = new ArrayList<>(manager.getAllRecipesFor(RecipeType.CRAFTING));
+        Map<ResourceLocation, Recipe<?>> loaded = new HashMap<>();
+        List<CraftingRecipe> crafting = new ArrayList<>();
+        for (Recipe<?> r : all) {
+            loaded.put(r.getId(), r);
+            if (r instanceof CraftingRecipe c && r.getType() == RecipeType.CRAFTING) crafting.add(c);
+        }
         crafting.sort(Comparator.comparing(r -> r.getId().toString()));
         Map<ResourceLocation, Integer> leatherSlotsByRecipe = new HashMap<>();
         List<LeatherworkingRecipe> auto = new ArrayList<>();
@@ -159,6 +199,7 @@ public final class TanningData {
                 if (!ServerConfig.get(ServerConfig.AUTO_DETECT_LEATHER_EQUIPMENT) || leatherSlots == 0) continue;
                 if (explicitResults.contains(result.getItem()) || autoResults.contains(result.getItem())) continue;
                 if (recipeBlacklist.contains(recipe.getId().toString()) || modBlacklist.contains(namespace(result.getItem()))) continue;
+                if (GeneticAnimals.owns(result.getItem()) && !GeneticAnimals.tackAtBench()) continue;
                 LeatherworkingRecipe detected = detect(recipe, result, notes);
                 if (detected == null) continue;
                 auto.add(detected);
@@ -169,11 +210,20 @@ public final class TanningData {
         }
         active.addAll(auto);
 
-        // 3. Seams travel with each recipe to the client.
+        // 3. Seams and work patterns travel with each recipe to the client. A pattern that cannot be used is one
+        // warning per recipe and reload, naming what it falls back to; the recipe itself always stays usable.
         for (LeatherworkingRecipe r : active) {
             ResourceLocation seam = r.explicitSeam() != null ? r.explicitSeam() : EquipmentSeams.classify(r.result());
-            if (!SeamPatterns.has(seam)) notes.add("Seam " + seam + " for " + r.getId() + " is not defined; the generic seam is used");
             r.resolveSeam(seam);
+            WorkPatterns.Resolution resolution = WorkPatterns.resolve(r.workPattern(), seam);
+            if (resolution.note() != null) {
+                ImmersiveTanning.LOGGER.warn("Immersive Tanning: bench recipe {}: {}; it is worked with {} instead", r.getId(),
+                        resolution.note(), resolution.pattern().id());
+            }
+            if (resolution.source() == WorkPatterns.Source.GENERIC && !SeamPatterns.has(seam)) {
+                notes.add("No work pattern or seam " + seam + " for " + r.getId() + "; the generic wrap is used");
+            }
+            r.resolvePattern(resolution.pattern());
         }
 
         // 4. Disable crafting recipes of leather results the bench now makes.
@@ -193,6 +243,20 @@ public final class TanningData {
                 if (modBlacklist.contains(namespace(result.getItem()))) continue;
                 suppressed.put(recipe.getId(), result.getItem());
             }
+            // 4b. Crafting recipes an active bench recipe names in "replaces".
+            for (LeatherworkingRecipe r : active) {
+                if (r.replaces().isEmpty()) continue;
+                String unmakeable = unmakeable(r);
+                if (unmakeable != null) {
+                    notes.add("Kept the crafting recipes " + r.getId() + " replaces: " + unmakeable);
+                    continue;
+                }
+                for (ResourceLocation id : r.replaces()) {
+                    String refusal = replacementRefusal(r, id, loaded.get(id), recipeBlacklist, modBlacklist, access);
+                    if (refusal != null) notes.add("Kept " + id + " (named by " + r.getId() + "): " + refusal);
+                    else suppressed.put(id, r.resultItem());
+                }
+            }
         }
 
         // 5. Rewrite the recipe manager: remove disabled and stale entries, add the automatic recipes.
@@ -208,6 +272,40 @@ public final class TanningData {
         dirty = false;
         notes.forEach(n -> ImmersiveTanning.LOGGER.debug("Immersive Tanning: {}", n));
         ImmersiveTanning.LOGGER.info("Immersive Tanning: {} ({} ms)", data.summary(), (System.nanoTime() - start) / 1_000_000);
+    }
+
+    /** Why the bench recipe can never be made (an auxiliary that matches no item), or null when it can. */
+    @Nullable
+    static String unmakeable(LeatherworkingRecipe recipe) {
+        for (int i = 0; i < recipe.auxiliary().size(); i++) {
+            boolean any = false;
+            // Forge stands an empty tag in as a barrier named "Empty Tag", which no recipe means to ask for.
+            for (ItemStack s : recipe.auxiliary().get(i).ingredient().getItems()) any |= !s.isEmpty() && !s.is(Items.BARRIER);
+            if (!any) return "auxiliary " + (i + 1) + " matches no item";
+        }
+        return null;
+    }
+
+    /** Why the named recipe stays, or null when the bench recipe may replace it. */
+    @Nullable
+    static String replacementRefusal(LeatherworkingRecipe bench, ResourceLocation id, @Nullable Recipe<?> named,
+                                     Set<String> recipeBlacklist, Set<String> modBlacklist, RegistryAccess access) {
+        if (recipeBlacklist.contains(id.toString())) return "it is in recipeBlacklist";
+        if (!(named instanceof CraftingRecipe) || named.getType() != RecipeType.CRAFTING) {
+            return named == null ? "no such recipe is loaded" : "it is not a crafting recipe";
+        }
+        ItemStack made;
+        try {
+            made = named.getResultItem(access);
+        } catch (RuntimeException e) {
+            return "its result cannot be read (" + e + ")";
+        }
+        if (made == null || made.isEmpty() || made.getItem() != bench.resultItem()) {
+            return "it makes " + (made == null || made.isEmpty() ? "nothing" : BuiltInRegistries.ITEM.getKey(made.getItem()))
+                    + ", not " + BuiltInRegistries.ITEM.getKey(bench.resultItem());
+        }
+        if (modBlacklist.contains(namespace(made.getItem()))) return "its mod is in modBlacklist";
+        return null;
     }
 
     /**
@@ -315,8 +413,10 @@ public final class TanningData {
     }
 
     /** Clears state when the server stops, so a later world starts clean. */
-    public static void reset() {
+    public static synchronized void reset() {
         current = EMPTY;
         dirty = true;
+        pristine = null;
+        pristineGeneration = -1;
     }
 }

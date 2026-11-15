@@ -2,6 +2,7 @@ package com.otectus.immersivetanning.leather;
 
 import com.otectus.immersivetanning.advancement.ModAdvancements;
 import com.otectus.immersivetanning.config.ServerConfig;
+import com.otectus.immersivetanning.effect.LeatherworkPolicy;
 import com.otectus.immersivetanning.item.AwlItem;
 import com.otectus.immersivetanning.registry.ModItems;
 import com.otectus.immersivetanning.registry.ModSounds;
@@ -19,18 +20,23 @@ import java.util.Optional;
  * Leather repairs in the field with Leather Scraps and an Awl, keeping enchantments, finish and quality. Harness
  * leather repairs best. There is no repair-kit item: carry scraps onto a damaged piece in the inventory (with an awl
  * anywhere in the inventory), or hold the awl and keep using it to patch the most worn piece you are wearing.
+ *
+ * <p>Scale-backed pieces (another mod's armor over a leather backing) are not patched with scraps unless the
+ * {@code scaleBacked.allowScrapRepair} config allows it: their own mod's repairs (anvil, materials) still apply. Both
+ * entry points and the tooltip ask {@link #isRepairable}.</p>
  */
 public final class FieldRepair {
 
     public static boolean isRepairable(ItemStack stack) {
-        return stack.isDamageableItem() && (LeatherworkData.has(stack) || stack.is(ModTags.FIELD_REPAIRABLE));
+        return stack.isDamageableItem() && (LeatherworkData.has(stack) || stack.is(ModTags.FIELD_REPAIRABLE))
+                && LeatherworkPolicy.of(stack).scrapRepair();
     }
 
     /** Durability one scrap restores on this stack. */
     public static int repairAmount(ItemStack stack) {
         double fraction = ServerConfig.get(ServerConfig.REPAIR_FRACTION_PER_SCRAP);
         Optional<LeatherworkData> data = LeatherworkData.get(stack);
-        if (data.isPresent() && data.get().finish() == Finish.HARNESS) fraction *= ServerConfig.get(ServerConfig.HARNESS_REPAIR_MULTIPLIER);
+        if (data.isPresent() && data.get().finish() == Finish.HARNESS) fraction *= LeatherworkPolicy.of(stack).harnessRepair();
         return Math.max(1, (int) Math.round(stack.getMaxDamage() * fraction));
     }
 
@@ -59,11 +65,23 @@ public final class FieldRepair {
     /** The most worn repairable piece the player wears or holds in the offhand, if any. */
     @Nullable
     public static ItemStack mostWornEquipped(Player player) {
+        return mostWorn(player, true);
+    }
+
+    /** The most worn damaged leatherwork the player wears that scraps may not patch (scale-backed), if any. */
+    @Nullable
+    public static ItemStack mostWornUnpatchable(Player player) {
+        return mostWorn(player, false);
+    }
+
+    @Nullable
+    private static ItemStack mostWorn(Player player, boolean patchable) {
         ItemStack best = null;
         float worst = 0F;
         for (EquipmentSlot slot : new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET, EquipmentSlot.OFFHAND}) {
             ItemStack stack = player.getItemBySlot(slot);
-            if (!isRepairable(stack) || !stack.isDamaged()) continue;
+            if (!stack.isDamaged()) continue;
+            if (patchable ? !isRepairable(stack) : isRepairable(stack) || !LeatherworkData.has(stack)) continue;
             float wear = stack.getDamageValue() / (float) stack.getMaxDamage();
             if (wear > worst) {
                 worst = wear;

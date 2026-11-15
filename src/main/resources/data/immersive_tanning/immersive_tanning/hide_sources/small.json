@@ -3,6 +3,7 @@
     "minecraft:rabbit",
     "minecraft:fox",
     "#forge:rabbit",
+    "#forge:rabbits",
     "#forge:foxes"
   ],
   "size": "small",

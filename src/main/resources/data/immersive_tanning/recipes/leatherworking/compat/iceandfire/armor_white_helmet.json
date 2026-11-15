@@ -1,0 +1,33 @@
+{
+  "type": "immersive_tanning:leatherworking",
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "iceandfire"
+    },
+    {
+      "type": "forge:item_exists",
+      "item": "iceandfire:armor_white_helmet"
+    },
+    {
+      "type": "forge:item_exists",
+      "item": "iceandfire:dragonscales_white"
+    }
+  ],
+  "leather": 1,
+  "auxiliary": [
+    {
+      "ingredient": {
+        "item": "iceandfire:dragonscales_white"
+      },
+      "count": 5
+    }
+  ],
+  "result": {
+    "item": "iceandfire:armor_white_helmet"
+  },
+  "seam": "immersive_tanning:helmet",
+  "replaces": [
+    "iceandfire:armor_white_helmet"
+  ]
+}
